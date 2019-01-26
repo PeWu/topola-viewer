@@ -35,5 +35,6 @@
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "prettier": "prettier --write src/**/*.{ts,tsx}"
-  }
+  },
+  "homepage": "https://pewu.github.io/topola-viewer"
 }
