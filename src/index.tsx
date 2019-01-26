@@ -10,7 +10,7 @@ import './index.css';
 ReactDOM.render(
   <Router>
     <div className="root">
-      <Route path="/" component={TopBar} />
+      <Route component={TopBar} />
       <Switch>
         <Route exact path="/" component={Intro} />
         <Route exact path="/view" component={ChartView} />
