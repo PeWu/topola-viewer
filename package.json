@@ -1,0 +1,39 @@
+{
+  "name": "topola-viewer",
+  "version": "1.0.0",
+  "main": "src/index.tsx",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "d3": "^5.7.0",
+    "history": "^4.7.2",
+    "md5": "^2.2.1",
+    "query-string": "^6.2.0",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "^4.3.1",
+    "semantic-ui-css": "^2.4.1",
+    "semantic-ui-react": "^0.84.0",
+    "topola": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/d3": "^5.5.0",
+    "@types/history": "^4.7.2",
+    "@types/md5": "^2.1.33",
+    "@types/query-string": "^6.2.0",
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "@types/react-router-dom": "^4.3.1",
+    "@types/jest": "*",
+    "@types/node": "*",
+    "prettier": "^1.15.3",
+    "react-scripts-ts": "latest",
+    "tslint-config-prettier": "^1.17.0",
+    "typescript": "latest"
+  },
+  "scripts": {
+    "start": "react-scripts-ts start",
+    "build": "react-scripts-ts build",
+    "test": "react-scripts-ts test --env=jsdom",
+    "prettier": "prettier --write src/**/*.{ts,tsx}"
+  }
+}
