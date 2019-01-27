@@ -138,6 +138,13 @@ export class TopBar extends React.Component<RouteComponentProps, State> {
             Load from file
           </Menu.Item>
         </label>
+        <Menu.Item
+          as="a"
+          href="https://github.com/PeWu/topola-viewer"
+          position="right"
+        >
+          Source on GitHub
+        </Menu.Item>
         {loadFromUrlModal}
       </Menu>
     );
