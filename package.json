@@ -25,6 +25,7 @@
     "@types/react-router-dom": "^4.3.1",
     "@types/jest": "*",
     "@types/node": "*",
+    "gh-pages": "^2.0.1",
     "prettier": "^1.15.3",
     "react-scripts-ts": "latest",
     "tslint-config-prettier": "^1.17.0",
@@ -34,7 +35,9 @@
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
-    "prettier": "prettier --write src/**/*.{ts,tsx}"
+    "prettier": "prettier --write src/**/*.{ts,tsx}",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "homepage": "https://pewu.github.io/topola-viewer"
 }
