@@ -130,9 +130,9 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
     indi?: string;
     generation?: number;
   }) {
+    const hash = md5(input.gedcom);
     try {
       const data = convertGedcom(input.gedcom);
-      const hash = md5(input.gedcom);
       const serializedData = JSON.stringify(data);
       sessionStorage.setItem(input.url || hash, serializedData);
       this.setState(
@@ -142,10 +142,20 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
           hash,
           loading: false,
           loadedUrl: input.url,
+          error: undefined,
         }),
       );
     } catch (e) {
-      this.setState(Object.assign({}, this.state, {error: e.message}));
+      this.setState(
+        Object.assign({}, this.state, {
+          data: undefined,
+          selection: undefined,
+          hash,
+          loading: false,
+          error: 'Failed to read GEDCOM file',
+          loadedUrl: input.url,
+        }),
+      );
     }
   }
 
