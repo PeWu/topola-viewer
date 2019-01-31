@@ -151,6 +151,7 @@ export class TopBar extends React.Component<RouteComponentProps, State> {
         <input
           className="hidden"
           type="file"
+          accept=".ged"
           id="fileInput"
           onChange={(e) => this.handleUpload(e)}
         />
