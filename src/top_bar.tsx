@@ -1,6 +1,7 @@
 import * as md5 from 'md5';
 import * as queryString from 'query-string';
 import * as React from 'react';
+import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {RouteComponentProps} from 'react-router-dom';
 import {
@@ -86,7 +87,14 @@ export class TopBar extends React.Component<RouteComponentProps, State> {
         onClose={() => this.handleClose()}
         centered={false}
       >
-        <Header icon="cloud download" content="Load from URL" />
+        <Header>
+          <Icon name="cloud download" />
+          <FormattedMessage
+            id="load_from_url.title"
+            defaultMessage="Load from URL"
+            children={(txt) => txt}
+          />
+        </Header>
         <Modal.Content>
           <Form onSubmit={() => this.handleLoad()}>
             <Input
@@ -95,22 +103,33 @@ export class TopBar extends React.Component<RouteComponentProps, State> {
               onChange={(e) => this.handleUrlChange(e)}
               ref={(ref) => (this.inputRef = ref!)}
             />
-            <p className="comment">
-              Data from the URL will be loaded through{' '}
-              <a href="https://cors-anywhere.herokuapp.com/">
-                cors-anywhere.herokuapp.com
-              </a>{' '}
-              to avoid CORS issues.
+            <p>
+              <FormattedMessage
+                id="load_from_url.comment"
+                defaultMessage={
+                  'Data from the URL will be loaded through {link} to avoid CORS issues.'
+                }
+                values={{
+                  link: (
+                    <a href="https://cors-anywhere.herokuapp.com/">
+                      cors-anywhere.herokuapp.com
+                    </a>
+                  ),
+                }}
+              />
             </p>
           </Form>
         </Modal.Content>
         <Modal.Actions>
-          <Button
-            secondary
-            content="Cancel"
-            onClick={() => this.handleClose()}
-          />
-          <Button primary content="Load" onClick={() => this.handleLoad()} />
+          <Button secondary onClick={() => this.handleClose()}>
+            <FormattedMessage
+              id="load_from_url.cancel"
+              defaultMessage="Cancel"
+            />
+          </Button>
+          <Button primary onClick={() => this.handleLoad()}>
+            <FormattedMessage id="load_from_url.load" defaultMessage="Load" />
+          </Button>
         </Modal.Actions>
       </Modal>
     );
@@ -124,7 +143,10 @@ export class TopBar extends React.Component<RouteComponentProps, State> {
         </Link>
         <Menu.Item as="a" onClick={() => this.handleLoadFromUrl()}>
           <Icon name="cloud download" />
-          Load from URL
+          <FormattedMessage
+            id="menu.load_from_url"
+            defaultMessage="Load from URL"
+          />
         </Menu.Item>
         <input
           className="hidden"
@@ -135,7 +157,10 @@ export class TopBar extends React.Component<RouteComponentProps, State> {
         <label htmlFor="fileInput">
           <Menu.Item as="a">
             <Icon name="folder open" />
-            Load from file
+            <FormattedMessage
+              id="menu.load_from_file"
+              defaultMessage="Load from file"
+            />
           </Menu.Item>
         </label>
         <Menu.Item
