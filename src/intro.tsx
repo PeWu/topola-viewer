@@ -91,12 +91,25 @@ export function Intro() {
           </li>
         </ul>
         <p>
-          <b>Privacy</b>: When using the "load from file" option, this site does
-          not send your data anywhere and files loaded from disk do not leave
-          your computer. When using "load from URL", data is passed through the{' '}
-          <a href="https://cors-anywhere.herokuapp.com/">cors-anywhere</a>{' '}
-          service to deal with an issue with cross-site file loading in the
-          browser.
+          <b>
+            <FormattedMessage id="intro.privacy" defaultMessage="Privacy" />
+          </b>
+          :
+          <FormattedMessage
+            id="intro.privacy_note"
+            defaultMessage={
+              'When using the "load from file" option, this site does not' +
+              ' send your data anywhere and files loaded from disk do not' +
+              ' leave your computer. When using "load from URL", data is' +
+              ' passed through the {link} service to deal with an issue with' +
+              ' cross-site file loading in the browser (CORS).'
+            }
+            values={{
+              link: (
+                <a href="https://cors-anywhere.herokuapp.com/">cors-anywhere</a>
+              ),
+            }}
+          />
         </p>
       </Card.Content>
     </Card>

@@ -169,7 +169,10 @@ export class TopBar extends React.Component<RouteComponentProps, State> {
           href="https://github.com/PeWu/topola-viewer"
           position="right"
         >
-          Source on GitHub
+          <FormattedMessage
+            id="menu.github"
+            defaultMessage="Source on GitHub"
+          />
         </Menu.Item>
         {loadFromUrlModal}
       </Menu>
