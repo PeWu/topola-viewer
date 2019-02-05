@@ -19,17 +19,17 @@
   "devDependencies": {
     "@types/d3": "^5.5.0",
     "@types/history": "^4.7.2",
+    "@types/jest": "*",
     "@types/md5": "^2.1.33",
+    "@types/node": "*",
     "@types/query-string": "^6.2.0",
     "@types/react": "*",
     "@types/react-dom": "*",
     "@types/react-intl": "^2.3.15",
     "@types/react-router-dom": "^4.3.1",
-    "@types/jest": "*",
-    "@types/node": "*",
     "gh-pages": "^2.0.1",
     "prettier": "^1.15.3",
-    "react-scripts-ts": "latest",
+    "react-scripts-ts": "^4.0.8",
     "tslint-config-prettier": "^1.17.0",
     "typescript": "latest"
   },
@@ -41,5 +41,11 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
-  "homepage": "https://pewu.github.io/topola-viewer"
+  "homepage": "https://pewu.github.io/topola-viewer",
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie < 11",
+    "not op_mini all"
+  ]
 }
