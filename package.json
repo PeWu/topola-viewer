@@ -9,11 +9,13 @@
     "md5": "^2.2.1",
     "query-string": "^5.1.1",
     "react": "latest",
+    "react-app-polyfill": "^0.2.0",
     "react-dom": "latest",
     "react-intl": "^2.8.0",
     "react-router-dom": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.84.0",
+    "string.prototype.startswith": "^0.2.0",
     "topola": "2.x"
   },
   "devDependencies": {
