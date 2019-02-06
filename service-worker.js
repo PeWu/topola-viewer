@@ -11,11 +11,10 @@
  * See https://goo.gl/2aRDsh
  */
 
-importScripts("/topola-viewer/workbox-v3.6.3/workbox-sw.js");
-workbox.setConfig({modulePathPrefix: "/topola-viewer/workbox-v3.6.3"});
+importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/topola-viewer/precache-manifest.be7f8b8262b71911abf1607a20146f72.js"
+  "/topola-viewer/precache-manifest.ebba1499186a7c72323cca2743d671af.js"
 );
 
 workbox.clientsClaim();
