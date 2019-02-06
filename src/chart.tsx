@@ -20,7 +20,7 @@ function zoomed() {
 /** Called when the scrollbars are used. */
 function scrolled() {
   const svg = d3.select('#chart');
-  const parent = (svg.node() as HTMLElement).parentElement!;
+  const parent = (svg.node() as HTMLElement).parentElement as Element;
   const x = parent.scrollLeft + parent.clientWidth / 2;
   const y = parent.scrollTop + parent.clientHeight / 2;
   d3.select(parent).call(d3.zoom().translateTo, x, y);
@@ -59,7 +59,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       baseGeneration: this.props.selection.generation,
     });
     const svg = d3.select('#chart');
-    const parent = (svg.node() as HTMLElement).parentElement!;
+    const parent = (svg.node() as HTMLElement).parentElement as Element;
 
     d3.select(parent)
       .on('scroll', scrolled)

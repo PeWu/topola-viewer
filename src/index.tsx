@@ -1,8 +1,8 @@
 import * as locale_en from 'react-intl/locale-data/en';
 import * as locale_pl from 'react-intl/locale-data/pl';
-import * as messages_pl from './translations/pl.json';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import messages_pl from './translations/pl.json';
 import {addLocaleData} from 'react-intl';
 import {ChartView} from './chart_view';
 import {HashRouter as Router, Route, Switch} from 'react-router-dom';

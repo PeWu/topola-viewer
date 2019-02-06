@@ -1,6 +1,6 @@
-import * as md5 from 'md5';
 import * as queryString from 'query-string';
 import * as React from 'react';
+import md5 from 'md5';
 import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {RouteComponentProps} from 'react-router-dom';
