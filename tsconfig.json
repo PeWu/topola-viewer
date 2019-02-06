@@ -17,7 +17,8 @@
     "noEmit": true,
     "jsx": "preserve",
     "allowSyntheticDefaultImports": true,
-    "suppressImplicitAnyIndexErrors": true
+    "suppressImplicitAnyIndexErrors": true,
+    "sourceMap": true
   },
   "include": [
     "src"
