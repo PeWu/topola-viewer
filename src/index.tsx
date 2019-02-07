@@ -1,5 +1,6 @@
 import 'react-app-polyfill/ie11';
 import 'string.prototype.startswith';
+import 'array.prototype.find';
 import * as locale_en from 'react-intl/locale-data/en';
 import * as locale_pl from 'react-intl/locale-data/pl';
 import * as React from 'react';

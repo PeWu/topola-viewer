@@ -1,6 +1,5 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
-import axios from 'axios';
 import md5 from 'md5';
 import {Chart} from './chart';
 import {convertGedcom} from './gedcom_util';
@@ -103,11 +102,16 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
       ? 'https://cors-anywhere.herokuapp.com/' + url
       : url;
 
-    axios
-      .get(urlToFetch)
-      .then((response) =>
+    window.fetch(urlToFetch)
+      .then((response) => {
+        if (response.status !== 200) {
+          return Promise.reject(new Error(response.statusText));
+        }
+        return response.text();
+      })
+      .then((data) =>
         this.setGedcom({
-          gedcom: response.data,
+          gedcom: data,
           url,
           indi: options.indi,
           generation: options.generation,

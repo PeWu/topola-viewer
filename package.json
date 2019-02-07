@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.tsx",
   "dependencies": {
-    "axios": "^0.18.0",
+    "array.prototype.find": "^2.0.4",
     "d3": "^5.7.0",
     "history": "^4.7.2",
     "md5": "^2.2.1",
