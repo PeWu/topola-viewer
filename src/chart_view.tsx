@@ -179,6 +179,7 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
     const parsedGen = Number(getParam('gen'));
     const generation = !isNaN(parsedGen) ? parsedGen : undefined;
     const hash = getParam('file');
+    const handleCors = getParam('handleCors') !== 'false';
 
     if (hash && hash !== this.state.hash) {
       // New "load from file" data.
@@ -209,7 +210,7 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
       this.loadFromUrl(url, {
         indi,
         generation,
-        handleCors: url.startsWith('http'),
+        handleCors: url.startsWith('http') && handleCors,
       });
     } else if (!url && !gedcom && hash !== this.state.hash) {
       this.props.history.replace({pathname: '/'});
