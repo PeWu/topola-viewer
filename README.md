@@ -11,3 +11,10 @@ Here are some examples from the Web:
 * [Harry Potter](https://pewu.github.io/topola-viewer/#/view?url=http%3A%2F%2Fgenealogyoflife.com%2Ftng%2Fgedcom%2FHarryPotter.ged) (from [Famous Family Trees](http://famousfamilytrees.blogspot.com/))
 
 If you have data in a genealogy database, you can export your data in GEDCOM format and load it using the "Load from file" menu.
+
+## Running locally
+
+```
+npm install
+npm start
+```
