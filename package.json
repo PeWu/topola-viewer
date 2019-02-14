@@ -3,19 +3,17 @@
   "version": "1.0.0",
   "main": "src/index.tsx",
   "dependencies": {
-    "array.prototype.find": "^2.0.4",
     "d3": "^5.7.0",
+    "detect-browser": "^4.1.0",
     "history": "^4.7.2",
     "md5": "^2.2.1",
     "query-string": "^5.1.1",
     "react": "latest",
-    "react-app-polyfill": "^0.2.0",
     "react-dom": "latest",
     "react-intl": "^2.8.0",
     "react-router-dom": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.84.0",
-    "string.prototype.startswith": "^0.2.0",
     "topola": "^2.2"
   },
   "devDependencies": {
@@ -47,7 +45,7 @@
   "browserslist": [
     ">0.2%",
     "not dead",
-    "not ie < 11",
+    "not ie <= 11",
     "not op_mini all"
   ]
 }
