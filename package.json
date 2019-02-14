@@ -16,7 +16,7 @@
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.84.0",
     "string.prototype.startswith": "^0.2.0",
-    "topola": "2.x"
+    "topola": "^2.2"
   },
   "devDependencies": {
     "@types/d3": "^5.5.0",

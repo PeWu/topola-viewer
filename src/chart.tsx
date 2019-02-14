@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import * as React from 'react';
+import {intlShape} from 'react-intl';
 import {
   JsonGedcomData,
   ChartHandle,
@@ -52,6 +53,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
         indiCallback: (info) => this.props.onSelection(info),
         animate: true,
         updateSvgSize: false,
+        locale: this.context.intl.locale,
       });
     }
     const chartInfo = this.chart!.render({
@@ -118,6 +120,11 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   componentDidUpdate(prevProps: ChartProps) {
     this.renderChart({initialRender: this.props.data !== prevProps.data});
   }
+
+  /** Make intl appear in this.context. */
+  static contextTypes = {
+    intl: intlShape,
+  };
 
   render() {
     return (
