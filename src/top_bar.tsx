@@ -20,7 +20,14 @@ interface State {
   url?: string;
 }
 
-export class TopBar extends React.Component<RouteComponentProps, State> {
+interface Props {
+  onPrint: () => void;
+}
+
+export class TopBar extends React.Component<
+  RouteComponentProps & Props,
+  State
+> {
   state: State = {loadUrlDialogOpen: false};
   inputRef?: Input;
 
@@ -164,6 +171,10 @@ export class TopBar extends React.Component<RouteComponentProps, State> {
             />
           </Menu.Item>
         </label>
+        <Menu.Item as="a" onClick={() => this.props.onPrint()}>
+          <Icon name="print" />
+          <FormattedMessage id="menu.print" defaultMessage="Print" />
+        </Menu.Item>
         <Menu.Item
           as="a"
           href="https://github.com/PeWu/topola-viewer"

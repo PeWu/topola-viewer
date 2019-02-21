@@ -133,4 +133,27 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       </div>
     );
   }
+
+  /** Shows the print dialog to print the currently displayed chart. */
+  print() {
+    const printWindow = document.createElement('iframe');
+    printWindow.style.position = 'absolute';
+    printWindow.style.top = '-1000px';
+    printWindow.style.left = '-1000px';
+    printWindow.onload = () => {
+      const svg = document.getElementById('chart')!.cloneNode(true) as Element;
+      svg.removeAttribute('transform');
+      const contents = svg.outerHTML;
+      printWindow.contentDocument!.open();
+      printWindow.contentDocument!.write(contents);
+      printWindow.contentDocument!.close();
+      // Doesn't work on Firefox without the setTimeout.
+      setTimeout(() => {
+        printWindow.contentWindow!.focus();
+        printWindow.contentWindow!.print();
+        printWindow.parentNode!.removeChild(printWindow);
+      }, 500);
+    };
+    document.body.appendChild(printWindow);
+  }
 }

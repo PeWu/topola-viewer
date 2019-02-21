@@ -50,6 +50,7 @@ interface State {
 /** The main area of the application dedicated for rendering the family chart. */
 export class ChartView extends React.Component<RouteComponentProps, State> {
   state: State = {loading: false};
+  chartRef: Chart | null = null;
 
   /**
    * Called when the user clicks an individual box in the chart.
@@ -102,7 +103,8 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
       ? 'https://cors-anywhere.herokuapp.com/' + url
       : url;
 
-    window.fetch(urlToFetch)
+    window
+      .fetch(urlToFetch)
       .then((response) => {
         if (response.status !== 200) {
           return Promise.reject(new Error(response.statusText));
@@ -237,6 +239,7 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
           data={this.state.data}
           onSelection={this.onSelection}
           selection={this.state.selection}
+          ref={(ref) => (this.chartRef = ref)}
         />
       );
     }
@@ -244,5 +247,12 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
       return <ErrorMessage message={this.state.error!} />;
     }
     return <Loader active size="large" />;
+  }
+
+  /** Shows the print dialog to print the currently displayed chart. */
+  print() {
+    if (this.chartRef) {
+      this.chartRef.print();
+    }
   }
 }

@@ -6,7 +6,12 @@ import messages_pl from './translations/pl.json';
 import {addLocaleData} from 'react-intl';
 import {detect} from 'detect-browser';
 import {ChartView} from './chart_view';
-import {HashRouter as Router, Route, Switch} from 'react-router-dom';
+import {
+  HashRouter as Router,
+  Route,
+  RouteComponentProps,
+  Switch,
+} from 'react-router-dom';
 import {IntlProvider} from 'react-intl';
 import {Intro} from './intro';
 import {TopBar} from './top_bar';
@@ -22,6 +27,8 @@ const language = navigator.language && navigator.language.split(/[-_]/)[0];
 
 const browser = detect();
 
+let chartViewRef: ChartView | null = null;
+
 if (browser && browser.name === 'ie') {
   ReactDOM.render(
     <p>
@@ -35,10 +42,23 @@ if (browser && browser.name === 'ie') {
     <IntlProvider locale={language} messages={messages[language]}>
       <Router>
         <div className="root">
-          <Route component={TopBar} />
+          <Route
+            component={(props: RouteComponentProps) => (
+              <TopBar
+                {...props}
+                onPrint={() => chartViewRef && chartViewRef.print()}
+              />
+            )}
+          />
           <Switch>
             <Route exact path="/" component={Intro} />
-            <Route exact path="/view" component={ChartView} />
+            <Route
+              exact
+              path="/view"
+              component={(props: RouteComponentProps) => (
+                <ChartView {...props} ref={(ref) => (chartViewRef = ref)} />
+              )}
+            />
           </Switch>
         </div>
       </Router>
