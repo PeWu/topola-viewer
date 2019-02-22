@@ -12,6 +12,7 @@ import {
   Modal,
   Input,
   Form,
+  Dropdown,
 } from 'semantic-ui-react';
 
 /** Menus and dialogs state. */
@@ -22,6 +23,7 @@ interface State {
 
 interface Props {
   onPrint: () => void;
+  onDownloadSvg: () => void;
 }
 
 export class TopBar extends React.Component<
@@ -175,6 +177,21 @@ export class TopBar extends React.Component<
           <Icon name="print" />
           <FormattedMessage id="menu.print" defaultMessage="Print" />
         </Menu.Item>
+        <Dropdown
+          trigger={
+            <div>
+              <Icon name="download" />
+              <FormattedMessage id="menu.download" defaultMessage="Download" />
+            </div>
+          }
+          className="item"
+        >
+          <Dropdown.Menu>
+            <Dropdown.Item onClick={() => this.props.onDownloadSvg()}>
+              <FormattedMessage id="menu.svg_file" defaultMessage="SVG file" />
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
         <Menu.Item
           as="a"
           href="https://github.com/PeWu/topola-viewer"

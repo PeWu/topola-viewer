@@ -47,6 +47,7 @@ if (browser && browser.name === 'ie') {
               <TopBar
                 {...props}
                 onPrint={() => chartViewRef && chartViewRef.print()}
+                onDownloadSvg={() => chartViewRef && chartViewRef.downloadSvg()}
               />
             )}
           />

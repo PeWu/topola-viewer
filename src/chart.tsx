@@ -134,6 +134,12 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     );
   }
 
+  private getSvgContents() {
+    const svg = document.getElementById('chart')!.cloneNode(true) as Element;
+    svg.removeAttribute('transform');
+    return svg.outerHTML;
+  }
+
   /** Shows the print dialog to print the currently displayed chart. */
   print() {
     const printWindow = document.createElement('iframe');
@@ -141,11 +147,8 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     printWindow.style.top = '-1000px';
     printWindow.style.left = '-1000px';
     printWindow.onload = () => {
-      const svg = document.getElementById('chart')!.cloneNode(true) as Element;
-      svg.removeAttribute('transform');
-      const contents = svg.outerHTML;
       printWindow.contentDocument!.open();
-      printWindow.contentDocument!.write(contents);
+      printWindow.contentDocument!.write(this.getSvgContents());
       printWindow.contentDocument!.close();
       // Doesn't work on Firefox without the setTimeout.
       setTimeout(() => {
@@ -155,5 +158,15 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       }, 500);
     };
     document.body.appendChild(printWindow);
+  }
+
+  downloadSvg() {
+    const hiddenElement = document.createElement('a');
+    hiddenElement.href = URL.createObjectURL(
+      new Blob([this.getSvgContents()], {type: 'image/svg+xml'}),
+    );
+    hiddenElement.target = '_blank';
+    hiddenElement.download = 'topola.svg';
+    hiddenElement.click();
   }
 }

@@ -255,4 +255,10 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
       this.chartRef.print();
     }
   }
+
+  downloadSvg() {
+    if (this.chartRef) {
+      this.chartRef.downloadSvg();
+    }
+  }
 }

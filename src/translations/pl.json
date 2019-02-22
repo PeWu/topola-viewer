@@ -2,6 +2,8 @@
   "menu.load_from_url": "Otwórz URL",
   "menu.load_from_file": "Otwórz plik",
   "menu.print": "Drukuj",
+  "menu.download": "Pobierz",
+  "menu.svg_file": "Plik SVG",
   "menu.github": "Źródła na GitHub",
   "intro.title": "Topola Genealogy",
   "intro.description": "Topola Genealogy pozwala przeglądać drzewo genealogiczne w interaktywny sposób.",
