@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import * as React from 'react';
+import canvg from 'canvg';
 import {intlShape} from 'react-intl';
 import {
   JsonGedcomData,
@@ -168,5 +169,36 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     hiddenElement.target = '_blank';
     hiddenElement.download = 'topola.svg';
     hiddenElement.click();
+  }
+
+  downloadPng() {
+    const canvas = document.createElement('canvas');
+
+    // Scale image for better quality.
+    const svg = (document.getElementById('chart') as unknown) as SVGSVGElement;
+    canvas.width = svg.getBBox().width * 2;
+    canvas.height = svg.getBBox().height * 2;
+
+    // Fill canvas with white background.
+    const ctx = canvas.getContext('2d')!;
+    const oldFill = ctx.fillStyle;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = oldFill;
+
+    canvg(canvas, this.getSvgContents(), {
+      ignoreDimensions: true,
+      ignoreClear: true,
+      scaleWidth: canvas.width,
+      scaleHeight: canvas.height,
+    });
+    const onBlob = (blob: Blob | null) => {
+      const hiddenElement = document.createElement('a');
+      hiddenElement.href = URL.createObjectURL(blob);
+      hiddenElement.target = '_blank';
+      hiddenElement.download = 'topola.png';
+      hiddenElement.click();
+    };
+    canvas.toBlob(onBlob, 'image/png');
   }
 }

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.tsx",
   "dependencies": {
+    "canvg": "^1.5.3",
     "d3": "^5.7.0",
     "detect-browser": "^4.1.0",
     "history": "^4.7.2",

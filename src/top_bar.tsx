@@ -24,6 +24,7 @@ interface State {
 interface Props {
   onPrint: () => void;
   onDownloadSvg: () => void;
+  onDownloadPng: () => void;
 }
 
 export class TopBar extends React.Component<
@@ -187,6 +188,9 @@ export class TopBar extends React.Component<
           className="item"
         >
           <Dropdown.Menu>
+            <Dropdown.Item onClick={() => this.props.onDownloadPng()}>
+              <FormattedMessage id="menu.png_file" defaultMessage="PNG file" />
+            </Dropdown.Item>
             <Dropdown.Item onClick={() => this.props.onDownloadSvg()}>
               <FormattedMessage id="menu.svg_file" defaultMessage="SVG file" />
             </Dropdown.Item>

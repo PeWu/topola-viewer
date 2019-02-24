@@ -48,6 +48,7 @@ if (browser && browser.name === 'ie') {
                 {...props}
                 onPrint={() => chartViewRef && chartViewRef.print()}
                 onDownloadSvg={() => chartViewRef && chartViewRef.downloadSvg()}
+                onDownloadPng={() => chartViewRef && chartViewRef.downloadPng()}
               />
             )}
           />

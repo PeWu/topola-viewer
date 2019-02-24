@@ -261,4 +261,10 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
       this.chartRef.downloadSvg();
     }
   }
+
+  downloadPng() {
+    if (this.chartRef) {
+      this.chartRef.downloadPng();
+    }
+  }
 }
