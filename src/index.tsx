@@ -4,17 +4,10 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import messages_pl from './translations/pl.json';
 import {addLocaleData} from 'react-intl';
+import {App} from './app';
 import {detect} from 'detect-browser';
-import {ChartView} from './chart_view';
-import {
-  HashRouter as Router,
-  Route,
-  RouteComponentProps,
-  Switch,
-} from 'react-router-dom';
+import {HashRouter as Router} from 'react-router-dom';
 import {IntlProvider} from 'react-intl';
-import {Intro} from './intro';
-import {TopBar} from './top_bar';
 import './index.css';
 import 'semantic-ui-css/semantic.min.css';
 
@@ -26,8 +19,6 @@ const messages = {
 const language = navigator.language && navigator.language.split(/[-_]/)[0];
 
 const browser = detect();
-
-let chartViewRef: ChartView | null = null;
 
 if (browser && browser.name === 'ie') {
   ReactDOM.render(
@@ -41,28 +32,7 @@ if (browser && browser.name === 'ie') {
   ReactDOM.render(
     <IntlProvider locale={language} messages={messages[language]}>
       <Router>
-        <div className="root">
-          <Route
-            component={(props: RouteComponentProps) => (
-              <TopBar
-                {...props}
-                onPrint={() => chartViewRef && chartViewRef.print()}
-                onDownloadSvg={() => chartViewRef && chartViewRef.downloadSvg()}
-                onDownloadPng={() => chartViewRef && chartViewRef.downloadPng()}
-              />
-            )}
-          />
-          <Switch>
-            <Route exact path="/" component={Intro} />
-            <Route
-              exact
-              path="/view"
-              component={(props: RouteComponentProps) => (
-                <ChartView {...props} ref={(ref) => (chartViewRef = ref)} />
-              )}
-            />
-          </Switch>
-        </div>
+        <App />
       </Router>
     </IntlProvider>,
     document.querySelector('#root'),
