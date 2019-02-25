@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {ChartView} from './chart_view';
-import {Route, RouteComponentProps, Switch} from 'react-router-dom';
+import {HashRouter as Router, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {Intro} from './intro';
 import {TopBar} from './top_bar';
 
@@ -9,7 +9,8 @@ export class App extends React.Component<{}, {}> {
 
   render() {
     return (
-      <div className="root">
+      <Router>
+      <>
         <Route
           component={(props: RouteComponentProps) => (
             <TopBar
@@ -34,7 +35,8 @@ export class App extends React.Component<{}, {}> {
             )}
           />
         </Switch>
-      </div>
+      </>
+      </Router>
     );
   }
 }
