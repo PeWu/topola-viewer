@@ -1,6 +1,5 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
-import md5 from 'md5';
 import {Chart} from './chart';
 import {convertGedcom} from './gedcom_util';
 import {IndiInfo, JsonGedcomData} from 'topola';
@@ -32,6 +31,50 @@ function getSelection(
   };
 }
 
+/** Fetches data from the given URL. Uses cors-anywhere if handleCors is true. */
+function loadFromUrl(
+  url: string,
+  handleCors: boolean,
+): Promise<JsonGedcomData> {
+  const cachedData = sessionStorage.getItem(url);
+  if (cachedData) {
+    return Promise.resolve(JSON.parse(cachedData));
+  }
+  const urlToFetch = handleCors
+    ? 'https://cors-anywhere.herokuapp.com/' + url
+    : url;
+
+  return window
+    .fetch(urlToFetch)
+    .then((response) => {
+      if (response.status !== 200) {
+        return Promise.reject(new Error(response.statusText));
+      }
+      return response.text();
+    })
+    .then((gedcom) => {
+      const data = convertGedcom(gedcom);
+      const serializedData = JSON.stringify(data);
+      sessionStorage.setItem(url, serializedData);
+      return data;
+    });
+}
+
+/** Loads data from the given GEDCOM file contents. */
+function loadGedcom(hash: string, gedcom?: string) {
+  const cachedData = sessionStorage.getItem(hash);
+  if (cachedData) {
+    return JSON.parse(cachedData);
+  }
+  if (!gedcom) {
+    throw new Error('Error loading data. Please upload your file again.');
+  }
+  const data = convertGedcom(gedcom);
+  const serializedData = JSON.stringify(data);
+  sessionStorage.setItem(hash, serializedData);
+  return data;
+}
+
 interface State {
   /** Loaded data. */
   data?: JsonGedcomData;
@@ -44,7 +87,7 @@ interface State {
   /** True if currently loading. */
   loading: boolean;
   /** URL of the data that is loaded or is being loaded. */
-  loadedUrl?: string;
+  url?: string;
 }
 
 /** The main area of the application dedicated for rendering the family chart. */
@@ -65,104 +108,29 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
     this.props.history.push(location);
   };
 
-  /** Loads a GEDCOM file from the given URL. */
-  loadFromUrl(
-    url: string,
-    options: {
-      handleCors?: boolean;
-      indi?: string;
-      generation?: number;
-    } = {},
-  ) {
-    const cachedData = sessionStorage.getItem(url);
-    if (cachedData) {
-      const data = JSON.parse(cachedData);
-      this.setState(
-        Object.assign({}, this.state, {
-          data,
-          selection: getSelection(data, options.indi, options.generation),
-          loadedUrl: url,
-          loading: false,
-          error: undefined,
-          hash: undefined,
-        }),
-      );
-      return;
-    }
-
-    this.setState(
-      Object.assign({}, this.state, {
-        loading: true,
-        loadedUrl: url,
-        data: undefined,
-        error: undefined,
-      }),
+  isNewData(hash: string | undefined, url: string | undefined): boolean {
+    return (
+      !!(hash && hash !== this.state.hash) || !!(url && this.state.url !== url)
     );
-
-    const urlToFetch = options.handleCors
-      ? 'https://cors-anywhere.herokuapp.com/' + url
-      : url;
-
-    window
-      .fetch(urlToFetch)
-      .then((response) => {
-        if (response.status !== 200) {
-          return Promise.reject(new Error(response.statusText));
-        }
-        return response.text();
-      })
-      .then((data) =>
-        this.setGedcom({
-          gedcom: data,
-          url,
-          indi: options.indi,
-          generation: options.generation,
-        }),
-      )
-      .catch((e: Error) =>
-        this.setState(
-          Object.assign({}, this.state, {error: e.message, loading: false}),
-        ),
-      );
   }
 
-  /**
-   * Converts GEDCOM contents and sets the data in the state.
-   * In case of an error reading the file, sets an error.
-   */
-  setGedcom(input: {
-    gedcom: string;
-    url?: string;
-    indi?: string;
-    generation?: number;
-  }) {
-    const hash = md5(input.gedcom);
-    try {
-      const data = convertGedcom(input.gedcom);
-      const serializedData = JSON.stringify(data);
-      sessionStorage.setItem(input.url || hash, serializedData);
-      this.setState(
-        Object.assign({}, this.state, {
-          data,
-          selection: getSelection(data, input.indi, input.generation),
-          hash,
-          loading: false,
-          loadedUrl: input.url,
-          error: undefined,
-        }),
-      );
-    } catch (e) {
-      this.setState(
-        Object.assign({}, this.state, {
-          data: undefined,
-          selection: undefined,
-          hash,
-          loading: false,
-          error: 'Failed to read GEDCOM file',
-          loadedUrl: input.url,
-        }),
-      );
+  loadData(
+    gedcom: string | undefined,
+    hash: string | undefined,
+    url: string | undefined,
+    handleCors: boolean,
+  ): Promise<JsonGedcomData> {
+    if (!hash && !url) {
+      return Promise.reject(new Error('Precondition failed'));
     }
+    if (hash) {
+      try {
+        return Promise.resolve(loadGedcom(hash, gedcom));
+      } catch (e) {
+        return Promise.reject(new Error('Failed to read GEDCOM file'));
+      }
+    }
+    return loadFromUrl(url!, handleCors);
   }
 
   componentDidMount() {
@@ -183,15 +151,10 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
     const hash = getParam('file');
     const handleCors = getParam('handleCors') !== 'false';
 
-    if (hash && hash !== this.state.hash) {
-      // New "load from file" data.
-      if (gedcom) {
-        this.setGedcom({gedcom, indi, generation});
-      } else {
-        // Data is not present. Try loading from cache.
-        const cachedData = sessionStorage.getItem(hash);
-        if (cachedData) {
-          const data = JSON.parse(cachedData);
+    if (this.isNewData(hash, url)) {
+      this.loadData(gedcom, hash, url, handleCors).then(
+        (data) => {
+          // Set state with data.
           this.setState(
             Object.assign({}, this.state, {
               data,
@@ -199,23 +162,31 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
               selection: getSelection(data, indi, generation),
               error: undefined,
               loading: false,
-              loadedUrl: undefined,
+              url,
             }),
           );
-        } else {
-          // No data available. Redirect to main page.
-          this.props.history.replace({pathname: '/'});
-        }
-      }
-    } else if (!this.state.loading && url && this.state.loadedUrl !== url) {
-      // New URL to load data from.
-      this.loadFromUrl(url, {
-        indi,
-        generation,
-        handleCors: url.startsWith('http') && handleCors,
-      });
-    } else if (!url && !gedcom && hash !== this.state.hash) {
-      this.props.history.replace({pathname: '/'});
+        },
+        (error) => {
+          // Set error state.
+          this.setState(
+            Object.assign({}, this.state, {
+              error: error.message,
+              loading: false,
+            }),
+          );
+        },
+      );
+      // Set loading state.
+      this.setState(
+        Object.assign({}, this.state, {
+          data: undefined,
+          selection: undefined,
+          hash,
+          error: undefined,
+          loading: true,
+          url,
+        }),
+      );
     } else if (this.state.data && this.state.selection) {
       // Update selection if it has changed in the URL.
       const selection = getSelection(this.state.data, indi, generation);
