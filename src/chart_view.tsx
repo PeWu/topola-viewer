@@ -1,10 +1,10 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
 import {Chart} from './chart';
-import {convertGedcom} from './gedcom_util';
 import {IndiInfo, JsonGedcomData} from 'topola';
 import {Loader, Message} from 'semantic-ui-react';
 import {RouteComponentProps} from 'react-router-dom';
+import {getSelection, loadFromUrl, loadGedcom} from './load_data';
 
 /** Shows an error message. */
 export function ErrorMessage(props: {message: string}) {
@@ -14,65 +14,6 @@ export function ErrorMessage(props: {message: string}) {
       <p>{props.message}</p>
     </Message>
   );
-}
-
-/**
- * Returns a valid IndiInfo object, either with the given indi and generation
- * or with an individual taken from the data and generation 0.
- */
-function getSelection(
-  data: JsonGedcomData,
-  indi?: string,
-  generation?: number,
-): IndiInfo {
-  return {
-    id: indi || data.indis[0].id,
-    generation: generation || 0,
-  };
-}
-
-/** Fetches data from the given URL. Uses cors-anywhere if handleCors is true. */
-function loadFromUrl(
-  url: string,
-  handleCors: boolean,
-): Promise<JsonGedcomData> {
-  const cachedData = sessionStorage.getItem(url);
-  if (cachedData) {
-    return Promise.resolve(JSON.parse(cachedData));
-  }
-  const urlToFetch = handleCors
-    ? 'https://cors-anywhere.herokuapp.com/' + url
-    : url;
-
-  return window
-    .fetch(urlToFetch)
-    .then((response) => {
-      if (response.status !== 200) {
-        return Promise.reject(new Error(response.statusText));
-      }
-      return response.text();
-    })
-    .then((gedcom) => {
-      const data = convertGedcom(gedcom);
-      const serializedData = JSON.stringify(data);
-      sessionStorage.setItem(url, serializedData);
-      return data;
-    });
-}
-
-/** Loads data from the given GEDCOM file contents. */
-function loadGedcom(hash: string, gedcom?: string) {
-  const cachedData = sessionStorage.getItem(hash);
-  if (cachedData) {
-    return JSON.parse(cachedData);
-  }
-  if (!gedcom) {
-    throw new Error('Error loading data. Please upload your file again.');
-  }
-  const data = convertGedcom(gedcom);
-  const serializedData = JSON.stringify(data);
-  sessionStorage.setItem(hash, serializedData);
-  return data;
 }
 
 interface State {
@@ -114,25 +55,6 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
     );
   }
 
-  loadData(
-    gedcom: string | undefined,
-    hash: string | undefined,
-    url: string | undefined,
-    handleCors: boolean,
-  ): Promise<JsonGedcomData> {
-    if (!hash && !url) {
-      return Promise.reject(new Error('Precondition failed'));
-    }
-    if (hash) {
-      try {
-        return Promise.resolve(loadGedcom(hash, gedcom));
-      } catch (e) {
-        return Promise.reject(new Error('Failed to read GEDCOM file'));
-      }
-    }
-    return loadFromUrl(url!, handleCors);
-  }
-
   componentDidMount() {
     this.componentDidUpdate();
   }
@@ -151,8 +73,13 @@ export class ChartView extends React.Component<RouteComponentProps, State> {
     const hash = getParam('file');
     const handleCors = getParam('handleCors') !== 'false';
 
-    if (this.isNewData(hash, url)) {
-      this.loadData(gedcom, hash, url, handleCors).then(
+    if (!url && !hash) {
+      this.props.history.replace({pathname: '/'});
+    } else if (this.isNewData(hash, url)) {
+      const loadedData = hash
+        ? loadGedcom(hash, gedcom)
+        : loadFromUrl(url!, handleCors);
+      loadedData.then(
         (data) => {
           // Set state with data.
           this.setState(
