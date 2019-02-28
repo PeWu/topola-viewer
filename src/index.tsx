@@ -6,6 +6,7 @@ import messages_pl from './translations/pl.json';
 import {addLocaleData} from 'react-intl';
 import {App} from './app';
 import {detect} from 'detect-browser';
+import {HashRouter as Router, Route} from 'react-router-dom';
 import {IntlProvider} from 'react-intl';
 import './index.css';
 import 'semantic-ui-css/semantic.min.css';
@@ -30,7 +31,9 @@ if (browser && browser.name === 'ie') {
 } else {
   ReactDOM.render(
     <IntlProvider locale={language} messages={messages[language]}>
-      <App />
+      <Router>
+        <Route component={App} />
+      </Router>
     </IntlProvider>,
     document.querySelector('#root'),
   );

@@ -22,6 +22,7 @@ interface State {
 }
 
 interface Props {
+  showingChart: boolean;
   onPrint: () => void;
   onDownloadSvg: () => void;
   onDownloadPng: () => void;
@@ -144,6 +145,33 @@ export class TopBar extends React.Component<
       </Modal>
     );
 
+    const chartMenus = this.props.showingChart ? (
+      <>
+        <Menu.Item as="a" onClick={() => this.props.onPrint()}>
+          <Icon name="print" />
+          <FormattedMessage id="menu.print" defaultMessage="Print" />
+        </Menu.Item>
+        <Dropdown
+          trigger={
+            <div>
+              <Icon name="download" />
+              <FormattedMessage id="menu.download" defaultMessage="Download" />
+            </div>
+          }
+          className="item"
+        >
+          <Dropdown.Menu>
+            <Dropdown.Item onClick={() => this.props.onDownloadPng()}>
+              <FormattedMessage id="menu.png_file" defaultMessage="PNG file" />
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => this.props.onDownloadSvg()}>
+              <FormattedMessage id="menu.svg_file" defaultMessage="SVG file" />
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+      </>
+    ) : null;
+
     return (
       <Menu attached="top" inverted color="blue" size="large">
         <Link to="/">
@@ -174,28 +202,7 @@ export class TopBar extends React.Component<
             />
           </Menu.Item>
         </label>
-        <Menu.Item as="a" onClick={() => this.props.onPrint()}>
-          <Icon name="print" />
-          <FormattedMessage id="menu.print" defaultMessage="Print" />
-        </Menu.Item>
-        <Dropdown
-          trigger={
-            <div>
-              <Icon name="download" />
-              <FormattedMessage id="menu.download" defaultMessage="Download" />
-            </div>
-          }
-          className="item"
-        >
-          <Dropdown.Menu>
-            <Dropdown.Item onClick={() => this.props.onDownloadPng()}>
-              <FormattedMessage id="menu.png_file" defaultMessage="PNG file" />
-            </Dropdown.Item>
-            <Dropdown.Item onClick={() => this.props.onDownloadSvg()}>
-              <FormattedMessage id="menu.svg_file" defaultMessage="SVG file" />
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
+        {chartMenus}
         <Menu.Item
           as="a"
           href="https://github.com/PeWu/topola-viewer"
