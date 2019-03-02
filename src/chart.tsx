@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import * as React from 'react';
 import canvg from 'canvg';
 import {intlShape} from 'react-intl';
+import {saveAs} from 'file-saver';
 import {
   JsonGedcomData,
   ChartHandle,
@@ -162,13 +163,8 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   }
 
   downloadSvg() {
-    const hiddenElement = document.createElement('a');
-    hiddenElement.href = URL.createObjectURL(
-      new Blob([this.getSvgContents()], {type: 'image/svg+xml'}),
-    );
-    hiddenElement.target = '_blank';
-    hiddenElement.download = 'topola.svg';
-    hiddenElement.click();
+    const blob = new Blob([this.getSvgContents()], {type: 'image/svg+xml'});
+    saveAs(blob, 'topola.svg');
   }
 
   downloadPng() {
@@ -193,11 +189,9 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       scaleHeight: canvas.height,
     });
     const onBlob = (blob: Blob | null) => {
-      const hiddenElement = document.createElement('a');
-      hiddenElement.href = URL.createObjectURL(blob);
-      hiddenElement.target = '_blank';
-      hiddenElement.download = 'topola.png';
-      hiddenElement.click();
+      if (blob) {
+        saveAs(blob, 'topola.png');
+      }
     };
     canvas.toBlob(onBlob, 'image/png');
   }

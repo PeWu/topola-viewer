@@ -10,6 +10,7 @@ import {HashRouter as Router, Route} from 'react-router-dom';
 import {IntlProvider} from 'react-intl';
 import './index.css';
 import 'semantic-ui-css/semantic.min.css';
+import 'canvas-toBlob';
 
 addLocaleData([...locale_en, ...locale_pl]);
 
