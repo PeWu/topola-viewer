@@ -139,7 +139,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   private getSvgContents() {
     const svg = document.getElementById('chart')!.cloneNode(true) as Element;
     svg.removeAttribute('transform');
-    return svg.outerHTML;
+    return new XMLSerializer().serializeToString(svg);
   }
 
   /** Shows the print dialog to print the currently displayed chart. */
@@ -175,24 +175,19 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     canvas.width = svg.getBBox().width * 2;
     canvas.height = svg.getBBox().height * 2;
 
-    // Fill canvas with white background.
-    const ctx = canvas.getContext('2d')!;
-    const oldFill = ctx.fillStyle;
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = oldFill;
+    const blob = new Blob([this.getSvgContents()], {type: 'image/svg+xml'});
 
-    canvg(canvas, this.getSvgContents(), {
-      ignoreDimensions: true,
-      ignoreClear: true,
-      scaleWidth: canvas.width,
-      scaleHeight: canvas.height,
-    });
-    const onBlob = (blob: Blob | null) => {
-      if (blob) {
-        saveAs(blob, 'topola.png');
-      }
+    const img = new Image();
+    img.onload = () => {
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const onBlob = (blob: Blob | null) => {
+        if (blob) {
+          saveAs(blob, 'topola.png');
+        }
+      };
+      canvas.toBlob(onBlob, 'image/png');        
     };
-    canvas.toBlob(onBlob, 'image/png');
+    img.src = URL.createObjectURL(blob);
   }
 }

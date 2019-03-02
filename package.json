@@ -4,7 +4,6 @@
   "main": "src/index.tsx",
   "dependencies": {
     "canvas-toBlob": "^1.0.0",
-    "canvg": "^1.5.3",
     "d3": "^5.7.0",
     "detect-browser": "^4.1.0",
     "file-saver": "^2.0.1",
