@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import * as React from 'react';
-import canvg from 'canvg';
+import jsPDF from 'jspdf';
 import {intlShape} from 'react-intl';
 import {saveAs} from 'file-saver';
 import {
@@ -167,7 +167,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     saveAs(blob, 'topola.svg');
   }
 
-  downloadPng() {
+  drawOnCanvas(): Promise<HTMLCanvasElement> {
     const canvas = document.createElement('canvas');
 
     // Scale image for better quality.
@@ -176,18 +176,41 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     canvas.height = svg.getBBox().height * 2;
 
     const blob = new Blob([this.getSvgContents()], {type: 'image/svg+xml'});
-
     const img = new Image();
-    img.onload = () => {
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const onBlob = (blob: Blob | null) => {
-        if (blob) {
-          saveAs(blob, 'topola.png');
-        }
-      };
-      canvas.toBlob(onBlob, 'image/png');        
-    };
     img.src = URL.createObjectURL(blob);
+
+    return new Promise<HTMLCanvasElement>((resolve) => {
+      img.onload = () => {
+        const ctx = canvas.getContext('2d')!;
+        const oldFill = ctx.fillStyle;
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = oldFill;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas);
+      };
+    });
+  }
+
+  downloadPng() {
+    const onBlob = (blob: Blob | null) => {
+      if (blob) {
+        saveAs(blob, 'topola.png');
+      }
+    };
+    this.drawOnCanvas().then((canvas) => canvas.toBlob(onBlob, 'image/png'));
+  }
+
+  downloadPdf() {
+    this.drawOnCanvas().then((canvas) => {
+      const doc = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'l' : 'p',
+        unit: 'pt',
+        format: [canvas.width, canvas.height],
+      });
+      doc.addImage(canvas, 'PNG', 0, 0, canvas.width, canvas.height, 'NONE');
+      doc.save('topola.pdf');
+    });
   }
 }

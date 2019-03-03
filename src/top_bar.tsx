@@ -24,8 +24,9 @@ interface State {
 interface Props {
   showingChart: boolean;
   onPrint: () => void;
-  onDownloadSvg: () => void;
+  onDownloadPdf: () => void;
   onDownloadPng: () => void;
+  onDownloadSvg: () => void;
 }
 
 export class TopBar extends React.Component<
@@ -161,6 +162,9 @@ export class TopBar extends React.Component<
           className="item"
         >
           <Dropdown.Menu>
+            <Dropdown.Item onClick={() => this.props.onDownloadPdf()}>
+              <FormattedMessage id="menu.pdf_file" defaultMessage="PDF file" />
+            </Dropdown.Item>
             <Dropdown.Item onClick={() => this.props.onDownloadPng()}>
               <FormattedMessage id="menu.png_file" defaultMessage="PNG file" />
             </Dropdown.Item>

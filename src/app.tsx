@@ -169,8 +169,9 @@ export class App extends React.Component<RouteComponentProps, {}> {
                 )
               }
               onPrint={() => this.chartRef && this.chartRef.print()}
-              onDownloadSvg={() => this.chartRef && this.chartRef.downloadSvg()}
+              onDownloadPdf={() => this.chartRef && this.chartRef.downloadPdf()}
               onDownloadPng={() => this.chartRef && this.chartRef.downloadPng()}
+              onDownloadSvg={() => this.chartRef && this.chartRef.downloadSvg()}
             />
           )}
         />
