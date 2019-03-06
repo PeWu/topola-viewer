@@ -17,5 +17,14 @@
   "load_from_url.title": "Otwórz z adresu URL",
   "load_from_url.comment": "Dane z podanego adresu URL zostaną załadowane poprzez usługę {link} w celu uniknięcia problemów z CORS.",
   "load_from_url.cancel": "Anuluj",
-  "load_from_url.load": "Otwórz"
+  "load_from_url.load": "Otwórz",
+  "gedcom.BAPM": "Chrzest",
+  "gedcom.BIRT": "Narodziny",
+  "gedcom.BURI": "Pogrzeb",
+  "gedcom.CHR": "Chrzest",
+  "gedcom.DEAT": "Śmierć",
+  "gedcom.EMAIL": "E-mail",
+  "gedcom.OCCU": "Zawód",
+  "gedcom.TITL": "Tytuł",
+  "gedcom.WWW": "Strona WWW"
 }

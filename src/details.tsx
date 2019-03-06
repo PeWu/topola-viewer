@@ -1,13 +1,38 @@
 import * as React from 'react';
 import {GedcomData} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
+import {FormattedMessage} from 'react-intl';
 
 interface Props {
   gedcom: GedcomData;
   indi: string;
 }
 
-function eventDetails(entry: GedcomEntry, header: string) {
+const NAME_TAGS = ['NAME'];
+const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI'];
+const DATA_TAGS = ['TITL', 'OCCU', 'WWW', 'EMAIL'];
+const TAG_DESCRIPTIONS = new Map([
+  ['BAPM', 'Baptism'],
+  ['BIRT', 'Birth'],
+  ['BURI', 'Burial'],
+  ['CHR', 'Christening'],
+  ['DEAT', 'Death'],
+  ['EMAIL', 'E-mail'],
+  ['OCCU', 'Occupation'],
+  ['TITL', 'Title'],
+  ['WWW', 'WWW'],
+]);
+
+function translateTag(tag: string) {
+  return (
+    <FormattedMessage
+      id={`gedcom.${tag}`}
+      defaultMessage={TAG_DESCRIPTIONS.get(tag) || tag}
+    />
+  );
+}
+
+function eventDetails(entry: GedcomEntry, tag: string) {
   const lines = [];
   const date = entry.tree.find((subentry) => subentry.tag === 'DATE');
   if (date && date.data) {
@@ -27,7 +52,7 @@ function eventDetails(entry: GedcomEntry, header: string) {
   }
   return (
     <>
-      <div className="ui sub header">{header}</div>
+      <div className="ui sub header">{translateTag(tag)}</div>
       <span>
         {lines.map((line) => (
           <>
@@ -40,7 +65,7 @@ function eventDetails(entry: GedcomEntry, header: string) {
   );
 }
 
-function dataDetails(entry: GedcomEntry, header: string) {
+function dataDetails(entry: GedcomEntry, tag: string) {
   const lines = [];
   if (entry.data) {
     lines.push(entry.data);
@@ -55,7 +80,7 @@ function dataDetails(entry: GedcomEntry, header: string) {
   }
   return (
     <>
-      <div className="ui sub header">{header}</div>
+      <div className="ui sub header">{translateTag(tag)}</div>
       <span>
         {lines.map((line) => (
           <>
@@ -68,7 +93,7 @@ function dataDetails(entry: GedcomEntry, header: string) {
   );
 }
 
-function nameDetails(entry: GedcomEntry, header: string) {
+function nameDetails(entry: GedcomEntry, tag: string) {
   return (
     <h2 className="ui header">
       {entry.data
@@ -87,7 +112,7 @@ function nameDetails(entry: GedcomEntry, header: string) {
 function getDetails(
   entries: GedcomEntry[],
   tags: string[],
-  detailsFunction: (entry: GedcomEntry, header: string) => JSX.Element | null,
+  detailsFunction: (entry: GedcomEntry, tag: string) => JSX.Element | null,
 ): JSX.Element[] {
   return tags
     .flatMap((tag) =>
@@ -98,10 +123,6 @@ function getDetails(
     .filter((element) => element !== null)
     .map((element) => <div className="ui segment">{element}</div>);
 }
-
-const NAME_TAGS = ['NAME'];
-const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI'];
-const DATA_TAGS = ['TITL', 'OCCU', 'WWW', 'EMAIL'];
 
 export class Details extends React.Component<Props, {}> {
   render() {
