@@ -10,6 +10,7 @@
     "history": "^4.7.2",
     "jspdf": "^1.5.3",
     "md5": "^2.2.1",
+    "parse-gedcom": "^1.0.4",
     "query-string": "^5.1.1",
     "react": "latest",
     "react-dom": "latest",
@@ -17,7 +18,7 @@
     "react-router-dom": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.84.0",
-    "topola": "^2.2"
+    "topola": "^2.2.2"
   },
   "devDependencies": {
     "@types/d3": "^5.5.0",

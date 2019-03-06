@@ -12,9 +12,20 @@ body, html {
   flex-direction: column;
 }
 
+#content {
+  flex: 1 1 auto;
+  display: flex;
+}
+
 #svgContainer {
   flex: 1 1 auto;
-  overflow: scroll;
+  overflow: auto;
+}
+
+#sidePanel {
+  flex: 0 0 320px;
+  overflow: auto;
+  border-left: solid #ccc 1px;
 }
 
 .hidden {

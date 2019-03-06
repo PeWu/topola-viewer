@@ -1,12 +1,14 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
 import {Chart} from './chart';
+import {Details} from './details';
 import {getSelection, loadFromUrl, loadGedcom} from './load_data';
-import {IndiInfo, JsonGedcomData} from 'topola';
+import {IndiInfo} from 'topola';
 import {Intro} from './intro';
 import {Loader, Message} from 'semantic-ui-react';
-import {Route, RouteComponentProps, Switch, Redirect} from 'react-router-dom';
+import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './top_bar';
+import {TopolaData} from './gedcom_util';
 
 /** Shows an error message. */
 export function ErrorMessage(props: {message: string}) {
@@ -20,7 +22,7 @@ export function ErrorMessage(props: {message: string}) {
 
 interface State {
   /** Loaded data. */
-  data?: JsonGedcomData;
+  data?: TopolaData;
   /** Selected individual. */
   selection?: IndiInfo;
   /** Hash of the GEDCOM contents. */
@@ -31,6 +33,8 @@ interface State {
   loading: boolean;
   /** URL of the data that is loaded or is being loaded. */
   url?: string;
+  /** Whether the side panel is shoen. */
+  showSidePanel?: boolean;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
@@ -65,7 +69,8 @@ export class App extends React.Component<RouteComponentProps, {}> {
     const parsedGen = Number(getParam('gen'));
     const generation = !isNaN(parsedGen) ? parsedGen : undefined;
     const hash = getParam('file');
-    const handleCors = getParam('handleCors') !== 'false';
+    const handleCors = getParam('handleCors') !== 'false'; // True by default.
+    const showSidePanel = getParam('sidePanel') === 'true'; // False by default.
 
     if (!url && !hash) {
       this.props.history.replace({pathname: '/'});
@@ -80,10 +85,11 @@ export class App extends React.Component<RouteComponentProps, {}> {
             Object.assign({}, this.state, {
               data,
               hash,
-              selection: getSelection(data, indi, generation),
+              selection: getSelection(data.chartData, indi, generation),
               error: undefined,
               loading: false,
               url,
+              showSidePanel,
             }),
           );
         },
@@ -110,7 +116,11 @@ export class App extends React.Component<RouteComponentProps, {}> {
       );
     } else if (this.state.data && this.state.selection) {
       // Update selection if it has changed in the URL.
-      const selection = getSelection(this.state.data, indi, generation);
+      const selection = getSelection(
+        this.state.data.chartData,
+        indi,
+        generation,
+      );
       if (
         this.state.selection.id !== selection.id ||
         this.state.selection.generation !== selection.generation
@@ -140,12 +150,22 @@ export class App extends React.Component<RouteComponentProps, {}> {
   private renderMainArea = () => {
     if (this.state.data && this.state.selection) {
       return (
-        <Chart
-          data={this.state.data}
-          onSelection={this.onSelection}
-          selection={this.state.selection}
-          ref={(ref) => (this.chartRef = ref)}
-        />
+        <div id="content">
+          <Chart
+            data={this.state.data.chartData}
+            onSelection={this.onSelection}
+            selection={this.state.selection}
+            ref={(ref) => (this.chartRef = ref)}
+          />
+          {this.state.showSidePanel ? (
+            <div id="sidePanel">
+              <Details
+                gedcom={this.state.data.gedcom}
+                indi={this.state.selection.id}
+              />
+            </div>
+          ) : null}
+        </div>
       );
     }
     if (this.state.error) {

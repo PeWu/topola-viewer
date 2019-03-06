@@ -1,4 +1,4 @@
-import {convertGedcom} from './gedcom_util';
+import {convertGedcom, TopolaData} from './gedcom_util';
 import {IndiInfo, JsonGedcomData} from 'topola';
 
 /**
@@ -16,11 +16,22 @@ export function getSelection(
   };
 }
 
+function prepareData(gedcom: string, cacheId: string): TopolaData {
+  const data = convertGedcom(gedcom);
+  const serializedData = JSON.stringify(data);
+  try {
+    sessionStorage.setItem(cacheId, serializedData);
+  } catch (e) {
+    console.warn('Failed to store data in session storage: ' + e);
+  }
+  return data;
+}
+
 /** Fetches data from the given URL. Uses cors-anywhere if handleCors is true. */
 export function loadFromUrl(
   url: string,
   handleCors: boolean,
-): Promise<JsonGedcomData> {
+): Promise<TopolaData> {
   const cachedData = sessionStorage.getItem(url);
   if (cachedData) {
     return Promise.resolve(JSON.parse(cachedData));
@@ -38,10 +49,7 @@ export function loadFromUrl(
       return response.text();
     })
     .then((gedcom) => {
-      const data = convertGedcom(gedcom);
-      const serializedData = JSON.stringify(data);
-      sessionStorage.setItem(url, serializedData);
-      return data;
+      return prepareData(gedcom, url);
     });
 }
 
@@ -54,17 +62,11 @@ function loadGedcomSync(hash: string, gedcom?: string) {
   if (!gedcom) {
     throw new Error('Error loading data. Please upload your file again.');
   }
-  const data = convertGedcom(gedcom);
-  const serializedData = JSON.stringify(data);
-  sessionStorage.setItem(hash, serializedData);
-  return data;
+  return prepareData(gedcom, hash);
 }
 
 /** Loads data from the given GEDCOM file contents. */
-export function loadGedcom(
-  hash: string,
-  gedcom?: string,
-): Promise<JsonGedcomData> {
+export function loadGedcom(hash: string, gedcom?: string): Promise<TopolaData> {
   try {
     return Promise.resolve(loadGedcomSync(hash, gedcom));
   } catch (e) {

@@ -1,4 +1,38 @@
-import {gedcomToJson, JsonFam, JsonGedcomData, JsonIndi} from 'topola';
+import {JsonFam, JsonGedcomData, JsonIndi, gedcomEntriesToJson} from 'topola';
+import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
+
+export interface GedcomData {
+  head: GedcomEntry;
+  indis: {[key: string]: GedcomEntry};
+  fams: {[key: string]: GedcomEntry};
+}
+
+export interface TopolaData {
+  chartData: JsonGedcomData;
+  gedcom: GedcomData;
+}
+
+/**
+ * Returns the identifier extracted from a pointer string.
+ * E.g. '@I123@' -> 'I123'
+ */
+function pointerToId(pointer: string): string {
+  return pointer.substring(1, pointer.length - 1);
+}
+
+function prepareGedcom(entries: GedcomEntry[]): GedcomData {
+  const head = entries.find((entry) => entry.tag === 'HEAD')!;
+  const indis: {[key: string]: GedcomEntry} = {};
+  const fams: {[key: string]: GedcomEntry} = {};
+  entries.forEach((entry) => {
+    if (entry.tag === 'INDI') {
+      indis[pointerToId(entry.pointer)] = entry;
+    } else if (entry.tag === 'FAM') {
+      fams[pointerToId(entry.pointer)] = entry;
+    }
+  });
+  return {head, indis, fams};
+}
 
 function strcmp(a: string, b: string) {
   if (a < b) {
@@ -94,8 +128,9 @@ function filterImages(gedcom: JsonGedcomData): JsonGedcomData {
  * - sort children by birth date
  * - remove images that are not HTTP links.
  */
-export function convertGedcom(gedcom: string): JsonGedcomData {
-  const json = gedcomToJson(gedcom);
+export function convertGedcom(gedcom: string): TopolaData {
+  const entries = parseGedcom(gedcom);
+  const json = gedcomEntriesToJson(entries);
   if (
     !json ||
     !json.indis ||
@@ -105,5 +140,9 @@ export function convertGedcom(gedcom: string): JsonGedcomData {
   ) {
     throw new Error('Failed to read GEDCOM file');
   }
-  return filterImages(sortChildren(json));
+
+  return {
+    chartData: filterImages(sortChildren(json)),
+    gedcom: prepareGedcom(entries),
+  };
 }
