@@ -5,7 +5,7 @@ import {Details} from './details';
 import {getSelection, loadFromUrl, loadGedcom} from './load_data';
 import {IndiInfo} from 'topola';
 import {Intro} from './intro';
-import {Loader, Message} from 'semantic-ui-react';
+import {Loader, Message, Responsive} from 'semantic-ui-react';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './top_bar';
 import {TopolaData} from './gedcom_util';
@@ -158,12 +158,12 @@ export class App extends React.Component<RouteComponentProps, {}> {
             ref={(ref) => (this.chartRef = ref)}
           />
           {this.state.showSidePanel ? (
-            <div id="sidePanel">
+            <Responsive minWidth={768} id="sidePanel">
               <Details
                 gedcom={this.state.data.gedcom}
                 indi={this.state.selection.id}
               />
-            </div>
+            </Responsive>
           ) : null}
         </div>
       );
