@@ -1,0 +1,2 @@
+body,html{height:100%}.node{cursor:pointer}#root{height:100%;display:flex;flex-direction:column}#content{flex:1 1 auto;display:flex;overflow:hidden}#svgContainer{flex:1 1 auto;overflow:auto}#sidePanel{flex:0 0 320px;overflow:auto;border-left:1px solid #ccc}.hidden{display:none}p.comment{margin-top:16px}div.ui.negative.message{margin:auto}div.ui.card.intro{width:600px;margin:auto}
+/*# sourceMappingURL=main.892da44e.chunk.css.map */
