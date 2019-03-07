@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.tsx",
   "dependencies": {
+    "array.prototype.flatmap": "^1.2.1",
     "canvas-toBlob": "^1.0.0",
     "d3": "^5.7.0",
     "detect-browser": "^4.1.0",
@@ -21,6 +22,7 @@
     "topola": "^2.2.2"
   },
   "devDependencies": {
+    "@types/array.prototype.flatmap": "^1.2.0",
     "@types/d3": "^5.5.0",
     "@types/file-saver": "^2.0.0",
     "@types/history": "^4.7.2",

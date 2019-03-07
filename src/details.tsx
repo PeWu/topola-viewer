@@ -2,6 +2,7 @@ import * as React from 'react';
 import {GedcomData} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {FormattedMessage} from 'react-intl';
+import flatMap from 'array.prototype.flatmap';
 
 interface Props {
   gedcom: GedcomData;
@@ -114,12 +115,11 @@ function getDetails(
   tags: string[],
   detailsFunction: (entry: GedcomEntry, tag: string) => JSX.Element | null,
 ): JSX.Element[] {
-  return tags
-    .flatMap((tag) =>
-      entries
-        .filter((entry) => entry.tag === tag)
-        .map((entry) => detailsFunction(entry, tag)),
-    )
+  return flatMap(tags, (tag) =>
+    entries
+      .filter((entry) => entry.tag === tag)
+      .map((entry) => detailsFunction(entry, tag)),
+  )
     .filter((element) => element !== null)
     .map((element) => <div className="ui segment">{element}</div>);
 }
