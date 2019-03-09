@@ -1,8 +1,11 @@
 import * as React from 'react';
+import flatMap from 'array.prototype.flatmap';
+import Linkify from 'react-linkify';
+import {formatDate, getDate} from 'topola';
+import {FormattedMessage} from 'react-intl';
 import {GedcomData} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
-import {FormattedMessage} from 'react-intl';
-import flatMap from 'array.prototype.flatmap';
+import {intlShape} from 'react-intl';
 
 interface Props {
   gedcom: GedcomData;
@@ -33,11 +36,20 @@ function translateTag(tag: string) {
   );
 }
 
-function eventDetails(entry: GedcomEntry, tag: string) {
+function translateDate(gedcomDate: string, locale: string) {
+  const dateOrRange = getDate(gedcomDate);
+  const date = dateOrRange && dateOrRange.date;
+  if (!date) {
+    return gedcomDate;
+  }
+  return formatDate(date, locale);
+}
+
+function eventDetails(entry: GedcomEntry, tag: string, locale: string) {
   const lines = [];
   const date = entry.tree.find((subentry) => subentry.tag === 'DATE');
   if (date && date.data) {
-    lines.push(date.data);
+    lines.push(translateDate(date.data, locale));
   }
   const place = entry.tree.find((subentry) => subentry.tag === 'PLAC');
   if (place && place.data) {
@@ -57,7 +69,7 @@ function eventDetails(entry: GedcomEntry, tag: string) {
       <span>
         {lines.map((line) => (
           <>
-            {line}
+            <Linkify properties={{target: '_blank'}}>{line}</Linkify>
             <br />
           </>
         ))}
@@ -85,7 +97,7 @@ function dataDetails(entry: GedcomEntry, tag: string) {
       <span>
         {lines.map((line) => (
           <>
-            {line}
+            <Linkify properties={{target: '_blank'}}>{line}</Linkify>
             <br />
           </>
         ))}
@@ -125,13 +137,20 @@ function getDetails(
 }
 
 export class Details extends React.Component<Props, {}> {
+  /** Make intl appear in this.context. */
+  static contextTypes = {
+    intl: intlShape,
+  };
+
   render() {
     const entries = this.props.gedcom.indis[this.props.indi].tree;
 
     return (
       <div className="ui segments" id="details">
         {getDetails(entries, NAME_TAGS, nameDetails)}
-        {getDetails(entries, EVENT_TAGS, eventDetails)}
+        {getDetails(entries, EVENT_TAGS, (entry, tag) =>
+          eventDetails(entry, tag, this.context.intl.locale),
+        )}
         {getDetails(entries, DATA_TAGS, dataDetails)}
       </div>
     );
