@@ -12,9 +12,8 @@ interface Props {
   indi: string;
 }
 
-const NAME_TAGS = ['NAME'];
 const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI'];
-const DATA_TAGS = ['TITL', 'OCCU', 'WWW', 'EMAIL'];
+const EXCLUDED_TAGS = ['NAME', 'SEX', 'FAMC', 'FAMS', 'SOUR', 'NOTE'];
 const TAG_DESCRIPTIONS = new Map([
   ['BAPM', 'Baptism'],
   ['BIRT', 'Birth'],
@@ -45,7 +44,20 @@ function translateDate(gedcomDate: string, locale: string) {
   return formatDate(date, locale);
 }
 
-function eventDetails(entry: GedcomEntry, tag: string, locale: string) {
+function joinLines(lines: (JSX.Element | string)[]) {
+  return (
+    <>
+      {lines.map((line) => (
+        <>
+          <Linkify properties={{target: '_blank'}}>{line}</Linkify>
+          <br />
+        </>
+      ))}
+    </>
+  );
+}
+
+function eventDetails(entry: GedcomEntry, locale: string) {
   const lines = [];
   const date = entry.tree.find((subentry) => subentry.tag === 'DATE');
   if (date && date.data) {
@@ -65,20 +77,13 @@ function eventDetails(entry: GedcomEntry, tag: string, locale: string) {
   }
   return (
     <>
-      <div className="ui sub header">{translateTag(tag)}</div>
-      <span>
-        {lines.map((line) => (
-          <>
-            <Linkify properties={{target: '_blank'}}>{line}</Linkify>
-            <br />
-          </>
-        ))}
-      </span>
+      <div className="ui sub header">{translateTag(entry.tag)}</div>
+      <span>{joinLines(lines)}</span>
     </>
   );
 }
 
-function dataDetails(entry: GedcomEntry, tag: string) {
+function dataDetails(entry: GedcomEntry) {
   const lines = [];
   if (entry.data) {
     lines.push(entry.data);
@@ -93,20 +98,24 @@ function dataDetails(entry: GedcomEntry, tag: string) {
   }
   return (
     <>
-      <div className="ui sub header">{translateTag(tag)}</div>
-      <span>
-        {lines.map((line) => (
-          <>
-            <Linkify properties={{target: '_blank'}}>{line}</Linkify>
-            <br />
-          </>
-        ))}
-      </span>
+      <div className="ui sub header">{translateTag(entry.tag)}</div>
+      <span>{joinLines(lines)}</span>
     </>
   );
 }
 
-function nameDetails(entry: GedcomEntry, tag: string) {
+function noteDetails(entry: GedcomEntry) {
+  const lines = [];
+  if (entry.data) {
+    lines.push(entry.data);
+  }
+  if (!lines.length) {
+    return null;
+  }
+  return <i>{joinLines(lines)}</i>;
+}
+
+function nameDetails(entry: GedcomEntry) {
   return (
     <h2 className="ui header">
       {entry.data
@@ -125,13 +134,24 @@ function nameDetails(entry: GedcomEntry, tag: string) {
 function getDetails(
   entries: GedcomEntry[],
   tags: string[],
-  detailsFunction: (entry: GedcomEntry, tag: string) => JSX.Element | null,
+  detailsFunction: (entry: GedcomEntry) => JSX.Element | null,
 ): JSX.Element[] {
   return flatMap(tags, (tag) =>
     entries
       .filter((entry) => entry.tag === tag)
-      .map((entry) => detailsFunction(entry, tag)),
+      .map((entry) => detailsFunction(entry)),
   )
+    .filter((element) => element !== null)
+    .map((element) => <div className="ui segment">{element}</div>);
+}
+
+function getOtherDetails(entries: GedcomEntry[]) {
+  return entries
+    .filter(
+      (entry) =>
+        !EXCLUDED_TAGS.includes(entry.tag) && !EVENT_TAGS.includes(entry.tag),
+    )
+    .map((entry) => dataDetails(entry))
     .filter((element) => element !== null)
     .map((element) => <div className="ui segment">{element}</div>);
 }
@@ -147,11 +167,12 @@ export class Details extends React.Component<Props, {}> {
 
     return (
       <div className="ui segments" id="details">
-        {getDetails(entries, NAME_TAGS, nameDetails)}
-        {getDetails(entries, EVENT_TAGS, (entry, tag) =>
-          eventDetails(entry, tag, this.context.intl.locale),
+        {getDetails(entries, ['NAME'], nameDetails)}
+        {getDetails(entries, EVENT_TAGS, (entry) =>
+          eventDetails(entry, this.context.intl.locale),
         )}
-        {getDetails(entries, DATA_TAGS, dataDetails)}
+        {getOtherDetails(entries)}
+        {getDetails(entries, ['NOTE'], noteDetails)}
       </div>
     );
   }
