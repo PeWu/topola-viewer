@@ -70,7 +70,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
     const generation = !isNaN(parsedGen) ? parsedGen : undefined;
     const hash = getParam('file');
     const handleCors = getParam('handleCors') !== 'false'; // True by default.
-    const showSidePanel = getParam('sidePanel') === 'true'; // False by default.
+    const showSidePanel = getParam('sidePanel') !== 'false'; // True by default.
 
     if (!url && !hash) {
       this.props.history.replace({pathname: '/'});
