@@ -4,7 +4,7 @@ self.__precacheManifest = [
     "url": "/topola-viewer/static/media/icons.faff9214.woff"
   },
   {
-    "revision": "d0a22e0b4f1b8fb67184",
+    "revision": "cf40cb681ffaa3827a6b",
     "url": "/topola-viewer/static/css/main.1f0a838c.chunk.css"
   },
   {
@@ -44,8 +44,8 @@ self.__precacheManifest = [
     "url": "/topola-viewer/static/media/icons.0ab54153.woff2"
   },
   {
-    "revision": "d0a22e0b4f1b8fb67184",
-    "url": "/topola-viewer/static/js/main.d0a22e0b.chunk.js"
+    "revision": "cf40cb681ffaa3827a6b",
+    "url": "/topola-viewer/static/js/main.cf40cb68.chunk.js"
   },
   {
     "revision": "e8c322de9658cbeb8a774b6624167c2c",
@@ -84,7 +84,7 @@ self.__precacheManifest = [
     "url": "/topola-viewer/static/css/1.99ae5474.chunk.css"
   },
   {
-    "revision": "5510cb5608c60ba545605604d94b307e",
+    "revision": "b0395a41135eb890d4425c234346a894",
     "url": "/topola-viewer/index.html"
   }
 ];
