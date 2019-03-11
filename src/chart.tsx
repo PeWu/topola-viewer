@@ -29,6 +29,79 @@ function scrolled() {
   d3.select(parent).call(d3.zoom().translateTo, x, y);
 }
 
+/** Loads blob as data URL. */
+function loadAsDataUrl(blob: Blob): Promise<string> {
+  const reader = new FileReader();
+  reader.readAsDataURL(blob);
+  return new Promise<string>((resolve, reject) => {
+    reader.onload = (e) => resolve((e.target as FileReader).result as string);
+  });
+}
+
+/**
+ * Fetches all images in the SVG and replaces them with inlined images as data
+ * URLs. Images are replaced in place. The replacement is done, the returned
+ * promise is resolved.
+ */
+function inlineImages(svg: Element): Promise<void[]> {
+  const images = Array.from(svg.getElementsByTagName('image'));
+  const promises = images.map((image) => {
+    const href = image.href && image.href.baseVal;
+    if (!href) {
+      return Promise.resolve();
+    }
+    return fetch(href)
+      .then((response) => response.blob())
+      .then(loadAsDataUrl)
+      .then((dataUrl) => {
+        image.href.baseVal = dataUrl;
+      })
+      // Log and ignore errors.
+      .catch((e) => console.warn('Failed to load image:', e));
+  });
+  return Promise.all(promises);
+}
+
+/** Loads a blob into an image object. */
+function loadImage(blob: Blob): Promise<HTMLImageElement> {
+  const image = new Image();
+  image.src = URL.createObjectURL(blob);
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    image.addEventListener('load', () => {
+      resolve(image);
+    });
+  });
+}
+
+/** Draw image on a new canvas and return the canvas. */
+function drawOnCanvas(image: HTMLImageElement) {
+  const canvas = document.createElement('canvas');
+  // Scale image for better quality.
+  canvas.width = image.width * 2;
+  canvas.height = image.height * 2;
+
+  const ctx = canvas.getContext('2d')!;
+  const oldFill = ctx.fillStyle;
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = oldFill;
+
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        reject();
+      }
+    }, type);
+  });
+}
+
 export interface ChartProps {
   data: JsonGedcomData;
   selection: IndiInfo;
@@ -142,6 +215,14 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     return new XMLSerializer().serializeToString(svg);
   }
 
+  private getSvgContentsWithInlinedImages() {
+    const svg = document.getElementById('chart')!.cloneNode(true) as Element;
+    svg.removeAttribute('transform');
+    return inlineImages(svg).then(() =>
+      new XMLSerializer().serializeToString(svg),
+    );
+  }
+
   /** Shows the print dialog to print the currently displayed chart. */
   print() {
     const printWindow = document.createElement('iframe');
@@ -163,43 +244,23 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   }
 
   downloadSvg() {
-    const blob = new Blob([this.getSvgContents()], {type: 'image/svg+xml'});
-    saveAs(blob, 'topola.svg');
-  }
-
-  drawOnCanvas(): Promise<HTMLCanvasElement> {
-    const canvas = document.createElement('canvas');
-
-    // Scale image for better quality.
-    const svg = (document.getElementById('chart') as unknown) as SVGSVGElement;
-    canvas.width = svg.getBBox().width * 2;
-    canvas.height = svg.getBBox().height * 2;
-
-    const blob = new Blob([this.getSvgContents()], {type: 'image/svg+xml'});
-    const img = new Image();
-    img.src = URL.createObjectURL(blob);
-
-    return new Promise<HTMLCanvasElement>((resolve) => {
-      img.onload = () => {
-        const ctx = canvas.getContext('2d')!;
-        const oldFill = ctx.fillStyle;
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = oldFill;
-
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas);
-      };
+    this.getSvgContentsWithInlinedImages().then((contents) => {
+      const blob = new Blob([contents], {type: 'image/svg+xml'});
+      saveAs(blob, 'topola.svg');
     });
   }
 
+  drawOnCanvas(): Promise<HTMLCanvasElement> {
+    return this.getSvgContentsWithInlinedImages()
+      .then((contents) => new Blob([contents], {type: 'image/svg+xml'}))
+      .then(loadImage)
+      .then(drawOnCanvas);
+  }
+
   downloadPng() {
-    const onBlob = (blob: Blob | null) => {
-      if (blob) {
-        saveAs(blob, 'topola.png');
-      }
-    };
-    this.drawOnCanvas().then((canvas) => canvas.toBlob(onBlob, 'image/png'));
+    this.drawOnCanvas()
+      .then((canvas) => canvasToBlob(canvas, 'image/png'))
+      .then((blob) => saveAs(blob, 'topola.png'));
   }
 
   downloadPdf() {
