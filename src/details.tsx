@@ -1,8 +1,8 @@
 import * as React from 'react';
 import flatMap from 'array.prototype.flatmap';
 import Linkify from 'react-linkify';
-import {formatDate, getDate} from 'topola';
-import {FormattedMessage} from 'react-intl';
+import {Date as TopolaDate, DateRange, getDate} from 'topola';
+import {FormattedMessage, InjectedIntl} from 'react-intl';
 import {GedcomData} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {intlShape} from 'react-intl';
@@ -35,13 +35,93 @@ function translateTag(tag: string) {
   );
 }
 
-function translateDate(gedcomDate: string, locale: string) {
-  const dateOrRange = getDate(gedcomDate);
-  const date = dateOrRange && dateOrRange.date;
-  if (!date) {
-    return gedcomDate;
+const DATE_QUALIFIERS = new Map([
+  ['abt', 'about'],
+  ['cal', 'calculated'],
+  ['est', 'estimated'],
+]);
+
+function formatDate(date: TopolaDate, intl: InjectedIntl) {
+  const hasDay = date.day !== undefined;
+  const hasMonth = date.month !== undefined;
+  const hasYear = date.year !== undefined;
+  if (!hasDay && !hasMonth && !hasYear) {
+    return date.text || '';
   }
-  return formatDate(date, locale);
+  const dateObject = new Date(
+    hasYear ? date.year! : 0,
+    hasMonth ? date.month! - 1 : 0,
+    hasDay ? date.day! : 1,
+  );
+
+  const qualifier = date.qualifier && date.qualifier.toLowerCase();
+  const translatedQualifier =
+    qualifier &&
+    intl.formatMessage({
+      id: `date.${qualifier}`,
+      defaultMessage: DATE_QUALIFIERS.get(qualifier) || qualifier,
+    });
+
+  const formatOptions = {
+    day: hasDay ? 'numeric' : undefined,
+    month: hasMonth ? 'long' : undefined,
+    year: hasYear ? 'numeric' : undefined,
+  };
+  const translatedDate = new Intl.DateTimeFormat(
+    intl.locale,
+    formatOptions,
+  ).format(dateObject);
+
+  return [translatedQualifier, translatedDate].join(' ');
+}
+
+function formatDateRage(dateRange: DateRange, intl: InjectedIntl) {
+  const fromDate = dateRange.from;
+  const toDate = dateRange.to;
+  const translatedFromDate = fromDate && formatDate(fromDate, intl);
+  const translatedToDate = toDate && formatDate(toDate, intl);
+  if (translatedFromDate && translatedToDate) {
+    return intl.formatMessage(
+      {
+        id: 'date.between',
+        defaultMessage: 'between {from} and {to}',
+      },
+      {from: translatedFromDate, to: translatedToDate},
+    );
+  }
+  if (translatedFromDate) {
+    return intl.formatMessage(
+      {
+        id: 'date.after',
+        defaultMessage: 'after {from}',
+      },
+      {from: translatedFromDate},
+    );
+  }
+  if (translatedToDate) {
+    return intl.formatMessage(
+      {
+        id: 'date.before',
+        defaultMessage: 'before {to}',
+      },
+      {to: translatedToDate},
+    );
+  }
+  return '';
+}
+
+function translateDate(gedcomDate: string, intl: InjectedIntl) {
+  const dateOrRange = getDate(gedcomDate);
+  if (!dateOrRange) {
+    return '';
+  }
+  if (dateOrRange.date) {
+    return formatDate(dateOrRange.date, intl);
+  }
+  if (dateOrRange.dateRange) {
+    return formatDateRage(dateOrRange.dateRange, intl);
+  }
+  return '';
 }
 
 function joinLines(lines: (JSX.Element | string)[]) {
@@ -57,11 +137,11 @@ function joinLines(lines: (JSX.Element | string)[]) {
   );
 }
 
-function eventDetails(entry: GedcomEntry, locale: string) {
+function eventDetails(entry: GedcomEntry, intl: InjectedIntl) {
   const lines = [];
   const date = entry.tree.find((subentry) => subentry.tag === 'DATE');
   if (date && date.data) {
-    lines.push(translateDate(date.data, locale));
+    lines.push(translateDate(date.data, intl));
   }
   const place = entry.tree.find((subentry) => subentry.tag === 'PLAC');
   if (place && place.data) {
@@ -169,7 +249,7 @@ export class Details extends React.Component<Props, {}> {
       <div className="ui segments" id="details">
         {getDetails(entries, ['NAME'], nameDetails)}
         {getDetails(entries, EVENT_TAGS, (entry) =>
-          eventDetails(entry, this.context.intl.locale),
+          eventDetails(entry, this.context.intl as InjectedIntl),
         )}
         {getOtherDetails(entries)}
         {getDetails(entries, ['NOTE'], noteDetails)}

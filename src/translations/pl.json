@@ -26,5 +26,11 @@
   "gedcom.EMAIL": "E-mail",
   "gedcom.OCCU": "Zawód",
   "gedcom.TITL": "Tytuł",
-  "gedcom.WWW": "Strona WWW"
+  "gedcom.WWW": "Strona WWW",
+  "date.abt": "około",
+  "date.cal": "wyliczone",
+  "date.est": "oszacowane",
+  "date.between": "między {from} a {to}",
+  "date.after": "po {from}",
+  "date.before": "przed {to}"
 }
