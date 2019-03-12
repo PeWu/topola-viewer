@@ -240,7 +240,7 @@ export class TopBar extends React.Component<
         <input
           className="hidden"
           type="file"
-          accept=".ged"
+          accept=".ged,image/*"
           id="fileInput"
           multiple
           onChange={(e) => this.handleUpload(e)}
