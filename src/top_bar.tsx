@@ -29,6 +29,31 @@ interface Props {
   onDownloadSvg: () => void;
 }
 
+function loadFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (evt: ProgressEvent) => {
+      resolve((evt.target as FileReader).result as string);
+    };
+    reader.readAsText(file);
+  });
+}
+
+function loadFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (evt: ProgressEvent) => {
+      resolve((evt.target as FileReader).result as string);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function isImageFileName(fileName: string) {
+  const lower = fileName.toLowerCase();
+  return lower.endsWith('.jpg') || lower.endsWith('.png');
+}
+
 export class TopBar extends React.Component<
   RouteComponentProps & Props,
   State
@@ -42,17 +67,39 @@ export class TopBar extends React.Component<
     if (!files || !files.length) {
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (evt: ProgressEvent) => {
-      const data = (evt.target as FileReader).result;
-      const hash = md5(data as string);
+    const filesArray = Array.from(files);
+    const gedcomFile =
+      files.length === 1
+        ? files[0]
+        : filesArray.find((file) => file.name.toLowerCase().endsWith('.ged')) ||
+          files[0];
+
+    // Convert uploaded images to object URLs.
+    const images = filesArray
+      .filter(
+        (file) => file.name !== gedcomFile.name && isImageFileName(file.name),
+      )
+      .map((file) => ({
+        name: file.name,
+        url: URL.createObjectURL(file),
+      }));
+    const imageMap = new Map(
+      images.map((entry) => [entry.name, entry.url] as [string, string]),
+    );
+    loadFileAsText(gedcomFile).then((data) => {
+      const imageFileNames = images
+        .map((image) => image.name)
+        .sort()
+        .join('|');
+      // Hash GEDCOM contents with uploaded image file names.
+      const hash = md5(md5(data) + imageFileNames);
       this.props.history.push({
         pathname: '/view',
         search: queryString.stringify({file: hash}),
-        state: {data},
+        state: {data, images: imageMap},
       });
-    };
-    reader.readAsText(files[0]);
+    });
+    (event.target as HTMLInputElement).value = ''; // Reset the file input.
   }
 
   /** Opens the "Load from URL" dialog. */
@@ -195,6 +242,7 @@ export class TopBar extends React.Component<
           type="file"
           accept=".ged"
           id="fileInput"
+          multiple
           onChange={(e) => this.handleUpload(e)}
         />
         <label htmlFor="fileInput">

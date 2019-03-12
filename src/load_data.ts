@@ -16,8 +16,12 @@ export function getSelection(
   };
 }
 
-function prepareData(gedcom: string, cacheId: string): TopolaData {
-  const data = convertGedcom(gedcom);
+function prepareData(
+  gedcom: string,
+  cacheId: string,
+  images?: Map<string, string>,
+): TopolaData {
+  const data = convertGedcom(gedcom, images || new Map());
   const serializedData = JSON.stringify(data);
   try {
     sessionStorage.setItem(cacheId, serializedData);
@@ -54,7 +58,11 @@ export function loadFromUrl(
 }
 
 /** Loads data from the given GEDCOM file contents. */
-function loadGedcomSync(hash: string, gedcom?: string) {
+function loadGedcomSync(
+  hash: string,
+  gedcom?: string,
+  images?: Map<string, string>,
+) {
   const cachedData = sessionStorage.getItem(hash);
   if (cachedData) {
     return JSON.parse(cachedData);
@@ -62,13 +70,17 @@ function loadGedcomSync(hash: string, gedcom?: string) {
   if (!gedcom) {
     throw new Error('Error loading data. Please upload your file again.');
   }
-  return prepareData(gedcom, hash);
+  return prepareData(gedcom, hash, images);
 }
 
 /** Loads data from the given GEDCOM file contents. */
-export function loadGedcom(hash: string, gedcom?: string): Promise<TopolaData> {
+export function loadGedcom(
+  hash: string,
+  gedcom?: string,
+  images?: Map<string, string>,
+): Promise<TopolaData> {
   try {
-    return Promise.resolve(loadGedcomSync(hash, gedcom));
+    return Promise.resolve(loadGedcomSync(hash, gedcom, images));
   } catch (e) {
     return Promise.reject(new Error('Failed to read GEDCOM file'));
   }

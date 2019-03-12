@@ -105,7 +105,15 @@ function sortChildren(gedcom: JsonGedcomData): JsonGedcomData {
  * Removes images that are not HTTP links.
  * Does not modify the input object.
  */
-function filterImage(indi: JsonIndi): JsonIndi {
+function filterImage(indi: JsonIndi, images: Map<string, string>): JsonIndi {
+  if (indi.imageUrl) {
+    const fileName = indi.imageUrl.match(/[^/\\]*$/)![0];
+    if (images.has(fileName)) {
+      const newIndi = Object.assign({}, indi);
+      newIndi.imageUrl = images.get(fileName);
+      return newIndi;
+    }
+  }
   if (!indi.imageUrl || indi.imageUrl.startsWith('http')) {
     return indi;
   }
@@ -118,17 +126,26 @@ function filterImage(indi: JsonIndi): JsonIndi {
  * Removes images that are not HTTP links.
  * Does not modify the input object.
  */
-function filterImages(gedcom: JsonGedcomData): JsonGedcomData {
-  const newIndis = gedcom.indis.map(filterImage);
+function filterImages(
+  gedcom: JsonGedcomData,
+  images: Map<string, string>,
+): JsonGedcomData {
+  const newIndis = gedcom.indis.map((indi) => filterImage(indi, images));
   return Object.assign({}, gedcom, {indis: newIndis});
 }
 
 /**
  * Converts GEDCOM file into JSON data performing additional transformations:
  * - sort children by birth date
- * - remove images that are not HTTP links.
+ * - remove images that are not HTTP links and aren't mapped in `images`.
+ *
+ * @param images Map from file name to image URL. This is used to pass in
+ *   uploaded images.
  */
-export function convertGedcom(gedcom: string): TopolaData {
+export function convertGedcom(
+  gedcom: string,
+  images: Map<string, string>,
+): TopolaData {
   const entries = parseGedcom(gedcom);
   const json = gedcomEntriesToJson(entries);
   if (
@@ -142,7 +159,7 @@ export function convertGedcom(gedcom: string): TopolaData {
   }
 
   return {
-    chartData: filterImages(sortChildren(json)),
+    chartData: filterImages(sortChildren(json), images),
     gedcom: prepareGedcom(entries),
   };
 }

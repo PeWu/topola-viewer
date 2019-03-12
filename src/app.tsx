@@ -59,6 +59,8 @@ export class App extends React.Component<RouteComponentProps, {}> {
       return;
     }
     const gedcom = this.props.location.state && this.props.location.state.data;
+    const images =
+      this.props.location.state && this.props.location.state.images;
     const search = queryString.parse(this.props.location.search);
     const getParam = (name: string) => {
       const value = search[name];
@@ -76,7 +78,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
       this.props.history.replace({pathname: '/'});
     } else if (this.isNewData(hash, url)) {
       const loadedData = hash
-        ? loadGedcom(hash, gedcom)
+        ? loadGedcom(hash, gedcom, images)
         : loadFromUrl(url!, handleCors);
       loadedData.then(
         (data) => {
