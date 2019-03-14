@@ -137,6 +137,23 @@ function joinLines(lines: (JSX.Element | string)[]) {
   );
 }
 
+/**
+ * Returns the data for the given GEDCOM entry as an array of lines. Supports
+ * continuations with CONT and CONC.
+ */
+function getData(entry: GedcomEntry) {
+  const result = [entry.data];
+  entry.tree.forEach((subentry) => {
+    if (subentry.tag === 'CONC' && subentry.data) {
+      const last = result.length - 1;
+      result[last] += subentry.data;
+    } else if (subentry.tag === 'CONT' && subentry.data) {
+      result.push(subentry.data);
+    }
+  });
+  return result;
+}
+
 function eventDetails(entry: GedcomEntry, intl: InjectedIntl) {
   const lines = [];
   const date = entry.tree.find((subentry) => subentry.tag === 'DATE');
@@ -145,13 +162,13 @@ function eventDetails(entry: GedcomEntry, intl: InjectedIntl) {
   }
   const place = entry.tree.find((subentry) => subentry.tag === 'PLAC');
   if (place && place.data) {
-    lines.push(place.data);
+    lines.push(...getData(place));
   }
   entry.tree
     .filter((subentry) => subentry.tag === 'NOTE')
-    .forEach((note) => {
-      lines.push(<i>{note.data}</i>);
-    });
+    .forEach((note) =>
+      getData(note).forEach((line) => lines.push(<i>{line}</i>)),
+    );
   if (!lines.length) {
     return null;
   }
@@ -166,13 +183,13 @@ function eventDetails(entry: GedcomEntry, intl: InjectedIntl) {
 function dataDetails(entry: GedcomEntry) {
   const lines = [];
   if (entry.data) {
-    lines.push(entry.data);
+    lines.push(...getData(entry));
   }
   entry.tree
     .filter((subentry) => subentry.tag === 'NOTE')
-    .forEach((note) => {
-      lines.push(<i>{note.data}</i>);
-    });
+    .forEach((note) =>
+      getData(note).forEach((line) => lines.push(<i>{line}</i>)),
+    );
   if (!lines.length) {
     return null;
   }
@@ -185,14 +202,7 @@ function dataDetails(entry: GedcomEntry) {
 }
 
 function noteDetails(entry: GedcomEntry) {
-  const lines = [];
-  if (entry.data) {
-    lines.push(entry.data);
-  }
-  if (!lines.length) {
-    return null;
-  }
-  return <i>{joinLines(lines)}</i>;
+  return joinLines(getData(entry).map((line) => <i>{line}</i>));
 }
 
 function nameDetails(entry: GedcomEntry) {
