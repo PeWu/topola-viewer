@@ -54,7 +54,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
     this.componentDidUpdate();
   }
 
-  componentDidUpdate() {
+  async componentDidUpdate() {
     if (this.props.location.pathname !== '/view') {
       return;
     }
@@ -77,45 +77,42 @@ export class App extends React.Component<RouteComponentProps, {}> {
     if (!url && !hash) {
       this.props.history.replace({pathname: '/'});
     } else if (this.isNewData(hash, url)) {
-      const loadedData = hash
-        ? loadGedcom(hash, gedcom, images)
-        : loadFromUrl(url!, handleCors);
-      loadedData.then(
-        (data) => {
-          // Set state with data.
-          this.setState(
-            Object.assign({}, this.state, {
-              data,
-              hash,
-              selection: getSelection(data.chartData, indi, generation),
-              error: undefined,
-              loading: false,
-              url,
-              showSidePanel,
-            }),
-          );
-        },
-        (error) => {
-          // Set error state.
-          this.setState(
-            Object.assign({}, this.state, {
-              error: error.message,
-              loading: false,
-            }),
-          );
-        },
-      );
-      // Set loading state.
-      this.setState(
-        Object.assign({}, this.state, {
-          data: undefined,
-          selection: undefined,
-          hash,
-          error: undefined,
-          loading: true,
-          url,
-        }),
-      );
+      try {
+        // Set loading state.
+        this.setState(
+          Object.assign({}, this.state, {
+            data: undefined,
+            selection: undefined,
+            hash,
+            error: undefined,
+            loading: true,
+            url,
+          }),
+        );
+        const data = hash
+          ? await loadGedcom(hash, gedcom, images)
+          : await loadFromUrl(url!, handleCors);
+        // Set state with data.
+        this.setState(
+          Object.assign({}, this.state, {
+            data,
+            hash,
+            selection: getSelection(data.chartData, indi, generation),
+            error: undefined,
+            loading: false,
+            url,
+            showSidePanel,
+          }),
+        );
+      } catch (error) {
+        // Set error state.
+        this.setState(
+          Object.assign({}, this.state, {
+            error: error.message,
+            loading: false,
+          }),
+        );
+      }
     } else if (this.state.data && this.state.selection) {
       // Update selection if it has changed in the URL.
       const selection = getSelection(

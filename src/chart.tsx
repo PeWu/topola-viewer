@@ -38,28 +38,29 @@ function loadAsDataUrl(blob: Blob): Promise<string> {
   });
 }
 
+async function inlineImage(image: SVGImageElement) {
+  const href = image.href.baseVal;
+  if (!href) {
+    return;
+  }
+  try {
+    const response = await fetch(href);
+    const blob = await response.blob();
+    const dataUrl = await loadAsDataUrl(blob);
+    image.href.baseVal = dataUrl;
+  } catch (e) {
+    console.warn('Failed to load image:', e);
+  }
+}
+
 /**
  * Fetches all images in the SVG and replaces them with inlined images as data
  * URLs. Images are replaced in place. The replacement is done, the returned
  * promise is resolved.
  */
-function inlineImages(svg: Element): Promise<void[]> {
+async function inlineImages(svg: Element): Promise<void> {
   const images = Array.from(svg.getElementsByTagName('image'));
-  const promises = images.map((image) => {
-    const href = image.href && image.href.baseVal;
-    if (!href) {
-      return Promise.resolve();
-    }
-    return fetch(href)
-      .then((response) => response.blob())
-      .then(loadAsDataUrl)
-      .then((dataUrl) => {
-        image.href.baseVal = dataUrl;
-      })
-      // Log and ignore errors.
-      .catch((e) => console.warn('Failed to load image:', e));
-  });
-  return Promise.all(promises);
+  await Promise.all(images.map(inlineImage));
 }
 
 /** Loads a blob into an image object. */
@@ -67,9 +68,7 @@ function loadImage(blob: Blob): Promise<HTMLImageElement> {
   const image = new Image();
   image.src = URL.createObjectURL(blob);
   return new Promise<HTMLImageElement>((resolve, reject) => {
-    image.addEventListener('load', () => {
-      resolve(image);
-    });
+    image.addEventListener('load', () => resolve(image));
   });
 }
 
@@ -215,12 +214,11 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     return new XMLSerializer().serializeToString(svg);
   }
 
-  private getSvgContentsWithInlinedImages() {
+  private async getSvgContentsWithInlinedImages() {
     const svg = document.getElementById('chart')!.cloneNode(true) as Element;
     svg.removeAttribute('transform');
-    return inlineImages(svg).then(() =>
-      new XMLSerializer().serializeToString(svg),
-    );
+    await inlineImages(svg);
+    return new XMLSerializer().serializeToString(svg);
   }
 
   /** Shows the print dialog to print the currently displayed chart. */
@@ -243,35 +241,32 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     document.body.appendChild(printWindow);
   }
 
-  downloadSvg() {
-    this.getSvgContentsWithInlinedImages().then((contents) => {
-      const blob = new Blob([contents], {type: 'image/svg+xml'});
-      saveAs(blob, 'topola.svg');
+  async downloadSvg() {
+    const contents = await this.getSvgContentsWithInlinedImages();
+    const blob = new Blob([contents], {type: 'image/svg+xml'});
+    saveAs(blob, 'topola.svg');
+  }
+
+  private async drawOnCanvas(): Promise<HTMLCanvasElement> {
+    const contents = await this.getSvgContentsWithInlinedImages();
+    const blob = new Blob([contents], {type: 'image/svg+xml'});
+    return await drawOnCanvas(await loadImage(blob));
+  }
+
+  async downloadPng() {
+    const canvas = await this.drawOnCanvas();
+    const blob = await canvasToBlob(canvas, 'image/png');
+    saveAs(blob, 'topola.png');
+  }
+
+  async downloadPdf() {
+    const canvas = await this.drawOnCanvas();
+    const doc = new jsPDF({
+      orientation: canvas.width > canvas.height ? 'l' : 'p',
+      unit: 'pt',
+      format: [canvas.width, canvas.height],
     });
-  }
-
-  drawOnCanvas(): Promise<HTMLCanvasElement> {
-    return this.getSvgContentsWithInlinedImages()
-      .then((contents) => new Blob([contents], {type: 'image/svg+xml'}))
-      .then(loadImage)
-      .then(drawOnCanvas);
-  }
-
-  downloadPng() {
-    this.drawOnCanvas()
-      .then((canvas) => canvasToBlob(canvas, 'image/png'))
-      .then((blob) => saveAs(blob, 'topola.png'));
-  }
-
-  downloadPdf() {
-    this.drawOnCanvas().then((canvas) => {
-      const doc = new jsPDF({
-        orientation: canvas.width > canvas.height ? 'l' : 'p',
-        unit: 'pt',
-        format: [canvas.width, canvas.height],
-      });
-      doc.addImage(canvas, 'PNG', 0, 0, canvas.width, canvas.height, 'NONE');
-      doc.save('topola.pdf');
-    });
+    doc.addImage(canvas, 'PNG', 0, 0, canvas.width, canvas.height, 'NONE');
+    doc.save('topola.pdf');
   }
 }

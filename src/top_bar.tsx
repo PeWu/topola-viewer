@@ -39,16 +39,6 @@ function loadFileAsText(file: File): Promise<string> {
   });
 }
 
-function loadFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (evt: ProgressEvent) => {
-      resolve((evt.target as FileReader).result as string);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 function isImageFileName(fileName: string) {
   const lower = fileName.toLowerCase();
   return lower.endsWith('.jpg') || lower.endsWith('.png');
@@ -62,12 +52,14 @@ export class TopBar extends React.Component<
   inputRef?: Input;
 
   /** Handles the "Upload file" button. */
-  handleUpload(event: React.SyntheticEvent<HTMLInputElement>) {
+  async handleUpload(event: React.SyntheticEvent<HTMLInputElement>) {
     const files = (event.target as HTMLInputElement).files;
     if (!files || !files.length) {
       return;
     }
     const filesArray = Array.from(files);
+    (event.target as HTMLInputElement).value = ''; // Reset the file input.
+
     const gedcomFile =
       files.length === 1
         ? files[0]
@@ -86,20 +78,19 @@ export class TopBar extends React.Component<
     const imageMap = new Map(
       images.map((entry) => [entry.name, entry.url] as [string, string]),
     );
-    loadFileAsText(gedcomFile).then((data) => {
-      const imageFileNames = images
-        .map((image) => image.name)
-        .sort()
-        .join('|');
-      // Hash GEDCOM contents with uploaded image file names.
-      const hash = md5(md5(data) + imageFileNames);
-      this.props.history.push({
-        pathname: '/view',
-        search: queryString.stringify({file: hash}),
-        state: {data, images: imageMap},
-      });
+
+    const data = await loadFileAsText(gedcomFile);
+    const imageFileNames = images
+      .map((image) => image.name)
+      .sort()
+      .join('|');
+    // Hash GEDCOM contents with uploaded image file names.
+    const hash = md5(md5(data) + imageFileNames);
+    this.props.history.push({
+      pathname: '/view',
+      search: queryString.stringify({file: hash}),
+      state: {data, images: imageMap},
     });
-    (event.target as HTMLInputElement).value = ''; // Reset the file input.
   }
 
   /** Opens the "Load from URL" dialog. */
