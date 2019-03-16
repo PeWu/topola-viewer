@@ -250,6 +250,7 @@ export class TopBar extends React.Component<
           as="a"
           href="https://github.com/PeWu/topola-viewer"
           position="right"
+          target="_blank"
         >
           <FormattedMessage
             id="menu.github"
