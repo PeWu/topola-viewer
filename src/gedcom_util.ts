@@ -163,3 +163,11 @@ export function convertGedcom(
     gedcom: prepareGedcom(entries),
   };
 }
+
+export function getSoftware(head: GedcomEntry): string | null {
+  const sour =
+    head && head.tree && head.tree.find((entry) => entry.tag === 'SOUR');
+  const name =
+    sour && sour.tree && sour.tree.find((entry) => entry.tag === 'NAME');
+  return (name && name.data) || null;
+}

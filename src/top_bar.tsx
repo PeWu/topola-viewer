@@ -1,6 +1,7 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
 import md5 from 'md5';
+import {analyticsEvent} from './analytics';
 import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {RouteComponentProps} from 'react-router-dom';
@@ -59,6 +60,9 @@ export class TopBar extends React.Component<
     }
     const filesArray = Array.from(files);
     (event.target as HTMLInputElement).value = ''; // Reset the file input.
+    analyticsEvent('upload_files_selected', {
+      event_value: files.length,
+    });
 
     const gedcomFile =
       files.length === 1
@@ -114,6 +118,7 @@ export class TopBar extends React.Component<
       }),
     );
     if (this.state.url) {
+      analyticsEvent('url_selected');
       this.props.history.push({
         pathname: '/view',
         search: queryString.stringify({url: this.state.url}),

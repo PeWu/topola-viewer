@@ -1,5 +1,6 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
+import {analyticsEvent} from './analytics';
 import {Chart} from './chart';
 import {Details} from './details';
 import {getSelection, loadFromUrl, loadGedcom} from './load_data';
@@ -8,7 +9,7 @@ import {Intro} from './intro';
 import {Loader, Message, Responsive} from 'semantic-ui-react';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './top_bar';
-import {TopolaData} from './gedcom_util';
+import {TopolaData, getSoftware} from './gedcom_util';
 
 /** Shows an error message. */
 export function ErrorMessage(props: {message: string}) {
@@ -92,6 +93,15 @@ export class App extends React.Component<RouteComponentProps, {}> {
         const data = hash
           ? await loadGedcom(hash, gedcom, images)
           : await loadFromUrl(url!, handleCors);
+        analyticsEvent(hash ? 'upload_file_loaded' : 'url_file_loaded');
+        if (images && images.size) {
+          analyticsEvent('images_uploaded');
+        }
+        const software = getSoftware(data.gedcom.head);
+        if (software) {
+          analyticsEvent('gedcom_software', {event_label: software});
+        }
+
         // Set state with data.
         this.setState(
           Object.assign({}, this.state, {
@@ -105,6 +115,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
           }),
         );
       } catch (error) {
+        analyticsEvent(hash ? 'upload_file_error' : 'url_file_error');
         // Set error state.
         this.setState(
           Object.assign({}, this.state, {
@@ -138,6 +149,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
    * Updates the browser URL.
    */
   private onSelection = (selection: IndiInfo) => {
+    analyticsEvent('selection_changed');
     const location = this.props.location;
     const search = queryString.parse(location.search);
     search.indi = selection.id;
@@ -187,10 +199,22 @@ export class App extends React.Component<RouteComponentProps, {}> {
                   this.state.selection
                 )
               }
-              onPrint={() => this.chartRef && this.chartRef.print()}
-              onDownloadPdf={() => this.chartRef && this.chartRef.downloadPdf()}
-              onDownloadPng={() => this.chartRef && this.chartRef.downloadPng()}
-              onDownloadSvg={() => this.chartRef && this.chartRef.downloadSvg()}
+              onPrint={() => {
+                analyticsEvent('print');
+                this.chartRef && this.chartRef.print();
+              }}
+              onDownloadPdf={() => {
+                analyticsEvent('download_pdf');
+                this.chartRef && this.chartRef.downloadPdf();
+              }}
+              onDownloadPng={() => {
+                analyticsEvent('download_png');
+                this.chartRef && this.chartRef.downloadPng();
+              }}
+              onDownloadSvg={() => {
+                analyticsEvent('download_svg');
+                this.chartRef && this.chartRef.downloadSvg();
+              }}
             />
           )}
         />
