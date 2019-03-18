@@ -93,14 +93,12 @@ export class App extends React.Component<RouteComponentProps, {}> {
         const data = hash
           ? await loadGedcom(hash, gedcom, images)
           : await loadFromUrl(url!, handleCors);
-        analyticsEvent(hash ? 'upload_file_loaded' : 'url_file_loaded');
-        if (images && images.size) {
-          analyticsEvent('images_uploaded');
-        }
+
         const software = getSoftware(data.gedcom.head);
-        if (software) {
-          analyticsEvent('gedcom_software', {event_label: software});
-        }
+        analyticsEvent(hash ? 'upload_file_loaded' : 'url_file_loaded', {
+          event_label: software,
+          event_value: (images && images.size) || 0,
+        });
 
         // Set state with data.
         this.setState(
