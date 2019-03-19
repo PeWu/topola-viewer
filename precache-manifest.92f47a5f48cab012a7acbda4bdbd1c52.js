@@ -4,7 +4,7 @@ self.__precacheManifest = [
     "url": "/topola-viewer/static/media/icons.faff9214.woff"
   },
   {
-    "revision": "9fff7a8c607c4f70803c",
+    "revision": "fb6d742e78d6a1b5e5b6",
     "url": "/topola-viewer/static/css/main.0c674a15.chunk.css"
   },
   {
@@ -28,6 +28,10 @@ self.__precacheManifest = [
     "url": "/topola-viewer/static/media/outline-icons.ef60a4f6.woff"
   },
   {
+    "revision": "9c74e172f87984c48ddf5c8108cabe67",
+    "url": "/topola-viewer/static/media/flags.9c74e172.png"
+  },
+  {
     "revision": "701ae6abd4719e9c2ada3535a497b341",
     "url": "/topola-viewer/static/media/outline-icons.701ae6ab.eot"
   },
@@ -36,16 +40,12 @@ self.__precacheManifest = [
     "url": "/topola-viewer/static/media/outline-icons.ad97afd3.ttf"
   },
   {
-    "revision": "9c74e172f87984c48ddf5c8108cabe67",
-    "url": "/topola-viewer/static/media/flags.9c74e172.png"
-  },
-  {
     "revision": "0ab54153eeeca0ce03978cc463b257f7",
     "url": "/topola-viewer/static/media/icons.0ab54153.woff2"
   },
   {
-    "revision": "9fff7a8c607c4f70803c",
-    "url": "/topola-viewer/static/js/main.9fff7a8c.chunk.js"
+    "revision": "fb6d742e78d6a1b5e5b6",
+    "url": "/topola-viewer/static/js/main.fb6d742e.chunk.js"
   },
   {
     "revision": "e8c322de9658cbeb8a774b6624167c2c",
@@ -60,12 +60,12 @@ self.__precacheManifest = [
     "url": "/topola-viewer/static/media/icons.8e3c7f55.eot"
   },
   {
-    "revision": "13db00b7a34fee4d819ab7f9838cc428",
-    "url": "/topola-viewer/static/media/brand-icons.13db00b7.eot"
-  },
-  {
     "revision": "b87b9ba532ace76ae9f6edfe9f72ded2",
     "url": "/topola-viewer/static/media/icons.b87b9ba5.ttf"
+  },
+  {
+    "revision": "13db00b7a34fee4d819ab7f9838cc428",
+    "url": "/topola-viewer/static/media/brand-icons.13db00b7.eot"
   },
   {
     "revision": "c5ebe0b32dc1b5cc449a76c4204d13bb",
@@ -84,7 +84,7 @@ self.__precacheManifest = [
     "url": "/topola-viewer/static/css/1.e047f155.chunk.css"
   },
   {
-    "revision": "226a49596af6ae131add18b36fed6302",
+    "revision": "3646a755eeea8223a11fe97cc3bb012c",
     "url": "/topola-viewer/index.html"
   }
 ];
