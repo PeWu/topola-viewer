@@ -84,11 +84,14 @@ function birthDatesComparator(gedcom: JsonGedcomData) {
  * Sorts children by birth date in the given family.
  * Does not modify the input objects.
  */
-function sortFamilyChildren(fam: JsonFam, gedcom: JsonGedcomData): JsonFam {
+function sortFamilyChildren(
+  fam: JsonFam,
+  comparator: (id1: string, id2: string) => number,
+): JsonFam {
   if (!fam.children) {
     return fam;
   }
-  const newChildren = fam.children.sort(birthDatesComparator(gedcom));
+  const newChildren = fam.children.sort(comparator);
   return Object.assign({}, fam, {children: newChildren});
 }
 
@@ -97,7 +100,8 @@ function sortFamilyChildren(fam: JsonFam, gedcom: JsonGedcomData): JsonFam {
  * Does not modify the input object.
  */
 function sortChildren(gedcom: JsonGedcomData): JsonGedcomData {
-  const newFams = gedcom.fams.map((fam) => sortFamilyChildren(fam, gedcom));
+  const comparator = birthDatesComparator(gedcom);
+  const newFams = gedcom.fams.map((fam) => sortFamilyChildren(fam, comparator));
   return Object.assign({}, gedcom, {fams: newFams});
 }
 
