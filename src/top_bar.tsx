@@ -163,6 +163,7 @@ export class TopBar extends React.Component<
 
   /** On search result selected. */
   handleResultSelect(id: string) {
+    analyticsEvent('search_result_selected');
     this.props.onSelection({id, generation: 0});
     this.searchRef!.setValue('');
   }
