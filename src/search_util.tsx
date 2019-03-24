@@ -42,6 +42,7 @@ function getDescriptionLine(indi: GedcomEntry, intl: InjectedIntl) {
 export function displaySearchResult(result: SearchResult, intl: InjectedIntl) {
   return {
     id: result.id,
+    key: result.id,
     title: getNameLine(result),
     description: getDescriptionLine(result.indi, intl),
   };
