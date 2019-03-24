@@ -1,8 +1,13 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
+import debounce from 'debounce';
 import md5 from 'md5';
 import {analyticsEvent} from './analytics';
-import {FormattedMessage} from 'react-intl';
+import {buildSearchIndex, SearchIndex, SearchResult} from './search_index';
+import {displaySearchResult} from './search_util';
+import {FormattedMessage, intlShape} from 'react-intl';
+import {GedcomData} from './gedcom_util';
+import {IndiInfo} from 'topola';
 import {Link} from 'react-router-dom';
 import {RouteComponentProps} from 'react-router-dom';
 import {
@@ -14,16 +19,21 @@ import {
   Input,
   Form,
   Dropdown,
+  Search,
+  SearchProps,
 } from 'semantic-ui-react';
 
 /** Menus and dialogs state. */
 interface State {
   loadUrlDialogOpen: boolean;
   url?: string;
+  searchResults: SearchResult[];
 }
 
 interface Props {
   showingChart: boolean;
+  gedcom?: GedcomData;
+  onSelection: (indiInfo: IndiInfo) => void;
   onPrint: () => void;
   onDownloadPdf: () => void;
   onDownloadPng: () => void;
@@ -49,8 +59,13 @@ export class TopBar extends React.Component<
   RouteComponentProps & Props,
   State
 > {
-  state: State = {loadUrlDialogOpen: false};
+  state: State = {
+    loadUrlDialogOpen: false,
+    searchResults: [],
+  };
   inputRef?: Input;
+  searchRef?: {setValue(value: string): void};
+  searchIndex?: SearchIndex;
 
   /** Handles the "Upload file" button. */
   async handleUpload(event: React.SyntheticEvent<HTMLInputElement>) {
@@ -135,6 +150,44 @@ export class TopBar extends React.Component<
     );
   }
 
+  /** On search input change. */
+  handleSearch(input: string | undefined) {
+    if (!input) {
+      return;
+    }
+    const results = this.searchIndex!.search(input).map((result) =>
+      displaySearchResult(result, this.context.intl),
+    );
+    this.setState(Object.assign({}, this.state, {searchResults: results}));
+  }
+
+  /** On search result selected. */
+  handleResultSelect(id: string) {
+    this.props.onSelection({id, generation: 0});
+    this.searchRef!.setValue('');
+  }
+
+  initializeSearchIndex() {
+    if (this.props.gedcom) {
+      this.searchIndex = buildSearchIndex(this.props.gedcom);
+    }
+  }
+
+  componentDidMount() {
+    this.initializeSearchIndex();
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.gedcom !== this.props.gedcom) {
+      this.initializeSearchIndex();
+    }
+  }
+
+  /** Make intl appear in this.context. */
+  static contextTypes = {
+    intl: intlShape,
+  };
+
   render() {
     const loadFromUrlModal = (
       <Modal
@@ -216,6 +269,29 @@ export class TopBar extends React.Component<
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
+        <Search
+          onSearchChange={debounce(
+            (_: React.MouseEvent<HTMLElement>, data: SearchProps) =>
+              this.handleSearch(data.value),
+            200,
+          )}
+          onResultSelect={(_, data) => this.handleResultSelect(data.result.id)}
+          results={this.state.searchResults}
+          noResultsMessage={this.context.intl.formatMessage({
+            id: 'menu.search.no_results',
+            defaultMessage: 'No results found',
+          })}
+          placeholder={this.context.intl.formatMessage({
+            id: 'menu.search.placeholder',
+            defaultMessage: 'Search for people',
+          })}
+          selectFirstResult={true}
+          ref={(ref) =>
+            (this.searchRef = (ref as unknown) as {
+              setValue(value: string): void;
+            })
+          }
+        />
       </>
     ) : null;
 

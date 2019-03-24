@@ -7,6 +7,8 @@
   "menu.png_file": "Plik PNG",
   "menu.svg_file": "Plik SVG",
   "menu.github": "Źródła na GitHub",
+  "menu.search.placeholder": "Szukaj osoby",
+  "menu.search.no_results": "Brak wyników",
   "intro.title": "Topola Genealogy",
   "intro.description": "Topola Genealogy pozwala przeglądać drzewo genealogiczne w interaktywny sposób.",
   "intro.instructions": "Kliknij OTWÓRZ URL lub OTWÓRZ PLIK, aby załadować plik GEDCOM. Większość programów genealogicznych posiada funkcję eksportu do pliku GEDCOM.",

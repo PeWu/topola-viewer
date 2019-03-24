@@ -190,6 +190,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
           render={(props: RouteComponentProps) => (
             <TopBar
               {...props}
+              gedcom={this.state.data && this.state.data.gedcom}
               showingChart={
                 !!(
                   this.props.history.location.pathname === '/view' &&
@@ -197,6 +198,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
                   this.state.selection
                 )
               }
+              onSelection={this.onSelection}
               onPrint={() => {
                 analyticsEvent('print');
                 this.chartRef && this.chartRef.print();
