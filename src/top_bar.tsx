@@ -105,7 +105,16 @@ export class TopBar extends React.Component<
       .join('|');
     // Hash GEDCOM contents with uploaded image file names.
     const hash = md5(md5(data) + imageFileNames);
-    this.props.history.push({
+
+    // Use history.replace() when reuploading the same file and history.push() when loading
+    // a new file.
+    const search = queryString.parse(this.props.location.search);
+    const historyPush =
+      search.file === hash
+        ? this.props.history.replace
+        : this.props.history.push;
+
+    historyPush({
       pathname: '/view',
       search: queryString.stringify({file: hash}),
       state: {data, images: imageMap},

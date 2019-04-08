@@ -45,9 +45,12 @@ export class App extends React.Component<RouteComponentProps, {}> {
   private isNewData(
     hash: string | undefined,
     url: string | undefined,
+    gedcom: string | undefined,
   ): boolean {
     return (
-      !!(hash && hash !== this.state.hash) || !!(url && this.state.url !== url)
+      !!(hash && hash !== this.state.hash) ||
+      !!(url && this.state.url !== url) ||
+      (!!gedcom && !this.state.loading && !this.state.data)
     );
   }
 
@@ -77,7 +80,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
 
     if (!url && !hash) {
       this.props.history.replace({pathname: '/'});
-    } else if (this.isNewData(hash, url)) {
+    } else if (this.isNewData(hash, url, gedcom)) {
       try {
         // Set loading state.
         this.setState(
