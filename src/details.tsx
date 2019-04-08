@@ -38,11 +38,11 @@ function translateTag(tag: string) {
 function joinLines(lines: (JSX.Element | string)[]) {
   return (
     <>
-      {lines.map((line) => (
-        <>
+      {lines.map((line, index) => (
+        <div key={index}>
           <Linkify properties={{target: '_blank'}}>{line}</Linkify>
           <br />
-        </>
+        </div>
       ))}
     </>
   );
@@ -113,7 +113,9 @@ function dataDetails(entry: GedcomEntry) {
 }
 
 function noteDetails(entry: GedcomEntry) {
-  return joinLines(getData(entry).map((line) => <i>{line}</i>));
+  return joinLines(
+    getData(entry).map((line, index) => <i key={index}>{line}</i>),
+  );
 }
 
 function nameDetails(entry: GedcomEntry) {
@@ -122,11 +124,11 @@ function nameDetails(entry: GedcomEntry) {
       {entry.data
         .split('/')
         .filter((name) => !!name)
-        .map((name) => (
-          <>
+        .map((name, index) => (
+          <div key={index}>
             {name}
             <br />
-          </>
+          </div>
         ))}
     </h2>
   );
@@ -143,7 +145,11 @@ function getDetails(
       .map((entry) => detailsFunction(entry)),
   )
     .filter((element) => element !== null)
-    .map((element) => <div className="ui segment">{element}</div>);
+    .map((element, index) => (
+      <div className="ui segment" key={index}>
+        {element}
+      </div>
+    ));
 }
 
 function getOtherDetails(entries: GedcomEntry[]) {
@@ -154,7 +160,11 @@ function getOtherDetails(entries: GedcomEntry[]) {
     )
     .map((entry) => dataDetails(entry))
     .filter((element) => element !== null)
-    .map((element) => <div className="ui segment">{element}</div>);
+    .map((element, index) => (
+      <div className="ui segment" key={index}>
+        {element}
+      </div>
+    ));
 }
 
 export class Details extends React.Component<Props, {}> {
