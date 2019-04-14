@@ -21,6 +21,29 @@ export function ErrorMessage(props: {message: string}) {
   );
 }
 
+/**
+ * Message types used in embedded mode.
+ * When the parent is ready to receive messages, it sends PARENT_READY.
+ * When the child (this app) is ready to receive messages, it sends READY.
+ * When the child receives PARENT_READY, it sends READY.
+ * When the parent receives READY, it sends data in a GEDCOM message.
+ */
+enum EmbeddedMessageType {
+  GEDCOM = 'gedcom',
+  READY = 'ready',
+  PARENT_READY = 'parent_ready',
+}
+
+/** Message sent to parent or received from parent in embedded mode. */
+interface EmbeddedMessage {
+  message: EmbeddedMessageType;
+}
+
+interface GedcomMessage extends EmbeddedMessage {
+  message: EmbeddedMessageType.GEDCOM;
+  gedcom?: string;
+}
+
 interface State {
   /** Loaded data. */
   data?: TopolaData;
@@ -36,10 +59,12 @@ interface State {
   url?: string;
   /** Whether the side panel is shoen. */
   showSidePanel?: boolean;
+  /** Whether the app is in embedded mode, i.e. embedded in an iframe. */
+  embedded: boolean;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
-  state: State = {loading: false};
+  state: State = {loading: false, embedded: false};
   chartRef: Chart | null = null;
 
   private isNewData(
@@ -54,6 +79,62 @@ export class App extends React.Component<RouteComponentProps, {}> {
     );
   }
 
+  /** Sets the state with a new individual selection. */
+  private updateSelection(selection: IndiInfo) {
+    if (
+      !this.state.selection ||
+      this.state.selection.id !== selection.id ||
+      this.state.selection!.generation !== selection.generation
+    ) {
+      this.setState(
+        Object.assign({}, this.state, {
+          selection,
+        }),
+      );
+    }
+  }
+
+  /** Sets error message after data load failure. */
+  private setError(error: string) {
+    this.setState(
+      Object.assign({}, this.state, {
+        error: error,
+        loading: false,
+      }),
+    );
+  }
+
+  private async onMessage(message: EmbeddedMessage) {
+    if (message.message === EmbeddedMessageType.PARENT_READY) {
+      // Parent didn't receive the first 'ready' message, so we need to send it again.
+      window.parent.postMessage({message: EmbeddedMessageType.READY}, '*');
+    } else if (message.message === EmbeddedMessageType.GEDCOM) {
+      const gedcom = (message as GedcomMessage).gedcom;
+      if (!gedcom) {
+        return;
+      }
+      try {
+        const data = await loadGedcom('', gedcom);
+        const software = getSoftware(data.gedcom.head);
+        analyticsEvent('embedded_file_loaded', {
+          event_label: software,
+        });
+        // Set state with data.
+        this.setState(
+          Object.assign({}, this.state, {
+            data,
+            selection: getSelection(data.chartData),
+            error: undefined,
+            loading: false,
+          }),
+        );
+      } catch (error) {
+        analyticsEvent('embedded_file_error');
+        this.setError(error.message);
+      }
+    }
+  }
+
   componentDidMount() {
     this.componentDidUpdate();
   }
@@ -62,21 +143,39 @@ export class App extends React.Component<RouteComponentProps, {}> {
     if (this.props.location.pathname !== '/view') {
       return;
     }
-    const gedcom = this.props.location.state && this.props.location.state.data;
-    const images =
-      this.props.location.state && this.props.location.state.images;
+
     const search = queryString.parse(this.props.location.search);
     const getParam = (name: string) => {
       const value = search[name];
       return typeof value === 'string' ? value : undefined;
     };
+
+    const showSidePanel = getParam('sidePanel') !== 'false'; // True by default.
+    const embedded = getParam('embedded') === 'true'; // False by default.
+
+    if (embedded && !this.state.embedded) {
+      this.setState(
+        Object.assign({}, this.state, {embedded: true, showSidePanel}),
+      );
+      // Notify the parent window that we are ready.
+      window.parent.postMessage('ready', '*');
+      window.addEventListener('message', (data) => this.onMessage(data.data));
+    }
+    if (embedded) {
+      // If the app is embedded, do not run the normal loading code.
+      return;
+    }
+
     const url = getParam('url');
     const indi = getParam('indi');
     const parsedGen = Number(getParam('gen'));
     const generation = !isNaN(parsedGen) ? parsedGen : undefined;
     const hash = getParam('file');
     const handleCors = getParam('handleCors') !== 'false'; // True by default.
-    const showSidePanel = getParam('sidePanel') !== 'false'; // True by default.
+
+    const gedcom = this.props.location.state && this.props.location.state.data;
+    const images =
+      this.props.location.state && this.props.location.state.images;
 
     if (!url && !hash) {
       this.props.history.replace({pathname: '/'});
@@ -117,13 +216,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
         );
       } catch (error) {
         analyticsEvent(hash ? 'upload_file_error' : 'url_file_error');
-        // Set error state.
-        this.setState(
-          Object.assign({}, this.state, {
-            error: error.message,
-            loading: false,
-          }),
-        );
+        this.setError(error.message);
       }
     } else if (this.state.data && this.state.selection) {
       // Update selection if it has changed in the URL.
@@ -132,16 +225,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
         indi,
         generation,
       );
-      if (
-        this.state.selection.id !== selection.id ||
-        this.state.selection.generation !== selection.generation
-      ) {
-        this.setState(
-          Object.assign({}, this.state, {
-            selection,
-          }),
-        );
-      }
+      this.updateSelection(selection);
     }
   }
 
@@ -151,6 +235,11 @@ export class App extends React.Component<RouteComponentProps, {}> {
    */
   private onSelection = (selection: IndiInfo) => {
     analyticsEvent('selection_changed');
+    if (this.state.embedded) {
+      // In embedded mode the URL doesn't change.
+      this.updateSelection(selection);
+      return;
+    }
     const location = this.props.location;
     const search = queryString.parse(location.search);
     search.indi = selection.id;
@@ -201,6 +290,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
                   this.state.selection
                 )
               }
+              embedded={this.state.embedded}
               onSelection={this.onSelection}
               onPrint={() => {
                 analyticsEvent('print');
