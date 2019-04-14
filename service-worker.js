@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/topola-viewer/precache-manifest.b6a91dc59ae75604a81b9b8ffa576d51.js"
+  "/topola-viewer/precache-manifest.b8fac91b9bfd17aac74e9597c7655ecb.js"
 );
 
 workbox.clientsClaim();
