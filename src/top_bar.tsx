@@ -33,7 +33,7 @@ interface State {
 interface Props {
   showingChart: boolean;
   gedcom?: GedcomData;
-  embedded: boolean;
+  standalone: boolean;
   onSelection: (indiInfo: IndiInfo) => void;
   onPrint: () => void;
   onDownloadPdf: () => void;
@@ -306,7 +306,7 @@ export class TopBar extends React.Component<
       </>
     ) : null;
 
-    const fileMenus = this.props.embedded ? null : (
+    const fileMenus = this.props.standalone ? (
       <>
         <Link to="/">
           <Menu.Item>
@@ -338,23 +338,9 @@ export class TopBar extends React.Component<
           </Menu.Item>
         </label>
       </>
-    );
+    ) : null;
 
-    const sourceLink = this.props.embedded ? (
-      <>
-        <Menu.Item
-          as="a"
-          href="https://pewu.github.com/topola-viewer"
-          position="right"
-          target="_blank"
-        >
-          <FormattedMessage
-            id="menu.powered_by"
-            defaultMessage="Powered by Topola"
-          />
-        </Menu.Item>
-      </>
-    ) : (
+    const sourceLink = this.props.standalone ? (
       <>
         <Menu.Item
           as="a"
@@ -365,6 +351,20 @@ export class TopBar extends React.Component<
           <FormattedMessage
             id="menu.github"
             defaultMessage="Source on GitHub"
+          />
+        </Menu.Item>
+      </>
+    ) : (
+      <>
+        <Menu.Item
+          as="a"
+          href="https://pewu.github.com/topola-viewer"
+          position="right"
+          target="_blank"
+        >
+          <FormattedMessage
+            id="menu.powered_by"
+            defaultMessage="Powered by Topola"
           />
         </Menu.Item>
       </>

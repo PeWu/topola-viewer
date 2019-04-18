@@ -61,10 +61,12 @@ interface State {
   showSidePanel?: boolean;
   /** Whether the app is in embedded mode, i.e. embedded in an iframe. */
   embedded: boolean;
+  /** Whether the app is in standalone mode, i.e. showing 'open file' menus */
+  standalone: boolean;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
-  state: State = {loading: false, embedded: false};
+  state: State = {loading: false, embedded: false, standalone: true};
   chartRef: Chart | null = null;
 
   private isNewData(
@@ -155,7 +157,11 @@ export class App extends React.Component<RouteComponentProps, {}> {
 
     if (embedded && !this.state.embedded) {
       this.setState(
-        Object.assign({}, this.state, {embedded: true, showSidePanel}),
+        Object.assign({}, this.state, {
+          embedded: true,
+          standalone: false,
+          showSidePanel,
+        }),
       );
       // Notify the parent window that we are ready.
       window.parent.postMessage('ready', '*');
@@ -172,6 +178,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
     const generation = !isNaN(parsedGen) ? parsedGen : undefined;
     const hash = getParam('file');
     const handleCors = getParam('handleCors') !== 'false'; // True by default.
+    const standalone = getParam('standalone') !== 'false'; // True by default.
 
     const gedcom = this.props.location.state && this.props.location.state.data;
     const images =
@@ -190,6 +197,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             error: undefined,
             loading: true,
             url,
+            standalone,
           }),
         );
         const data = hash
@@ -212,6 +220,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             loading: false,
             url,
             showSidePanel,
+            standalone,
           }),
         );
       } catch (error) {
@@ -290,7 +299,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
                   this.state.selection
                 )
               }
-              embedded={this.state.embedded}
+              standalone={this.state.standalone}
               onSelection={this.onSelection}
               onPrint={() => {
                 analyticsEvent('print');
