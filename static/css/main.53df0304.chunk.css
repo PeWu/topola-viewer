@@ -1,0 +1,2 @@
+body,html{height:100%}.node{cursor:pointer}#root{height:100%;-webkit-flex-direction:column;flex-direction:column}#content,#root{display:-webkit-flex;display:flex}#content{overflow:hidden}#content,#svgContainer{-webkit-flex:1 1 auto;flex:1 1 auto}#sidePanel,#svgContainer{overflow:auto}#sidePanel{-webkit-flex:0 0 320px;flex:0 0 320px;border-left:1px solid #ccc}.hidden{display:none}p.comment{margin-top:16px}div.ui.negative.message{margin:auto}div.ui.card.intro{width:600px;margin:auto}
+/*# sourceMappingURL=main.53df0304.chunk.css.map */
