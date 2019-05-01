@@ -1,8 +1,22 @@
 # Topola Genealogy Viewer
 
+View your genealogy data using an interactive chart.
+
 Website: https://pewu.github.io/topola-viewer
 
-View your genealogy data using an interactive chart.
+## Features
+* hourglass chart
+* click on a person to focus
+* open standard GEDCOM files you can export from any genealogy application
+* load from URL (just point to a GEDCOM file on the Web)
+* privacy – your files do not leave your computer
+* print the whole genealogy tree
+* export to PDF, PNG, SVG
+* side panel with details
+* permalinks when loading from URL
+* cool transition animations
+
+## Examples
 
 Here are some examples from the Web:
 
