@@ -4,6 +4,12 @@ View your genealogy data using an interactive chart.
 
 Website: https://pewu.github.io/topola-viewer
 
+<p align="center">
+  <a href="https://pewu.github.io/topola-viewer/#/view?url=http%3A%2F%2Fgenpol.com%2Fmodule-Downloads-prep_hand_out-lid-32.html">
+    <img src="screenshot.png" width="320" alt="screenshot">
+  </a>
+</p>
+
 ## Features
 * hourglass chart
 * click on a person to focus
