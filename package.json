@@ -23,7 +23,7 @@
     "react-router-dom": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.84.0",
-    "topola": "^2.2.7"
+    "topola": "^2.2.9"
   },
   "devDependencies": {
     "@types/array.prototype.flatmap": "^1.2.0",
