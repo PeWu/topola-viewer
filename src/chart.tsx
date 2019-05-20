@@ -10,6 +10,7 @@ import {
   createChart,
   DetailedRenderer,
   HourglassChart,
+  RelativesChart,
 } from 'topola';
 
 /** Called when the view is dragged with the mouse. */
@@ -101,15 +102,34 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string) {
   });
 }
 
+/** Supported chart types. */
+export enum ChartType {
+  Hourglass,
+  Relatives,
+}
+
 export interface ChartProps {
   data: JsonGedcomData;
   selection: IndiInfo;
+  chartType: ChartType;
   onSelection: (indiInfo: IndiInfo) => void;
 }
 
 /** Component showing the genealogy chart and handling transition animations. */
 export class Chart extends React.PureComponent<ChartProps, {}> {
   private chart?: ChartHandle;
+
+  private getChartType() {
+    switch (this.props.chartType) {
+      case ChartType.Hourglass:
+        return HourglassChart;
+      case ChartType.Relatives:
+        return RelativesChart;
+      default:
+        // Fall back to hourglass chart.
+        return HourglassChart;
+    }
+  }
 
   /**
    * Renders the chart or performs a transition animation to a new state.
@@ -121,7 +141,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       (d3.select('#chart').node() as HTMLElement).innerHTML = '';
       this.chart = createChart({
         json: this.props.data,
-        chartType: HourglassChart,
+        chartType: this.getChartType(),
         renderer: DetailedRenderer,
         svgSelector: '#chart',
         indiCallback: (info) => this.props.onSelection(info),
@@ -192,7 +212,10 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   }
 
   componentDidUpdate(prevProps: ChartProps) {
-    this.renderChart({initialRender: this.props.data !== prevProps.data});
+    const initialRender =
+      this.props.data !== prevProps.data ||
+      this.props.chartType !== prevProps.chartType;
+    this.renderChart({initialRender});
   }
 
   /** Make intl appear in this.context. */

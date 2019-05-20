@@ -1,7 +1,7 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
 import {analyticsEvent} from './analytics';
-import {Chart} from './chart';
+import {Chart, ChartType} from './chart';
 import {Details} from './details';
 import {getSelection, loadFromUrl, loadGedcom} from './load_data';
 import {IndiInfo} from 'topola';
@@ -53,20 +53,27 @@ interface State {
   hash?: string;
   /** Error to display. */
   error?: string;
-  /** True if currently loading. */
+  /** True if data is currently being loaded. */
   loading: boolean;
   /** URL of the data that is loaded or is being loaded. */
   url?: string;
-  /** Whether the side panel is shoen. */
+  /** Whether the side panel is shown. */
   showSidePanel?: boolean;
   /** Whether the app is in embedded mode, i.e. embedded in an iframe. */
   embedded: boolean;
-  /** Whether the app is in standalone mode, i.e. showing 'open file' menus */
+  /** Whether the app is in standalone mode, i.e. showing 'open file' menus. */
   standalone: boolean;
+  /** Type of displayed chart. */
+  chartType: ChartType;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
-  state: State = {loading: false, embedded: false, standalone: true};
+  state: State = {
+    loading: false,
+    embedded: false,
+    standalone: true,
+    chartType: ChartType.Hourglass,
+  };
   chartRef: Chart | null = null;
 
   private isNewData(
@@ -81,16 +88,18 @@ export class App extends React.Component<RouteComponentProps, {}> {
     );
   }
 
-  /** Sets the state with a new individual selection. */
-  private updateSelection(selection: IndiInfo) {
+  /** Sets the state with a new individual selection and chart type. */
+  private updateDisplay(selection: IndiInfo, chartType?: ChartType) {
     if (
       !this.state.selection ||
       this.state.selection.id !== selection.id ||
-      this.state.selection!.generation !== selection.generation
+      this.state.selection!.generation !== selection.generation ||
+      (chartType !== undefined && chartType !== this.state.chartType)
     ) {
       this.setState(
         Object.assign({}, this.state, {
           selection,
+          chartType: chartType !== undefined ? chartType : this.state.chartType,
         }),
       );
     }
@@ -179,6 +188,10 @@ export class App extends React.Component<RouteComponentProps, {}> {
     const hash = getParam('file');
     const handleCors = getParam('handleCors') !== 'false'; // True by default.
     const standalone = getParam('standalone') !== 'false'; // True by default.
+    const view = getParam('view');
+    // Hourglass is the default view.
+    const chartType =
+      view === 'relatives' ? ChartType.Relatives : ChartType.Hourglass;
 
     const gedcom = this.props.location.state && this.props.location.state.data;
     const images =
@@ -198,6 +211,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             loading: true,
             url,
             standalone,
+            chartType,
           }),
         );
         const data = hash
@@ -221,6 +235,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             url,
             showSidePanel,
             standalone,
+            chartType,
           }),
         );
       } catch (error) {
@@ -234,7 +249,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
         indi,
         generation,
       );
-      this.updateSelection(selection);
+      this.updateDisplay(selection, chartType);
     }
   }
 
@@ -246,7 +261,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
     analyticsEvent('selection_changed');
     if (this.state.embedded) {
       // In embedded mode the URL doesn't change.
-      this.updateSelection(selection);
+      this.updateDisplay(selection);
       return;
     }
     const location = this.props.location;
@@ -263,8 +278,9 @@ export class App extends React.Component<RouteComponentProps, {}> {
         <div id="content">
           <Chart
             data={this.state.data.chartData}
-            onSelection={this.onSelection}
             selection={this.state.selection}
+            chartType={this.state.chartType}
+            onSelection={this.onSelection}
             ref={(ref) => (this.chartRef = ref)}
           />
           {this.state.showSidePanel ? (

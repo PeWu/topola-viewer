@@ -184,6 +184,16 @@ export class TopBar extends React.Component<
     }
   }
 
+  changeView(view: string) {
+    const location = this.props.location;
+    const search = queryString.parse(location.search);
+    if (search.view !== view) {
+      search.view = view;
+      location.search = queryString.stringify(search);
+      this.props.history.push(location);
+    }
+  }
+
   componentDidMount() {
     this.initializeSearchIndex();
   }
@@ -259,6 +269,7 @@ export class TopBar extends React.Component<
           <Icon name="print" />
           <FormattedMessage id="menu.print" defaultMessage="Print" />
         </Menu.Item>
+
         <Dropdown
           trigger={
             <div>
@@ -280,6 +291,34 @@ export class TopBar extends React.Component<
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
+
+        <Dropdown
+          trigger={
+            <div>
+              <Icon name="eye" />
+              <FormattedMessage id="menu.view" defaultMessage="View" />
+            </div>
+          }
+          className="item"
+        >
+          <Dropdown.Menu>
+            <Dropdown.Item onClick={() => this.changeView('hourglass')}>
+              <Icon name="hourglass" />
+              <FormattedMessage
+                id="menu.hourglass"
+                defaultMessage="Hourglass chart"
+              />
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => this.changeView('relatives')}>
+              <Icon name="users" />
+              <FormattedMessage
+                id="menu.relatives"
+                defaultMessage="All relatives"
+              />
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+
         <Search
           onSearchChange={debounce(
             (_: React.MouseEvent<HTMLElement>, data: SearchProps) =>
