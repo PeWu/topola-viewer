@@ -30,15 +30,19 @@ interface State {
   searchResults: SearchResult[];
 }
 
-interface Props {
-  showingChart: boolean;
-  gedcom?: GedcomData;
-  standalone: boolean;
+interface EventHandlers {
   onSelection: (indiInfo: IndiInfo) => void;
   onPrint: () => void;
   onDownloadPdf: () => void;
   onDownloadPng: () => void;
   onDownloadSvg: () => void;
+}
+
+interface Props {
+  showingChart: boolean;
+  gedcom?: GedcomData;
+  standalone: boolean;
+  eventHandlers: EventHandlers;
 }
 
 function loadFileAsText(file: File): Promise<string> {
@@ -174,7 +178,7 @@ export class TopBar extends React.Component<
   /** On search result selected. */
   handleResultSelect(id: string) {
     analyticsEvent('search_result_selected');
-    this.props.onSelection({id, generation: 0});
+    this.props.eventHandlers.onSelection({id, generation: 0});
     this.searchRef!.setValue('');
   }
 
@@ -265,7 +269,7 @@ export class TopBar extends React.Component<
 
     const chartMenus = this.props.showingChart ? (
       <>
-        <Menu.Item as="a" onClick={() => this.props.onPrint()}>
+        <Menu.Item as="a" onClick={() => this.props.eventHandlers.onPrint()}>
           <Icon name="print" />
           <FormattedMessage id="menu.print" defaultMessage="Print" />
         </Menu.Item>
@@ -280,13 +284,19 @@ export class TopBar extends React.Component<
           className="item"
         >
           <Dropdown.Menu>
-            <Dropdown.Item onClick={() => this.props.onDownloadPdf()}>
+            <Dropdown.Item
+              onClick={() => this.props.eventHandlers.onDownloadPdf()}
+            >
               <FormattedMessage id="menu.pdf_file" defaultMessage="PDF file" />
             </Dropdown.Item>
-            <Dropdown.Item onClick={() => this.props.onDownloadPng()}>
+            <Dropdown.Item
+              onClick={() => this.props.eventHandlers.onDownloadPng()}
+            >
               <FormattedMessage id="menu.png_file" defaultMessage="PNG file" />
             </Dropdown.Item>
-            <Dropdown.Item onClick={() => this.props.onDownloadSvg()}>
+            <Dropdown.Item
+              onClick={() => this.props.eventHandlers.onDownloadSvg()}
+            >
               <FormattedMessage id="menu.svg_file" defaultMessage="SVG file" />
             </Dropdown.Item>
           </Dropdown.Menu>

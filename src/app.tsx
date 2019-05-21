@@ -272,6 +272,26 @@ export class App extends React.Component<RouteComponentProps, {}> {
     this.props.history.push(location);
   };
 
+  private onPrint = () => {
+    analyticsEvent('print');
+    this.chartRef && this.chartRef.print();
+  };
+
+  private onDownloadPdf = () => {
+    analyticsEvent('download_pdf');
+    this.chartRef && this.chartRef.downloadPdf();
+  };
+
+  private onDownloadPng = () => {
+    analyticsEvent('download_png');
+    this.chartRef && this.chartRef.downloadPng();
+  };
+
+  private onDownloadSvg = () => {
+    analyticsEvent('download_svg');
+    this.chartRef && this.chartRef.downloadSvg();
+  };
+
   private renderMainArea = () => {
     if (this.state.data && this.state.selection) {
       return (
@@ -316,22 +336,12 @@ export class App extends React.Component<RouteComponentProps, {}> {
                 )
               }
               standalone={this.state.standalone}
-              onSelection={this.onSelection}
-              onPrint={() => {
-                analyticsEvent('print');
-                this.chartRef && this.chartRef.print();
-              }}
-              onDownloadPdf={() => {
-                analyticsEvent('download_pdf');
-                this.chartRef && this.chartRef.downloadPdf();
-              }}
-              onDownloadPng={() => {
-                analyticsEvent('download_png');
-                this.chartRef && this.chartRef.downloadPng();
-              }}
-              onDownloadSvg={() => {
-                analyticsEvent('download_svg');
-                this.chartRef && this.chartRef.downloadSvg();
+              eventHandlers={{
+                onSelection: this.onSelection,
+                onPrint: this.onPrint,
+                onDownloadPdf: this.onDownloadPdf,
+                onDownloadPng: this.onDownloadPng,
+                onDownloadSvg: this.onDownloadSvg,
               }}
             />
           )}
