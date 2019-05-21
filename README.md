@@ -11,16 +11,17 @@ Website: https://pewu.github.io/topola-viewer
 </p>
 
 ## Features
-* hourglass chart
-* click on a person to focus
-* open standard GEDCOM files you can export from any genealogy application
-* load from URL (just point to a GEDCOM file on the Web)
-* privacy – your files do not leave your computer
-* print the whole genealogy tree
-* export to PDF, PNG, SVG
-* side panel with details
-* permalinks when loading from URL
-* cool transition animations
+* Hourglass chart
+* All relatives chart
+* Click on a person to focus
+* Open standard GEDCOM files you can export from any genealogy application
+* Load from URL (just point to a GEDCOM file on the Web)
+* Privacy – your files do not leave your computer
+* Print the whole genealogy tree
+* Export to PDF, PNG, SVG
+* Side panel with details
+* Permalinks when loading from URL
+* Cool transition animations
 
 ## Examples
 
