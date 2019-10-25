@@ -37,8 +37,14 @@ p.comment {
   margin-top: 16px;
 }
 
-div.ui.negative.message {
+div.ui.error.message {
   margin: auto;
+}
+
+div.ui.errorPopup.message {
+  left: 40px;
+  bottom: 40px;
+  position: fixed;
 }
 
 div.ui.card.intro {

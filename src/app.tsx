@@ -3,21 +3,54 @@ import * as React from 'react';
 import {analyticsEvent} from './analytics';
 import {Chart, ChartType} from './chart';
 import {Details} from './details';
+import {FormattedMessage} from 'react-intl';
 import {getSelection, loadFromUrl, loadGedcom} from './load_data';
+import {getSoftware, TopolaData} from './gedcom_util';
 import {IndiInfo} from 'topola';
+import {intlShape} from 'react-intl';
 import {Intro} from './intro';
-import {Loader, Message, Responsive} from 'semantic-ui-react';
+import {Loader, Message, Portal, Responsive} from 'semantic-ui-react';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './top_bar';
-import {TopolaData, getSoftware} from './gedcom_util';
 
-/** Shows an error message. */
-export function ErrorMessage(props: {message: string}) {
+/** Shows an error message in the middle of the screen. */
+function ErrorMessage(props: {message?: string}) {
   return (
     <Message negative className="error">
-      <Message.Header>Failed to load file</Message.Header>
+      <Message.Header>
+        <FormattedMessage
+          id="error.failed_to_load_file"
+          defaultMessage={'Failed to load file'}
+        />
+      </Message.Header>
       <p>{props.message}</p>
     </Message>
+  );
+}
+
+interface ErrorPopupProps {
+  message?: string;
+  open: boolean;
+  onDismiss: () => void;
+}
+
+/**
+ * Shows a dismissable error message in the bottom left corner of the screen.
+ */
+function ErrorPopup(props: ErrorPopupProps) {
+  return (
+    <Portal open={props.open} onClose={props.onDismiss}>
+      <Message
+        negative
+        className="errorPopup"
+        onDismiss={props.onDismiss}
+      >
+        <Message.Header>
+          <FormattedMessage id="error.error" defaultMessage={'Error'} />
+        </Message.Header>
+        <p>{props.message}</p>
+      </Message>
+    </Portal>
   );
 }
 
@@ -65,6 +98,8 @@ interface State {
   standalone: boolean;
   /** Type of displayed chart. */
   chartType: ChartType;
+  /** Whether to show the error popup. */
+  showErrorPopup: boolean;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
@@ -73,8 +108,14 @@ export class App extends React.Component<RouteComponentProps, {}> {
     embedded: false,
     standalone: true,
     chartType: ChartType.Hourglass,
+    showErrorPopup: false,
   };
   chartRef: Chart | null = null;
+
+  /** Make intl appear in this.context. */
+  static contextTypes = {
+    intl: intlShape,
+  };
 
   private isNewData(
     hash: string | undefined,
@@ -277,14 +318,45 @@ export class App extends React.Component<RouteComponentProps, {}> {
     this.chartRef && this.chartRef.print();
   };
 
-  private onDownloadPdf = () => {
+  private showErrorPopup(message: string) {
+    this.setState(
+      Object.assign({}, this.state, {
+        showErrorPopup: true,
+        error: message,
+      }),
+    );
+  }
+
+  private onDownloadPdf = async () => {
     analyticsEvent('download_pdf');
-    this.chartRef && this.chartRef.downloadPdf();
+    try {
+      this.chartRef && (await this.chartRef.downloadPdf());
+    } catch (e) {
+      this.showErrorPopup(
+        this.context.intl.formatMessage({
+          id: 'error.failed_pdf',
+          defaultMessage:
+            'Failed to generate PDF file.' +
+            ' Please try with a smaller diagram or download an SVG file.',
+        }),
+      );
+    }
   };
 
-  private onDownloadPng = () => {
+  private onDownloadPng = async () => {
     analyticsEvent('download_png');
-    this.chartRef && this.chartRef.downloadPng();
+    try {
+      this.chartRef && (await this.chartRef.downloadPng());
+    } catch (e) {
+      this.showErrorPopup(
+        this.context.intl.formatMessage({
+          id: 'error.failed_png',
+          defaultMessage:
+            'Failed to generate PNG file.' +
+            ' Please try with a smaller diagram or download an SVG file.',
+        }),
+      );
+    }
   };
 
   private onDownloadSvg = () => {
@@ -292,10 +364,23 @@ export class App extends React.Component<RouteComponentProps, {}> {
     this.chartRef && this.chartRef.downloadSvg();
   };
 
+  onDismissErrorPopup = () => {
+    this.setState(
+      Object.assign({}, this.state, {
+        showErrorPopup: false,
+      }),
+    );
+  };
+
   private renderMainArea = () => {
     if (this.state.data && this.state.selection) {
       return (
         <div id="content">
+          <ErrorPopup
+            open={this.state.showErrorPopup}
+            message={this.state.error}
+            onDismiss={this.onDismissErrorPopup}
+          />
           <Chart
             data={this.state.data.chartData}
             selection={this.state.selection}
