@@ -11,6 +11,8 @@ import {
   DetailedRenderer,
   HourglassChart,
   RelativesChart,
+  FancyChart,
+  CircleRenderer,
 } from 'topola';
 
 /** Called when the view is dragged with the mouse. */
@@ -106,6 +108,7 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string) {
 export enum ChartType {
   Hourglass,
   Relatives,
+  Fancy,
 }
 
 export interface ChartProps {
@@ -125,9 +128,21 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
         return HourglassChart;
       case ChartType.Relatives:
         return RelativesChart;
+      case ChartType.Fancy:
+        return FancyChart;
       default:
         // Fall back to hourglass chart.
         return HourglassChart;
+    }
+  }
+
+  private getRendererType() {
+    switch (this.props.chartType) {
+      case ChartType.Fancy:
+        return CircleRenderer;
+      default:
+        // Use DetailedRenderer by default.
+        return DetailedRenderer;
     }
   }
 
@@ -142,7 +157,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       this.chart = createChart({
         json: this.props.data,
         chartType: this.getChartType(),
-        renderer: DetailedRenderer,
+        renderer: this.getRendererType(),
         svgSelector: '#chart',
         indiCallback: (info) => this.props.onSelection(info),
         animate: true,

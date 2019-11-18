@@ -326,6 +326,13 @@ export class TopBar extends React.Component<
                 defaultMessage="All relatives"
               />
             </Dropdown.Item>
+            <Dropdown.Item onClick={() => this.changeView('fancy')}>
+              <Icon name="users" />
+              <FormattedMessage
+                id="menu.fancy"
+                defaultMessage="Fancy tree (experimental)"
+              />
+            </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
 

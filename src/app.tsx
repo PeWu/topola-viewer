@@ -40,11 +40,7 @@ interface ErrorPopupProps {
 function ErrorPopup(props: ErrorPopupProps) {
   return (
     <Portal open={props.open} onClose={props.onDismiss}>
-      <Message
-        negative
-        className="errorPopup"
-        onDismiss={props.onDismiss}
-      >
+      <Message negative className="errorPopup" onDismiss={props.onDismiss}>
         <Message.Header>
           <FormattedMessage id="error.error" defaultMessage={'Error'} />
         </Message.Header>
@@ -230,9 +226,13 @@ export class App extends React.Component<RouteComponentProps, {}> {
     const handleCors = getParam('handleCors') !== 'false'; // True by default.
     const standalone = getParam('standalone') !== 'false'; // True by default.
     const view = getParam('view');
+
+    const chartTypes = new Map<string | undefined, ChartType>([
+      ['relatives', ChartType.Relatives],
+      ['fancy', ChartType.Fancy],
+    ]);
     // Hourglass is the default view.
-    const chartType =
-      view === 'relatives' ? ChartType.Relatives : ChartType.Hourglass;
+    const chartType = chartTypes.get(view) || ChartType.Hourglass;
 
     const gedcom = this.props.location.state && this.props.location.state.data;
     const images =
