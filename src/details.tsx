@@ -13,7 +13,7 @@ interface Props {
 }
 
 const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI'];
-const EXCLUDED_TAGS = ['NAME', 'SEX', 'FAMC', 'FAMS', 'SOUR', 'NOTE'];
+const EXCLUDED_TAGS = ['NAME', 'SEX', 'FAMC', 'FAMS', 'NOTE'];
 const TAG_DESCRIPTIONS = new Map([
   ['BAPM', 'Baptism'],
   ['BIRT', 'Birth'],
@@ -152,12 +152,22 @@ function getDetails(
     ));
 }
 
+/**
+ * Returns true if there is displayable information in this entry.
+ * Returns false if there is no data in this entry or this is only a reference
+ * to another entry.
+ */
+function hasData(entry: GedcomEntry) {
+  return entry.tree.length > 0 || (entry.data && !entry.data.startsWith('@'));
+}
+
 function getOtherDetails(entries: GedcomEntry[]) {
   return entries
     .filter(
       (entry) =>
         !EXCLUDED_TAGS.includes(entry.tag) && !EVENT_TAGS.includes(entry.tag),
     )
+    .filter(hasData)
     .map((entry) => dataDetails(entry))
     .filter((element) => element !== null)
     .map((element, index) => (
@@ -175,6 +185,7 @@ export class Details extends React.Component<Props, {}> {
 
   render() {
     const entries = this.props.gedcom.indis[this.props.indi].tree;
+    const entriesWithData = entries.filter(hasData);
 
     return (
       <div className="ui segments" id="details">
@@ -182,8 +193,8 @@ export class Details extends React.Component<Props, {}> {
         {getDetails(entries, EVENT_TAGS, (entry) =>
           eventDetails(entry, this.context.intl as InjectedIntl),
         )}
-        {getOtherDetails(entries)}
-        {getDetails(entries, ['NOTE'], noteDetails)}
+        {getOtherDetails(entriesWithData)}
+        {getDetails(entriesWithData, ['NOTE'], noteDetails)}
       </div>
     );
   }
