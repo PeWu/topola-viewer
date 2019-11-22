@@ -85,10 +85,10 @@ export class TopBar extends React.Component<
     });
 
     const gedcomFile =
-      files.length === 1
-        ? files[0]
+      filesArray.length === 1
+        ? filesArray[0]
         : filesArray.find((file) => file.name.toLowerCase().endsWith('.ged')) ||
-          files[0];
+          filesArray[0];
 
     // Convert uploaded images to object URLs.
     const images = filesArray
