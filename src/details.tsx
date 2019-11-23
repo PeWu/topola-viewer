@@ -12,8 +12,8 @@ interface Props {
   indi: string;
 }
 
-const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI'];
-const EXCLUDED_TAGS = ['NAME', 'SEX', 'FAMC', 'FAMS', 'NOTE'];
+const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI', 'EVEN'];
+const EXCLUDED_TAGS = ['NAME', 'SEX', 'FAMC', 'FAMS', 'NOTE', 'SOUR'];
 const TAG_DESCRIPTIONS = new Map([
   ['BAPM', 'Baptism'],
   ['BIRT', 'Birth'],
@@ -21,6 +21,7 @@ const TAG_DESCRIPTIONS = new Map([
   ['CHR', 'Christening'],
   ['DEAT', 'Death'],
   ['EMAIL', 'E-mail'],
+  ['EVEN', 'Event'],
   ['OCCU', 'Occupation'],
   ['TITL', 'Title'],
   ['WWW', 'WWW'],
@@ -67,6 +68,9 @@ function getData(entry: GedcomEntry) {
 
 function eventDetails(entry: GedcomEntry, intl: InjectedIntl) {
   const lines = [];
+  if (entry.data && entry.data.length > 1) {
+    lines.push(<i>{entry.data}</i>);
+  }
   const date = entry.tree.find((subentry) => subentry.tag === 'DATE');
   if (date && date.data) {
     lines.push(translateDate(date.data, intl));
