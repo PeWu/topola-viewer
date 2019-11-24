@@ -2,7 +2,7 @@ import * as React from 'react';
 import flatMap from 'array.prototype.flatmap';
 import Linkify from 'react-linkify';
 import {FormattedMessage, InjectedIntl} from 'react-intl';
-import {GedcomData} from './gedcom_util';
+import {GedcomData, pointerToId} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {intlShape} from 'react-intl';
 import {translateDate} from './date_util';
@@ -181,6 +181,20 @@ function getOtherDetails(entries: GedcomEntry[]) {
     ));
 }
 
+/**
+ * If the entry is a reference to a top-level entry, the referenced entry is
+ * returned. Otherwise, returns the given entry unmodified.
+ */
+function dereference(entry: GedcomEntry, gedcom: GedcomData) {
+  if (entry.data) {
+    const dereferenced = gedcom.other[pointerToId(entry.data)];
+    if (dereferenced) {
+      return dereferenced;
+    }
+  }
+  return entry;
+}
+
 export class Details extends React.Component<Props, {}> {
   /** Make intl appear in this.context. */
   static contextTypes = {
@@ -189,7 +203,9 @@ export class Details extends React.Component<Props, {}> {
 
   render() {
     const entries = this.props.gedcom.indis[this.props.indi].tree;
-    const entriesWithData = entries.filter(hasData);
+    const entriesWithData = entries
+      .map((entry) => dereference(entry, this.props.gedcom))
+      .filter(hasData);
 
     return (
       <div className="ui segments" id="details">

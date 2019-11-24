@@ -2,9 +2,14 @@ import {JsonFam, JsonGedcomData, JsonIndi, gedcomEntriesToJson} from 'topola';
 import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
 
 export interface GedcomData {
+  /** The HEAD entry. */
   head: GedcomEntry;
+  /** INDI entries mapped by id. */
   indis: {[key: string]: GedcomEntry};
+  /** FAM entries mapped by id. */
   fams: {[key: string]: GedcomEntry};
+  /** Other entries mapped by id, e.g. NOTE, SOUR. */
+  other: {[key: string]: GedcomEntry};
 }
 
 export interface TopolaData {
@@ -16,7 +21,7 @@ export interface TopolaData {
  * Returns the identifier extracted from a pointer string.
  * E.g. '@I123@' -> 'I123'
  */
-function pointerToId(pointer: string): string {
+export function pointerToId(pointer: string): string {
   return pointer.substring(1, pointer.length - 1);
 }
 
@@ -24,14 +29,17 @@ function prepareGedcom(entries: GedcomEntry[]): GedcomData {
   const head = entries.find((entry) => entry.tag === 'HEAD')!;
   const indis: {[key: string]: GedcomEntry} = {};
   const fams: {[key: string]: GedcomEntry} = {};
+  const other: {[key: string]: GedcomEntry} = {};
   entries.forEach((entry) => {
     if (entry.tag === 'INDI') {
       indis[pointerToId(entry.pointer)] = entry;
     } else if (entry.tag === 'FAM') {
       fams[pointerToId(entry.pointer)] = entry;
+    } else if (entry.pointer) {
+      other[pointerToId(entry.pointer)] = entry;
     }
   });
-  return {head, indis, fams};
+  return {head, indis, fams, other};
 }
 
 function strcmp(a: string, b: string) {
