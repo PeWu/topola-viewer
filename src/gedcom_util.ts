@@ -113,20 +113,32 @@ function sortChildren(gedcom: JsonGedcomData): JsonGedcomData {
   return Object.assign({}, gedcom, {fams: newFams});
 }
 
+const IMAGE_EXTENSIONS = ['.jpg', '.png', '.gif'];
+
+/** Returns true if the given file name has a known image extension. */
+function isImageFile(fileName: string): boolean {
+  const lowerName = fileName.toLowerCase();
+  return IMAGE_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+}
+
 /**
- * Removes images that are not HTTP links.
- * Does not modify the input object.
+ * Removes imageUrl fields that are not HTTP links or do not have known image
+ * extensions. Does not modify the input object.
  */
 function filterImage(indi: JsonIndi, images: Map<string, string>): JsonIndi {
   if (indi.imageUrl) {
     const fileName = indi.imageUrl.match(/[^/\\]*$/)![0];
+    // If the image file has been loaded into memory, use it.
     if (images.has(fileName)) {
       const newIndi = Object.assign({}, indi);
       newIndi.imageUrl = images.get(fileName);
       return newIndi;
     }
   }
-  if (!indi.imageUrl || indi.imageUrl.startsWith('http')) {
+  if (
+    !indi.imageUrl ||
+    (indi.imageUrl.startsWith('http') && isImageFile(indi.imageUrl))
+  ) {
     return indi;
   }
   const newIndi = Object.assign({}, indi);
