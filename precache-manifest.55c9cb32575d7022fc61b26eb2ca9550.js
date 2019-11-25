@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "d25cca9c65d2d18652a9c2937e096872",
+    "revision": "19abf51b531a6e90477f1c05bcfafac9",
     "url": "/topola-viewer/index.html"
   },
   {
@@ -8,7 +8,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/topola-viewer/static/css/2.bda320df.chunk.css"
   },
   {
-    "revision": "07ebe3f899bfb523638f",
+    "revision": "0c2d6a397ba9672b6a77",
     "url": "/topola-viewer/static/css/main.0545fa1c.chunk.css"
   },
   {
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/topola-viewer/static/js/2.999b7d4c.chunk.js"
   },
   {
-    "revision": "07ebe3f899bfb523638f",
-    "url": "/topola-viewer/static/js/main.76148759.chunk.js"
+    "revision": "0c2d6a397ba9672b6a77",
+    "url": "/topola-viewer/static/js/main.b88ba6a3.chunk.js"
   },
   {
     "revision": "f20ab92a042545955e37",
