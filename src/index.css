@@ -51,3 +51,7 @@ div.ui.card.intro {
   width: 600px;
   margin: auto;
 }
+
+.version {
+  color: #888;
+}

@@ -48,8 +48,8 @@
     "typescript": "latest"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts start",
+    "build": "REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "prettier": "prettier --write src/**/*.{ts,tsx,json}",
     "predeploy": "npm run build",

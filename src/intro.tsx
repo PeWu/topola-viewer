@@ -15,6 +15,13 @@ function GedcomLink(props: {url: string; text: string}) {
   );
 }
 
+function formatBuildDate(dateString: string) {
+  return new Date(dateString)
+    .toISOString()
+    .slice(0, 16)
+    .replace('T', ' ');
+}
+
 /** The intro page. */
 export function Intro() {
   return (
@@ -110,6 +117,17 @@ export function Intro() {
               ),
             }}
           />
+        </p>
+        <p className="ui right aligned version">
+          version: {formatBuildDate(process.env.REACT_APP_GIT_TIME!)} (
+          <a
+            href={`https://github.com/PeWu/topola-viewer/commit/${
+              process.env.REACT_APP_GIT_SHA
+            }`}
+          >
+            {process.env.REACT_APP_GIT_SHA}
+          </a>
+          )
         </p>
       </Card.Content>
     </Card>
