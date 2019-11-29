@@ -3,7 +3,7 @@ import * as React from 'react';
 import debounce from 'debounce';
 import md5 from 'md5';
 import {analyticsEvent} from './analytics';
-import {buildSearchIndex, SearchIndex, SearchResult} from './search_index';
+import {buildSearchIndex, SearchIndex} from './search_index';
 import {displaySearchResult} from './search_util';
 import {FormattedMessage, intlShape} from 'react-intl';
 import {GedcomData} from './gedcom_util';
@@ -21,13 +21,14 @@ import {
   Dropdown,
   Search,
   SearchProps,
+  SearchResultProps,
 } from 'semantic-ui-react';
 
 /** Menus and dialogs state. */
 interface State {
   loadUrlDialogOpen: boolean;
   url?: string;
-  searchResults: SearchResult[];
+  searchResults: SearchResultProps[];
 }
 
 interface EventHandlers {
