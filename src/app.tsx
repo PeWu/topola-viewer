@@ -12,6 +12,7 @@ import {Intro} from './intro';
 import {Loader, Message, Portal, Responsive} from 'semantic-ui-react';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './top_bar';
+import {loadWikiTree} from './wikitree';
 
 /** Shows an error message in the middle of the screen. */
 function ErrorMessage(props: {message?: string}) {
@@ -117,11 +118,16 @@ export class App extends React.Component<RouteComponentProps, {}> {
     hash: string | undefined,
     url: string | undefined,
     gedcom: string | undefined,
+    source: string | undefined,
   ): boolean {
     return (
       !!(hash && hash !== this.state.hash) ||
       !!(url && this.state.url !== url) ||
-      (!!gedcom && !this.state.loading && !this.state.data)
+      (!!gedcom && !this.state.loading && !this.state.data) ||
+      (source === 'wikitree' &&
+        !this.state.loading &&
+        !this.state.data &&
+        !this.state.error)
     );
   }
 
@@ -226,6 +232,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
     const handleCors = getParam('handleCors') !== 'false'; // True by default.
     const standalone = getParam('standalone') !== 'false'; // True by default.
     const view = getParam('view');
+    const source = getParam('source');
 
     const chartTypes = new Map<string | undefined, ChartType>([
       ['relatives', ChartType.Relatives],
@@ -238,9 +245,9 @@ export class App extends React.Component<RouteComponentProps, {}> {
     const images =
       this.props.location.state && this.props.location.state.images;
 
-    if (!url && !hash) {
+    if (!url && !hash && !source) {
       this.props.history.replace({pathname: '/'});
-    } else if (this.isNewData(hash, url, gedcom)) {
+    } else if (this.isNewData(hash, url, gedcom, source)) {
       try {
         // Set loading state.
         this.setState(
@@ -255,9 +262,12 @@ export class App extends React.Component<RouteComponentProps, {}> {
             chartType,
           }),
         );
-        const data = hash
-          ? await loadGedcom(hash, gedcom, images)
-          : await loadFromUrl(url!, handleCors);
+        const data =
+          source === 'wikitree'
+            ? await loadWikiTree(indi!, handleCors)
+            : hash
+            ? await loadGedcom(hash, gedcom, images)
+            : await loadFromUrl(url!, handleCors);
 
         const software = getSoftware(data.gedcom.head);
         analyticsEvent(hash ? 'upload_file_loaded' : 'url_file_loaded', {
