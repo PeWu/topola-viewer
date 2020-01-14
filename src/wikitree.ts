@@ -135,7 +135,9 @@ export async function loadWikiTree(id: string, handleCors: boolean) {
     }
     converted.add(person.Id);
     gedcomLines.push(`0 @${idToName.get(person.Id)}@ INDI`);
-    gedcomLines.push(`1 NAME ${person.FirstName} /${person.LastNameAtBirth}/`);
+    const firstName = person.FirstName === 'Unknown' ? '' : person.FirstName;
+    const lastName = person.LastNameAtBirth === 'Unknown' ? '' : person.LastNameAtBirth;
+    gedcomLines.push(`1 NAME ${firstName} /${lastName}/`);
     if (person.Mother || person.Father) {
       gedcomLines.push(`1 FAMC @${getFamilyId(person.Mother, person.Father)}@`);
     }
@@ -147,11 +149,13 @@ export async function loadWikiTree(id: string, handleCors: boolean) {
 
   spouses.forEach((value, key) => {
     gedcomLines.push(`0 @${key}@ FAM`);
-    if (value.wife) {
-      gedcomLines.push(`1 WIFE @${idToName.get(value.wife)}@`);
+    const wife = value.wife && idToName.get(value.wife);
+    if (wife) {
+      gedcomLines.push(`1 WIFE @${wife}@`);
     }
-    if (value.husband) {
-      gedcomLines.push(`1 HUSB @${idToName.get(value.husband)}@`);
+    const husband = value.husband && idToName.get(value.husband);
+    if (husband) {
+      gedcomLines.push(`1 HUSB @${husband}@`);
     }
     getSet(children, key).forEach((child) => {
       gedcomLines.push(`1 CHIL @${idToName.get(child)}@`);
