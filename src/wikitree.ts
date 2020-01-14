@@ -111,7 +111,10 @@ export async function loadWikiTree(id: string, handleCors: boolean) {
     return newSet;
   }
 
+  const idToName = new Map<number, string>();
+
   everyone.forEach((person: any) => {
+    idToName.set(person.Id, person.Name);
     if (person.Mother || person.Father) {
       const famId = getFamilyId(person.Mother, person.Father);
       getSet(families, person.Mother).add(famId);
@@ -131,7 +134,7 @@ export async function loadWikiTree(id: string, handleCors: boolean) {
       return;
     }
     converted.add(person.Id);
-    gedcomLines.push(`0 @${person.Id}@ INDI`);
+    gedcomLines.push(`0 @${idToName.get(person.Id)}@ INDI`);
     gedcomLines.push(`1 NAME ${person.FirstName} /${person.LastNameAtBirth}/`);
     if (person.Mother || person.Father) {
       gedcomLines.push(`1 FAMC @${getFamilyId(person.Mother, person.Father)}@`);
@@ -145,13 +148,13 @@ export async function loadWikiTree(id: string, handleCors: boolean) {
   spouses.forEach((value, key) => {
     gedcomLines.push(`0 @${key}@ FAM`);
     if (value.wife) {
-      gedcomLines.push(`1 WIFE @${value.wife}@`);
+      gedcomLines.push(`1 WIFE @${idToName.get(value.wife)}@`);
     }
     if (value.husband) {
-      gedcomLines.push(`1 HUSB @${value.husband}@`);
+      gedcomLines.push(`1 HUSB @${idToName.get(value.husband)}@`);
     }
     getSet(children, key).forEach((child) => {
-      gedcomLines.push(`1 CHIL @${child}@`);
+      gedcomLines.push(`1 CHIL @${idToName.get(child)}@`);
     });
   });
   gedcomLines.push('0 TRLR');
