@@ -1,8 +1,6 @@
-// WikiTree support is currenlty implemented only as proof of concept.
-// It works for a specific id (12082793) and few others.
-
-import md5 from 'md5';
-import {loadGedcom} from './load_data';
+import {TopolaData, GedcomData} from './gedcom_util';
+import {JsonFam, JsonIndi} from 'topola';
+import {GedcomEntry} from 'parse-gedcom';
 
 interface GetAncestorsRequest {
   action: 'getAncestors';
@@ -79,7 +77,10 @@ function getFamilyId(id1: number, id2: number) {
   return `${id2}_${id1}`;
 }
 
-export async function loadWikiTree(key: string, handleCors: boolean) {
+export async function loadWikiTree(
+  key: string,
+  handleCors: boolean,
+): Promise<TopolaData> {
   const everyone: Person[] = [];
 
   // Fetch the ancestors of the input person and ancestors of his/her spouses.
@@ -134,44 +135,83 @@ export async function loadWikiTree(key: string, handleCors: boolean) {
     }
   });
 
-  const gedcomLines: string[] = ['0 HEAD'];
+  const indis: JsonIndi[] = [];
+
   const converted = new Set<number>();
   everyone.forEach((person) => {
     if (converted.has(person.Id)) {
       return;
     }
     converted.add(person.Id);
-    gedcomLines.push(`0 @${idToName.get(person.Id)}@ INDI`);
-    const firstName = person.FirstName === 'Unknown' ? '' : person.FirstName;
-    const lastName =
-      person.LastNameAtBirth === 'Unknown' ? '' : person.LastNameAtBirth;
-    gedcomLines.push(`1 NAME ${firstName} /${lastName}/`);
+    const indi: JsonIndi = {
+      id: idToName.get(person.Id)!,
+    };
+    if (person.FirstName !== 'Unknown') {
+      indi.firstName = person.FirstName;
+    }
+    if (person.LastNameAtBirth !== 'Unknown') {
+      indi.lastName = person.LastNameAtBirth;
+    }
     if (person.Mother || person.Father) {
-      gedcomLines.push(`1 FAMC @${getFamilyId(person.Mother, person.Father)}@`);
+      indi.famc = getFamilyId(person.Mother, person.Father);
     }
     // TODO: add to spouses map for each spouse.
-    getSet(families, person.Id).forEach((famId) =>
-      gedcomLines.push(`1 FAMS @${famId}@`),
-    );
+    indi.fams = Array.from(getSet(families, person.Id));
+    indis.push(indi);
   });
 
-  spouses.forEach((value, key) => {
-    gedcomLines.push(`0 @${key}@ FAM`);
+  const fams = Array.from(spouses.entries()).map(([key, value]) => {
+    const fam: JsonFam = {
+      id: key,
+    };
     const wife = value.wife && idToName.get(value.wife);
     if (wife) {
-      gedcomLines.push(`1 WIFE @${wife}@`);
+      fam.wife = wife;
     }
     const husband = value.husband && idToName.get(value.husband);
     if (husband) {
-      gedcomLines.push(`1 HUSB @${husband}@`);
+      fam.husb = husband;
     }
-    getSet(children, key).forEach((child) => {
-      gedcomLines.push(`1 CHIL @${idToName.get(child)}@`);
-    });
+    fam.children = Array.from(getSet(children, key)).map(
+      (child) => idToName.get(child)!,
+    );
+    return fam;
   });
-  gedcomLines.push('0 TRLR');
-  const gedcom = gedcomLines.join('\n');
 
-  const hash = md5(gedcom);
-  return await loadGedcom(hash, gedcom);
+  // Create a GEDCOM structure only for the purpose of displaying the details
+  // panel.
+  const gedcomIndis: {[key: string]: GedcomEntry} = {};
+  indis.forEach((indi) => {
+    gedcomIndis[indi.id] = {
+      level: 0,
+      pointer: `@${indi.id}@`,
+      tag: 'INDI',
+      data: '',
+      tree: [
+        {
+          level: 1,
+          pointer: '',
+          tag: 'NAME',
+          data: `${indi.firstName} /${indi.lastName}/`,
+          tree: [],
+        },
+        {
+          level: 1,
+          pointer: '',
+          tag: 'WWW',
+          data: `https://www.wikitree.com/wiki/${indi.id}`,
+          tree: [],
+        },
+      ],
+    };
+  });
+
+  const gedcom: GedcomData = {
+    head: {level: 0, pointer: '', tag: 'HEAD', data: '', tree: []},
+    indis: gedcomIndis,
+    fams: {},
+    other: {},
+  };
+
+  return {chartData: {indis, fams}, gedcom};
 }
