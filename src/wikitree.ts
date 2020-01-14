@@ -10,6 +10,17 @@ interface GetAncestorsRequest {
   fields: string;
 }
 
+interface Person {
+  Id: number;
+  Name: string;
+  FirstName: string;
+  LastNameAtBirth: string;
+  Spouses: {[key: number]: Person};
+  Children: {[key: number]: Person};
+  Mother: number;
+  Father: number;
+}
+
 interface GetRelatives {
   action: 'getRelatives';
   keys: string;
@@ -36,6 +47,31 @@ async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
   return JSON.parse(responseBody);
 }
 
+async function getAncestors(key: string, handleCors: boolean) {
+  const response = await wikiTreeGet(
+    {
+      action: 'getAncestors',
+      key: key,
+      fields: '*',
+    },
+    handleCors,
+  );
+  return response[0].ancestors as Person[];
+}
+
+async function getRelatives(keys: string[], handleCors: boolean) {
+  const response = await wikiTreeGet(
+    {
+      action: 'getRelatives',
+      keys: keys.join(','),
+      getChildren: true,
+      getSpouses: true,
+    },
+    handleCors,
+  );
+  return response[0].items.map((x: {person: Person}) => x.person) as Person[];
+}
+
 function getFamilyId(id1: number, id2: number) {
   if (id2 > id1) {
     return `${id1}_${id2}`;
@@ -43,58 +79,29 @@ function getFamilyId(id1: number, id2: number) {
   return `${id2}_${id1}`;
 }
 
-export async function loadWikiTree(id: string, handleCors: boolean) {
-  const firstRelativesData = await wikiTreeGet(
-    {
-      action: 'getRelatives',
-      keys: id,
-      getChildren: true,
-      getSpouses: true,
-    },
-    handleCors,
-  );
+export async function loadWikiTree(key: string, handleCors: boolean) {
+  const everyone: Person[] = [];
 
-  const spouseIds = Object.values(
-    firstRelativesData[0].items[0].person.Spouses,
-  ).map((s: any) => s.Id);
-
-  const everyone: any[] = [];
-
-  [id].concat(spouseIds).forEach(async (personId) => {
-    const ancestorsData = await wikiTreeGet(
-      {
-        action: 'getAncestors',
-        key: personId,
-        fields: '*',
-      },
-      handleCors,
-    );
-    const ancestors = ancestorsData[0].ancestors;
-    ancestors.forEach((a: any) => everyone.push(a));
+  // Fetch the ancestors of the input person and ancestors of his/her spouses.
+  const firstPerson = await getRelatives([key], handleCors);
+  const spouseKeys = Object.values(firstPerson[0].Spouses).map((s) => s.Name);
+  [key].concat(spouseKeys).forEach(async (personId) => {
+    const ancestors = await getAncestors(personId, handleCors);
+    everyone.push(...ancestors);
   });
 
-  let toFetch = [id];
-
+  let toFetch = [key];
   while (toFetch.length > 0) {
-    const relativesData = await wikiTreeGet(
-      {
-        action: 'getRelatives',
-        keys: toFetch.join(','),
-        getChildren: true,
-        getSpouses: true,
-      },
-      handleCors,
+    const people = await getRelatives(toFetch, handleCors);
+    everyone.push(...people);
+    const allSpouses = people.flatMap((person) =>
+      Object.values(person.Spouses),
     );
-    const people = relativesData[0].items.map((x: any) => x.person);
-    toFetch = [];
-    people.forEach((person: any) => {
-      everyone.push(person);
-      const spouses = Object.values(person.Spouses);
-      spouses.forEach((s) => everyone.push(s));
-      const children = Object.values(person.Children);
-      const childrenKeys = (children as any[]).map((c) => c.Name);
-      childrenKeys.forEach((k) => toFetch.push(k));
-    });
+    everyone.push(...allSpouses);
+    // Fetch all children.
+    toFetch = people.flatMap((person) =>
+      Object.values(person.Children).map((c) => c.Name),
+    );
   }
 
   // Map from person id to the set of families where they are a spouse.
@@ -113,7 +120,7 @@ export async function loadWikiTree(id: string, handleCors: boolean) {
 
   const idToName = new Map<number, string>();
 
-  everyone.forEach((person: any) => {
+  everyone.forEach((person) => {
     idToName.set(person.Id, person.Name);
     if (person.Mother || person.Father) {
       const famId = getFamilyId(person.Mother, person.Father);
@@ -129,14 +136,15 @@ export async function loadWikiTree(id: string, handleCors: boolean) {
 
   const gedcomLines: string[] = ['0 HEAD'];
   const converted = new Set<number>();
-  everyone.forEach((person: any) => {
+  everyone.forEach((person) => {
     if (converted.has(person.Id)) {
       return;
     }
     converted.add(person.Id);
     gedcomLines.push(`0 @${idToName.get(person.Id)}@ INDI`);
     const firstName = person.FirstName === 'Unknown' ? '' : person.FirstName;
-    const lastName = person.LastNameAtBirth === 'Unknown' ? '' : person.LastNameAtBirth;
+    const lastName =
+      person.LastNameAtBirth === 'Unknown' ? '' : person.LastNameAtBirth;
     gedcomLines.push(`1 NAME ${firstName} /${lastName}/`);
     if (person.Mother || person.Father) {
       gedcomLines.push(`1 FAMC @${getFamilyId(person.Mother, person.Father)}@`);
