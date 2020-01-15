@@ -1,4 +1,10 @@
-import {JsonFam, JsonGedcomData, JsonIndi, gedcomEntriesToJson} from 'topola';
+import {
+  JsonFam,
+  JsonGedcomData,
+  JsonIndi,
+  gedcomEntriesToJson,
+  JsonImage,
+} from 'topola';
 import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
 
 export interface GedcomData {
@@ -122,28 +128,24 @@ function isImageFile(fileName: string): boolean {
 }
 
 /**
- * Removes imageUrl fields that are not HTTP links or do not have known image
- * extensions. Does not modify the input object.
+ * Removes images that are not HTTP links or do not have known image extensions.
+ * Does not modify the input object.
  */
 function filterImage(indi: JsonIndi, images: Map<string, string>): JsonIndi {
-  if (indi.imageUrl) {
-    const fileName = indi.imageUrl.match(/[^/\\]*$/)![0];
-    // If the image file has been loaded into memory, use it.
-    if (images.has(fileName)) {
-      const newIndi = Object.assign({}, indi);
-      newIndi.imageUrl = images.get(fileName);
-      return newIndi;
-    }
-  }
-  if (
-    !indi.imageUrl ||
-    (indi.imageUrl.startsWith('http') && isImageFile(indi.imageUrl))
-  ) {
+  if (!indi.images || indi.images.length === 0) {
     return indi;
   }
-  const newIndi = Object.assign({}, indi);
-  delete newIndi.imageUrl;
-  return newIndi;
+  const newImages: JsonImage[] = [];
+  indi.images.forEach((image) => {
+    const fileName = image.url.match(/[^/\\]*$/)![0];
+    // If the image file has been loaded into memory, use it.
+    if (images.has(fileName)) {
+      newImages.push({url: images.get(fileName)!, title: image.title});
+    } else if (image.url.startsWith('http') && isImageFile(image.url)) {
+      newImages.push(image);
+    }
+  });
+  return Object.assign({}, indi, {images: newImages});
 }
 
 /**
