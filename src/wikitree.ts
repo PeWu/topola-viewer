@@ -2,12 +2,24 @@ import {TopolaData, GedcomData} from './gedcom_util';
 import {JsonFam, JsonIndi} from 'topola';
 import {GedcomEntry} from 'parse-gedcom';
 
+/** WikiTree API getAncestors request. */
 interface GetAncestorsRequest {
   action: 'getAncestors';
   key: string;
   fields: string;
 }
 
+/** WikiTree API getRelatives request. */
+interface GetRelatives {
+  action: 'getRelatives';
+  keys: string;
+  getChildren?: true;
+  getSpouses?: true;
+}
+
+type WikiTreeRequest = GetAncestorsRequest | GetRelatives;
+
+/** Person structure returned from WikiTree API. */
 interface Person {
   Id: number;
   Name: string;
@@ -19,15 +31,7 @@ interface Person {
   Father: number;
 }
 
-interface GetRelatives {
-  action: 'getRelatives';
-  keys: string;
-  getChildren?: true;
-  getSpouses?: true;
-}
-
-type WikiTreeRequest = GetAncestorsRequest | GetRelatives;
-
+/** Sends a request to the WikiTree API. Returns the parsed response JSON. */
 async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
   const requestData = new FormData();
   requestData.append('format', 'json');
@@ -45,6 +49,7 @@ async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
   return JSON.parse(responseBody);
 }
 
+/** Retrieves ancestors from WikiTree for the given person ID. */
 async function getAncestors(key: string, handleCors: boolean) {
   const response = await wikiTreeGet(
     {
@@ -57,6 +62,7 @@ async function getAncestors(key: string, handleCors: boolean) {
   return response[0].ancestors as Person[];
 }
 
+/** Retrieves relatives from WikiTree for the given array of person IDs. */
 async function getRelatives(keys: string[], handleCors: boolean) {
   const response = await wikiTreeGet(
     {
@@ -70,13 +76,18 @@ async function getRelatives(keys: string[], handleCors: boolean) {
   return response[0].items.map((x: {person: Person}) => x.person) as Person[];
 }
 
-function getFamilyId(id1: number, id2: number) {
-  if (id2 > id1) {
-    return `${id1}_${id2}`;
+/** Creates a family identifier given 2 spouse identifiers. */
+function getFamilyId(spouse1: number, spouse2: number) {
+  if (spouse2 > spouse1) {
+    return `${spouse1}_${spouse2}`;
   }
-  return `${id2}_${id1}`;
+  return `${spouse2}_${spouse1}`;
 }
 
+/**
+ * Loads data from WikiTree to populate an hourglass chart starting from the
+ * given person ID.
+ */
 export async function loadWikiTree(
   key: string,
   handleCors: boolean,
@@ -178,8 +189,16 @@ export async function loadWikiTree(
     return fam;
   });
 
-  // Create a GEDCOM structure only for the purpose of displaying the details
-  // panel.
+  const gedcom = buildGedcom(indis);
+  return {chartData: {indis, fams}, gedcom};
+}
+
+
+/**
+ * Creates a GEDCOM structure for the purpose of displaying the details
+ * panel.
+ */
+function buildGedcom(indis: JsonIndi[]): GedcomData {
   const gedcomIndis: {[key: string]: GedcomEntry} = {};
   indis.forEach((indi) => {
     gedcomIndis[indi.id] = {
@@ -206,12 +225,10 @@ export async function loadWikiTree(
     };
   });
 
-  const gedcom: GedcomData = {
+  return {
     head: {level: 0, pointer: '', tag: 'HEAD', data: '', tree: []},
     indis: gedcomIndis,
     fams: {},
     other: {},
   };
-
-  return {chartData: {indis, fams}, gedcom};
 }
