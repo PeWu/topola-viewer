@@ -1,5 +1,5 @@
-import {TopolaData, GedcomData} from './gedcom_util';
-import {JsonFam, JsonIndi} from 'topola';
+import {GedcomData, TopolaData} from './gedcom_util';
+import {Date, JsonFam, JsonIndi} from 'topola';
 import {GedcomEntry} from 'parse-gedcom';
 
 /** WikiTree API getAncestors request. */
@@ -29,6 +29,15 @@ interface Person {
   Children: {[key: number]: Person};
   Mother: number;
   Father: number;
+  Gender: string;
+  BirthDate: string;
+  DeathDate: string;
+  BirthLocation: string;
+  DeathLocation: string;
+  DataStatus?: {
+    BirthDate: string;
+    DeathDate: string;
+  };
 }
 
 /** Sends a request to the WikiTree API. Returns the parsed response JSON. */
@@ -154,18 +163,7 @@ export async function loadWikiTree(
       return;
     }
     converted.add(person.Id);
-    const indi: JsonIndi = {
-      id: idToName.get(person.Id)!,
-    };
-    if (person.FirstName !== 'Unknown') {
-      indi.firstName = person.FirstName;
-    }
-    if (person.LastNameAtBirth !== 'Unknown') {
-      indi.lastName = person.LastNameAtBirth;
-    }
-    if (person.Mother || person.Father) {
-      indi.famc = getFamilyId(person.Mother, person.Father);
-    }
+    const indi = convertPerson(person);
     // TODO: add to spouses map for each spouse.
     indi.fams = Array.from(getSet(families, person.Id));
     indis.push(indi);
@@ -193,6 +191,70 @@ export async function loadWikiTree(
   return {chartData: {indis, fams}, gedcom};
 }
 
+function convertPerson(person: Person): JsonIndi {
+  const indi: JsonIndi = {
+    id: person.Name,
+  };
+  if (person.FirstName !== 'Unknown') {
+    indi.firstName = person.FirstName;
+  }
+  if (person.LastNameAtBirth !== 'Unknown') {
+    indi.lastName = person.LastNameAtBirth;
+  }
+  if (person.Mother || person.Father) {
+    indi.famc = getFamilyId(person.Mother, person.Father);
+  }
+  if (person.Gender === 'Male') {
+    indi.sex = 'M';
+  } else if (person.Gender === 'Female') {
+    indi.sex = 'F';
+  }
+  if (person.BirthDate || person.BirthLocation) {
+    const parsedDate = parseDate(
+      person.BirthDate,
+      person.DataStatus && person.DataStatus.BirthDate,
+    );
+    indi.birth = Object.assign({}, parsedDate, {place: person.BirthLocation});
+  }
+  if (person.DeathDate || person.DeathLocation) {
+    const parsedDate = parseDate(
+      person.DeathDate,
+      person.DataStatus && person.DataStatus.DeathDate,
+    );
+    indi.death = Object.assign({}, parsedDate, {place: person.DeathLocation});
+  }
+  return indi;
+}
+
+function parseDate(date: string, dataStatus?: string) {
+  if (!date) {
+    return undefined;
+  }
+  const matchedDate = date.match(/(\d\d\d\d)-(\d\d)-(\d\d)/);
+  if (!matchedDate) {
+    return {text: date};
+  }
+  const parsedDate: Date = {};
+  if (matchedDate[1] !== '0000') {
+    parsedDate.year = ~~matchedDate[1];
+  }
+  if (matchedDate[2] !== '00') {
+    parsedDate.month = ~~matchedDate[2];
+  }
+  if (matchedDate[3] !== '00') {
+    parsedDate.day = ~~matchedDate[3];
+  }
+  if (dataStatus === 'after') {
+    return {dataRange: {from: parsedDate}};
+  }
+  if (dataStatus === 'before') {
+    return {dataRange: {to: parsedDate}};
+  }
+  if (dataStatus === 'guess') {
+    parsedDate.qualifier = 'abt';
+  }
+  return {date: parsedDate};
+}
 
 /**
  * Creates a GEDCOM structure for the purpose of displaying the details
