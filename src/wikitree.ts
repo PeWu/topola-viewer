@@ -85,14 +85,6 @@ async function getRelatives(keys: string[], handleCors: boolean) {
   return response[0].items.map((x: {person: Person}) => x.person) as Person[];
 }
 
-/** Creates a family identifier given 2 spouse identifiers. */
-function getFamilyId(spouse1: number, spouse2: number) {
-  if (spouse2 > spouse1) {
-    return `${spouse1}_${spouse2}`;
-  }
-  return `${spouse2}_${spouse1}`;
-}
-
 /**
  * Loads data from WikiTree to populate an hourglass chart starting from the
  * given person ID.
@@ -111,6 +103,7 @@ export async function loadWikiTree(
     everyone.push(...ancestors);
   });
 
+  // Fetch descendants recursively.
   let toFetch = [key];
   while (toFetch.length > 0) {
     const people = await getRelatives(toFetch, handleCors);
@@ -127,18 +120,11 @@ export async function loadWikiTree(
 
   // Map from person id to the set of families where they are a spouse.
   const families = new Map<number, Set<string>>();
+  // Map from family id to the set of children.
   const children = new Map<string, Set<number>>();
+  // Map from famliy id to the spouses.
   const spouses = new Map<string, {wife?: number; husband?: number}>();
-  function getSet<K, V>(map: Map<K, Set<V>>, id: K): Set<V> {
-    const set = map.get(id);
-    if (set) {
-      return set;
-    }
-    const newSet = new Set<V>();
-    map.set(id, newSet);
-    return newSet;
-  }
-
+  // Map from numerical id to human-readable id.
   const idToName = new Map<number, string>();
 
   everyone.forEach((person) => {
@@ -156,7 +142,6 @@ export async function loadWikiTree(
   });
 
   const indis: JsonIndi[] = [];
-
   const converted = new Set<number>();
   everyone.forEach((person) => {
     if (converted.has(person.Id)) {
@@ -189,6 +174,14 @@ export async function loadWikiTree(
 
   const gedcom = buildGedcom(indis);
   return {chartData: {indis, fams}, gedcom};
+}
+
+/** Creates a family identifier given 2 spouse identifiers. */
+function getFamilyId(spouse1: number, spouse2: number) {
+  if (spouse2 > spouse1) {
+    return `${spouse1}_${spouse2}`;
+  }
+  return `${spouse2}_${spouse1}`;
 }
 
 function convertPerson(person: Person): JsonIndi {
@@ -226,6 +219,10 @@ function convertPerson(person: Person): JsonIndi {
   return indi;
 }
 
+/**
+ * Parses a date in the format returned by WikiTree and converts in to
+ * the format defined by Topola.
+ */
 function parseDate(date: string, dataStatus?: string) {
   if (!date) {
     return undefined;
@@ -293,4 +290,18 @@ function buildGedcom(indis: JsonIndi[]): GedcomData {
     fams: {},
     other: {},
   };
+}
+
+/**
+ * Returns a set which is a value from a SetMultimap. If the key doesn't exist,
+ * an empty set is added to the map.
+ */
+function getSet<K, V>(map: Map<K, Set<V>>, key: K): Set<V> {
+  const set = map.get(key);
+  if (set) {
+    return set;
+  }
+  const newSet = new Set<V>();
+  map.set(key, newSet);
+  return newSet;
 }
