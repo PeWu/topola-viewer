@@ -270,7 +270,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             : await loadFromUrl(url!, handleCors);
 
         const software = getSoftware(data.gedcom.head);
-        if (source == 'wikitree') {
+        if (source === 'wikitree') {
           analyticsEvent('wikitree_loaded');
         } else {
           analyticsEvent(hash ? 'upload_file_loaded' : 'url_file_loaded', {
