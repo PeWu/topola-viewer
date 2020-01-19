@@ -40,6 +40,9 @@ interface Person {
     BirthDate: string;
     DeathDate: string;
   };
+  PhotoData?: {
+    path: string;
+  };
 }
 
 /** Sends a request to the WikiTree API. Returns the parsed response JSON. */
@@ -244,6 +247,9 @@ function convertPerson(person: Person): JsonIndi {
       person.DataStatus && person.DataStatus.DeathDate,
     );
     indi.death = Object.assign({}, parsedDate, {place: person.DeathLocation});
+  }
+  if (person.PhotoData) {
+    indi.images = [{url: `https://wikitree.com${person.PhotoData.path}`}];
   }
   return indi;
 }
