@@ -100,10 +100,14 @@ export async function loadWikiTree(
   // Fetch the ancestors of the input person and ancestors of his/her spouses.
   const firstPerson = await getRelatives([key], handleCors);
   const spouseKeys = Object.values(firstPerson[0].Spouses).map((s) => s.Name);
-  [key].concat(spouseKeys).forEach(async (personId) => {
-    const ancestors = await getAncestors(personId, handleCors);
-    everyone.push(...ancestors);
-  });
+  const ancestors = await Promise.all(
+    [key]
+      .concat(spouseKeys)
+      .map((personId) => getAncestors(personId, handleCors)),
+  );
+  const ancestorKeys = ancestors.flat().map((person) => person.Name);
+  const ancestorDetails = await getRelatives(ancestorKeys, handleCors);
+  everyone.push(...ancestorDetails);
 
   // Fetch descendants recursively.
   let toFetch = [key];
