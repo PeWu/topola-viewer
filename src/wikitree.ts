@@ -34,6 +34,8 @@ interface Person {
   DeathDate: string;
   BirthLocation: string;
   DeathLocation: string;
+  marriage_location: string;
+  marriage_date: string;
   DataStatus?: {
     BirthDate: string;
     DeathDate: string;
@@ -123,7 +125,10 @@ export async function loadWikiTree(
   // Map from family id to the set of children.
   const children = new Map<string, Set<number>>();
   // Map from famliy id to the spouses.
-  const spouses = new Map<string, {wife?: number; husband?: number}>();
+  const spouses = new Map<
+    string,
+    {wife?: number; husband?: number; spouse?: Person}
+  >();
   // Map from numerical id to human-readable id.
   const idToName = new Map<number, string>();
 
@@ -149,7 +154,18 @@ export async function loadWikiTree(
     }
     converted.add(person.Id);
     const indi = convertPerson(person);
-    // TODO: add to spouses map for each spouse.
+    if (person.Spouses) {
+      Object.values(person.Spouses).forEach((spouse) => {
+        const famId = getFamilyId(person.Id, spouse.Id);
+        getSet(families, person.Id).add(famId);
+        getSet(families, spouse.Id).add(famId);
+        const familySpouses =
+          person.Gender === 'Male'
+            ? {wife: spouse.Id, husband: person.Id, spouse}
+            : {wife: person.Id, husband: spouse.Id, spouse};
+        spouses.set(famId, familySpouses);
+      });
+    }
     indi.fams = Array.from(getSet(families, person.Id));
     indis.push(indi);
   });
@@ -169,6 +185,15 @@ export async function loadWikiTree(
     fam.children = Array.from(getSet(children, key)).map(
       (child) => idToName.get(child)!,
     );
+    if (
+      value.spouse &&
+      (value.spouse.marriage_date || value.spouse.marriage_location)
+    ) {
+      const parsedDate = parseDate(value.spouse.marriage_date);
+      fam.marriage = Object.assign({}, parsedDate, {
+        place: value.spouse.marriage_location,
+      });
+    }
     return fam;
   });
 
