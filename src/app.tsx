@@ -270,10 +270,14 @@ export class App extends React.Component<RouteComponentProps, {}> {
             : await loadFromUrl(url!, handleCors);
 
         const software = getSoftware(data.gedcom.head);
-        analyticsEvent(hash ? 'upload_file_loaded' : 'url_file_loaded', {
-          event_label: software,
-          event_value: (images && images.size) || 0,
-        });
+        if (source == 'wikitree') {
+          analyticsEvent('wikitree_loaded');
+        } else {
+          analyticsEvent(hash ? 'upload_file_loaded' : 'url_file_loaded', {
+            event_label: software,
+            event_value: (images && images.size) || 0,
+          });
+        }
 
         // Set state with data.
         this.setState(
