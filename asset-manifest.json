@@ -1,18 +1,18 @@
 {
   "files": {
-    "main.css": "/topola-viewer/static/css/main.04f1eb66.chunk.css",
-    "main.js": "/topola-viewer/static/js/main.41bfa89d.chunk.js",
-    "main.js.map": "/topola-viewer/static/js/main.41bfa89d.chunk.js.map",
-    "runtime~main.js": "/topola-viewer/static/js/runtime~main.95e962fa.js",
-    "runtime~main.js.map": "/topola-viewer/static/js/runtime~main.95e962fa.js.map",
-    "static/css/2.bda320df.chunk.css": "/topola-viewer/static/css/2.bda320df.chunk.css",
-    "static/js/2.b473d98e.chunk.js": "/topola-viewer/static/js/2.b473d98e.chunk.js",
-    "static/js/2.b473d98e.chunk.js.map": "/topola-viewer/static/js/2.b473d98e.chunk.js.map",
-    "index.html": "/topola-viewer/index.html",
-    "precache-manifest.a34f4ee5876e7cf72c81bbc16f20de22.js": "/topola-viewer/precache-manifest.a34f4ee5876e7cf72c81bbc16f20de22.js",
-    "service-worker.js": "/topola-viewer/service-worker.js",
-    "static/css/2.bda320df.chunk.css.map": "/topola-viewer/static/css/2.bda320df.chunk.css.map",
-    "static/css/main.04f1eb66.chunk.css.map": "/topola-viewer/static/css/main.04f1eb66.chunk.css.map",
-    "static/media/semantic.min.css": "/topola-viewer/static/media/outline-icons.ef60a4f6.woff"
+    "main.css": "./static/css/main.04f1eb66.chunk.css",
+    "main.js": "./static/js/main.ca8223af.chunk.js",
+    "main.js.map": "./static/js/main.ca8223af.chunk.js.map",
+    "runtime~main.js": "./static/js/runtime~main.d653cc00.js",
+    "runtime~main.js.map": "./static/js/runtime~main.d653cc00.js.map",
+    "static/css/2.9c7c3dac.chunk.css": "./static/css/2.9c7c3dac.chunk.css",
+    "static/js/2.b473d98e.chunk.js": "./static/js/2.b473d98e.chunk.js",
+    "static/js/2.b473d98e.chunk.js.map": "./static/js/2.b473d98e.chunk.js.map",
+    "index.html": "./index.html",
+    "precache-manifest.6926bcac2b9ea10a31b7e37567352896.js": "./precache-manifest.6926bcac2b9ea10a31b7e37567352896.js",
+    "service-worker.js": "./service-worker.js",
+    "static/css/2.9c7c3dac.chunk.css.map": "./static/css/2.9c7c3dac.chunk.css.map",
+    "static/css/main.04f1eb66.chunk.css.map": "./static/css/main.04f1eb66.chunk.css.map",
+    "static/media/semantic.min.css": "./static/media/outline-icons.ef60a4f6.woff"
   }
 }
