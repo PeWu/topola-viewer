@@ -55,7 +55,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
-  "homepage": "https://pewu.github.io/topola-viewer",
+  "homepage": ".",
   "browserslist": [
     ">0.2%",
     "not dead",
