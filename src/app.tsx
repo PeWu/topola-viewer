@@ -97,6 +97,8 @@ interface State {
   chartType: ChartType;
   /** Whether to show the error popup. */
   showErrorPopup: boolean;
+  /** True if data is loaded from WikiTree. */
+  wikiTreeSource: boolean;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
@@ -106,6 +108,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
     standalone: true,
     chartType: ChartType.Hourglass,
     showErrorPopup: false,
+    wikiTreeSource: false,
   };
   chartRef: Chart | null = null;
 
@@ -291,6 +294,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             showSidePanel,
             standalone,
             chartType,
+            wikiTreeSource: source === 'wikitree',
           }),
         );
       } catch (error) {
@@ -427,6 +431,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             <TopBar
               {...props}
               gedcom={this.state.data && this.state.data.gedcom}
+              allowAllRelativesChart={!this.state.wikiTreeSource}
               showingChart={
                 !!(
                   this.props.history.location.pathname === '/view' &&

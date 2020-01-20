@@ -40,9 +40,13 @@ interface EventHandlers {
 }
 
 interface Props {
+  /** True if the application is currently showing a chart. */
   showingChart: boolean;
+  /** Data used for the search index. */
   gedcom?: GedcomData;
   standalone: boolean;
+  /** Whether to show the "All relatives" chart type in the menu. */
+  allowAllRelativesChart: boolean;
   eventHandlers: EventHandlers;
 }
 
@@ -320,13 +324,15 @@ export class TopBar extends React.Component<
                 defaultMessage="Hourglass chart"
               />
             </Dropdown.Item>
-            <Dropdown.Item onClick={() => this.changeView('relatives')}>
-              <Icon name="users" />
-              <FormattedMessage
-                id="menu.relatives"
-                defaultMessage="All relatives"
-              />
-            </Dropdown.Item>
+            {this.props.allowAllRelativesChart ? (
+              <Dropdown.Item onClick={() => this.changeView('relatives')}>
+                <Icon name="users" />
+                <FormattedMessage
+                  id="menu.relatives"
+                  defaultMessage="All relatives"
+                />
+              </Dropdown.Item>
+            ) : null}
             <Dropdown.Item onClick={() => this.changeView('fancy')}>
               <Icon name="users" />
               <FormattedMessage
