@@ -94,10 +94,10 @@ async function getRelatives(keys: string[], handleCors: boolean) {
  * Loads data from WikiTree to populate an hourglass chart starting from the
  * given person ID.
  */
-export async function loadWikiTree(
-  key: string,
-  handleCors: boolean,
-): Promise<TopolaData> {
+export async function loadWikiTree(key: string): Promise<TopolaData> {
+  // Work around CORS if not in apps.wikitree.com domain.
+  const handleCors = window.location.hostname !== 'apps.wikitree.com';
+
   const everyone: Person[] = [];
 
   // Fetch the ancestors of the input person and ancestors of his/her spouses.

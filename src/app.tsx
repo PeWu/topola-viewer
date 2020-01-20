@@ -264,7 +264,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
         );
         const data =
           source === 'wikitree'
-            ? await loadWikiTree(indi!, handleCors)
+            ? await loadWikiTree(indi!)
             : hash
             ? await loadGedcom(hash, gedcom, images)
             : await loadFromUrl(url!, handleCors);
