@@ -74,6 +74,16 @@ interface GedcomMessage extends EmbeddedMessage {
   gedcom?: string;
 }
 
+/** Returs true if the changes object has values that are different than those in state. */
+function hasUpdatedValues<T>(state: T, changes: Partial<T> | undefined) {
+  if (!changes) {
+    return false;
+  }
+  return Object.entries(changes).some(
+    ([key, value]) => value !== undefined && state[key] !== value,
+  );
+}
+
 interface State {
   /** Loaded data. */
   data?: TopolaData;
@@ -99,6 +109,7 @@ interface State {
   showErrorPopup: boolean;
   /** True if data is loaded from WikiTree. */
   wikiTreeSource: boolean;
+  loadingMore?: boolean;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
@@ -135,18 +146,18 @@ export class App extends React.Component<RouteComponentProps, {}> {
   }
 
   /** Sets the state with a new individual selection and chart type. */
-  private updateDisplay(selection: IndiInfo, chartType?: ChartType) {
+  private updateDisplay(
+    selection: IndiInfo,
+    otherStateChanges?: Partial<State>,
+  ) {
     if (
       !this.state.selection ||
       this.state.selection.id !== selection.id ||
       this.state.selection!.generation !== selection.generation ||
-      (chartType !== undefined && chartType !== this.state.chartType)
+      hasUpdatedValues(this.state, otherStateChanges)
     ) {
       this.setState(
-        Object.assign({}, this.state, {
-          selection,
-          chartType: chartType !== undefined ? chartType : this.state.chartType,
-        }),
+        Object.assign({}, this.state, {selection}, otherStateChanges),
       );
     }
   }
@@ -308,7 +319,31 @@ export class App extends React.Component<RouteComponentProps, {}> {
         indi,
         generation,
       );
-      this.updateDisplay(selection, chartType);
+      const loadMoreFromWikitree =
+        source === 'wikitree' &&
+        (!this.state.selection || this.state.selection.id !== selection.id);
+      this.updateDisplay(selection, {
+        chartType,
+        loadingMore: loadMoreFromWikitree || undefined,
+      });
+      if (loadMoreFromWikitree) {
+        const data = await loadWikiTree(indi!);
+        this.setState(
+          Object.assign({}, this.state, {
+            data,
+            hash,
+            selection: getSelection(data.chartData, indi, generation),
+            error: undefined,
+            loading: false,
+            url,
+            showSidePanel,
+            standalone,
+            chartType,
+            wikiTreeSource: source === 'wikitree',
+            loadingMore: false,
+          }),
+        );
+      }
     }
   }
 
@@ -399,6 +434,9 @@ export class App extends React.Component<RouteComponentProps, {}> {
             message={this.state.error}
             onDismiss={this.onDismissErrorPopup}
           />
+          {this.state.loadingMore ? (
+            <Loader active inline size="small" />
+          ) : null}
           <Chart
             data={this.state.data.chartData}
             selection={this.state.selection}

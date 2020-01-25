@@ -63,8 +63,16 @@ async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
   return JSON.parse(responseBody);
 }
 
-/** Retrieves ancestors from WikiTree for the given person ID. */
+/**
+ * Retrieves ancestors from WikiTree for the given person ID.
+ * Uses sessionStorage for caching responses.
+ */
 async function getAncestors(key: string, handleCors: boolean) {
+  const cacheKey = `wikitree:ancestors:${key}`;
+  const cachedData = sessionStorage.getItem(cacheKey);
+  if (cachedData) {
+    return JSON.parse(cachedData);
+  }
   const response = await wikiTreeGet(
     {
       action: 'getAncestors',
@@ -73,21 +81,48 @@ async function getAncestors(key: string, handleCors: boolean) {
     },
     handleCors,
   );
-  return response[0].ancestors as Person[];
+  const result = response[0].ancestors as Person[];
+  sessionStorage.setItem(cacheKey, JSON.stringify(result));
+  return result;
 }
 
-/** Retrieves relatives from WikiTree for the given array of person IDs. */
+/**
+ * Retrieves relatives from WikiTree for the given array of person IDs.
+ * Uses sessionStorage for caching responses.
+ */
 async function getRelatives(keys: string[], handleCors: boolean) {
+  const result: Person[] = [];
+  const keysToFetch: string[] = [];
+  keys.forEach((key) => {
+    const cachedData = sessionStorage.getItem(`wikitree:relatives:${key}`);
+    if (cachedData) {
+      result.push(JSON.parse(cachedData));
+    } else {
+      keysToFetch.push(key);
+    }
+  });
+  if (keysToFetch.length === 0) {
+    return result;
+  }
   const response = await wikiTreeGet(
     {
       action: 'getRelatives',
-      keys: keys.join(','),
+      keys: keysToFetch.join(','),
       getChildren: true,
       getSpouses: true,
     },
     handleCors,
   );
-  return response[0].items.map((x: {person: Person}) => x.person) as Person[];
+  const fetchedResults = response[0].items.map(
+    (x: {person: Person}) => x.person,
+  ) as Person[];
+  fetchedResults.forEach((person) => {
+    sessionStorage.setItem(
+      `wikitree:relatives:${person.Name}`,
+      JSON.stringify(person),
+    );
+  });
+  return result.concat(fetchedResults);
 }
 
 /**

@@ -164,6 +164,8 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
         updateSvgSize: false,
         locale: this.context.intl.locale,
       });
+    } else {
+      this.chart!.setData(this.props.data);
     }
     const chartInfo = this.chart!.render({
       startIndi: this.props.selection.id,
@@ -227,9 +229,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   }
 
   componentDidUpdate(prevProps: ChartProps) {
-    const initialRender =
-      this.props.data !== prevProps.data ||
-      this.props.chartType !== prevProps.chartType;
+    const initialRender = this.props.chartType !== prevProps.chartType;
     this.renderChart({initialRender});
   }
 
