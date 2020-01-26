@@ -143,7 +143,10 @@ export async function loadWikiTree(key: string): Promise<TopolaData> {
       .concat(spouseKeys)
       .map((personId) => getAncestors(personId, handleCors)),
   );
-  const ancestorKeys = ancestors.flat().map((person) => person.Name);
+  const ancestorKeys = ancestors
+    .flat()
+    .map((person) => person.Name)
+    .filter((key) => !!key);
   const ancestorDetails = await getRelatives(ancestorKeys, handleCors);
   everyone.push(...ancestorDetails);
 
