@@ -121,6 +121,10 @@ export interface ChartProps {
 /** Component showing the genealogy chart and handling transition animations. */
 export class Chart extends React.PureComponent<ChartProps, {}> {
   private chart?: ChartHandle;
+  /** Animation is in progress. */
+  private animating = false;
+  /** Rendering is required after the current animation finishes. */
+  private rerenderRequired = false;
 
   private getChartType() {
     switch (this.props.chartType) {
@@ -152,6 +156,12 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
    * animation is performed.
    */
   private renderChart(args: {initialRender: boolean} = {initialRender: false}) {
+    // Wait for animation to finish if animation is in progress.
+    if (!args.initialRender && this.animating) {
+      this.rerenderRequired = true;
+      return;
+    }
+
     if (args.initialRender) {
       (d3.select('#chart').node() as HTMLElement).innerHTML = '';
       this.chart = createChart({
@@ -222,6 +232,16 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
         .tween('scrollLeft', scrollLeftTween(-dx))
         .tween('scrollTop', scrollTopTween(-dy));
     }
+
+    // After the animation is finished, rerender the chart if required.
+    this.animating = true;
+    chartInfo.animationPromise.then(() => {
+      this.animating = false;
+      if (this.rerenderRequired) {
+        this.rerenderRequired = false;
+        this.renderChart({initialRender: false});
+      }
+    });
   }
 
   componentDidMount() {
