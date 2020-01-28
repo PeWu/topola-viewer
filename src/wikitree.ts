@@ -279,7 +279,10 @@ function convertPerson(person: Person): JsonIndi {
     );
     indi.birth = Object.assign({}, parsedDate, {place: person.BirthLocation});
   }
-  if (person.DeathDate || person.DeathLocation) {
+  if (
+    (person.DeathDate && person.DeathDate !== '0000-00-00') ||
+    person.DeathLocation
+  ) {
     const parsedDate = parseDate(
       person.DeathDate,
       person.DataStatus && person.DataStatus.DeathDate,
