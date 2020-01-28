@@ -113,6 +113,9 @@ async function getRelatives(keys: string[], handleCors: boolean) {
     },
     handleCors,
   );
+  if (response[0].items === null) {
+    throw new Error(`WikiTree profile ${keysToFetch[0]} not found.`);
+  }
   const fetchedResults = response[0].items.map(
     (x: {person: Person}) => x.person,
   ) as Person[];
@@ -137,6 +140,12 @@ export async function loadWikiTree(key: string): Promise<TopolaData> {
 
   // Fetch the ancestors of the input person and ancestors of his/her spouses.
   const firstPerson = await getRelatives([key], handleCors);
+  if (!firstPerson[0].Name) {
+    throw new Error(
+      `WikiTree profile ${key} is not accessible. Try logging in.`,
+    );
+  }
+
   const spouseKeys = Object.values(firstPerson[0].Spouses).map((s) => s.Name);
   const ancestors = await Promise.all(
     [key]
