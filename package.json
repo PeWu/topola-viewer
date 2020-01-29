@@ -53,7 +53,9 @@
     "test": "react-scripts test --env=jsdom",
     "prettier": "prettier --write src/**/*.{ts,tsx,json}",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "predeploy-wikitree": "npm run build",
+    "deploy-wikitree": "./deploy-wikitree.sh"
   },
   "homepage": ".",
   "browserslist": [
