@@ -241,7 +241,9 @@ export async function loadWikiTree(key: string): Promise<TopolaData> {
     );
     if (
       value.spouse &&
-      (value.spouse.marriage_date || value.spouse.marriage_location)
+      ((value.spouse.marriage_date &&
+        value.spouse.marriage_date !== '0000-00-00') ||
+        value.spouse.marriage_location)
     ) {
       const parsedDate = parseDate(value.spouse.marriage_date);
       fam.marriage = Object.assign({}, parsedDate, {
@@ -281,7 +283,10 @@ function convertPerson(person: Person): JsonIndi {
   } else if (person.Gender === 'Female') {
     indi.sex = 'F';
   }
-  if (person.BirthDate || person.BirthLocation) {
+  if (
+    (person.BirthDate && person.DeathDate !== '0000-00-00') ||
+    person.BirthLocation
+  ) {
     const parsedDate = parseDate(
       person.BirthDate,
       person.DataStatus && person.DataStatus.BirthDate,
