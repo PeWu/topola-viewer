@@ -247,6 +247,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
     const standalone = getParam('standalone') !== 'false'; // True by default.
     const view = getParam('view');
     const source = getParam('source');
+    const authcode = getParam('?authcode');
 
     const chartTypes = new Map<string | undefined, ChartType>([
       ['relatives', ChartType.Relatives],
@@ -278,7 +279,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
         );
         const data =
           source === 'wikitree'
-            ? await loadWikiTree(indi!)
+            ? await loadWikiTree(indi!, authcode)
             : hash
             ? await loadGedcom(hash, gedcom, images)
             : await loadFromUrl(url!, handleCors);
@@ -485,6 +486,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
                 onDownloadPng: this.onDownloadPng,
                 onDownloadSvg: this.onDownloadSvg,
               }}
+              showWikiTreeLogin={this.state.wikiTreeSource}
             />
           )}
         />

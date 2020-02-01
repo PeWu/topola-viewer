@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.tsx",
   "dependencies": {
+    "@types/js-cookie": "^2.2.4",
     "array.prototype.flatmap": "^1.2.1",
     "canvas-toBlob": "^1.0.0",
     "d3": "^5.7.0",
@@ -11,6 +12,7 @@
     "file-saver": "^2.0.1",
     "history": "^4.7.2",
     "javascript-natural-sort": "^0.7.1",
+    "js-cookie": "^2.2.1",
     "jspdf": "^1.5.3",
     "lunr": "^2.3.6",
     "md5": "^2.2.1",

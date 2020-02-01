@@ -1,5 +1,6 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
+import Cookies from 'js-cookie';
 import debounce from 'debounce';
 import md5 from 'md5';
 import {analyticsEvent} from './analytics';
@@ -24,10 +25,18 @@ import {
   SearchResultProps,
 } from 'semantic-ui-react';
 
+enum WikiTreeLoginState {
+  UNKNOWN,
+  NOT_LOGGED_IN,
+  LOGGED_IN,
+}
+
 /** Menus and dialogs state. */
 interface State {
   loadUrlDialogOpen: boolean;
   url?: string;
+  wikiTreeLoginState: WikiTreeLoginState;
+  wikiTreeLoginUsername?: string;
   searchResults: SearchResultProps[];
 }
 
@@ -48,6 +57,8 @@ interface Props {
   /** Whether to show the "All relatives" chart type in the menu. */
   allowAllRelativesChart: boolean;
   eventHandlers: EventHandlers;
+  /** Whether to show the 'Log in to WikiTree' button. */
+  showWikiTreeLogin: boolean;
 }
 
 function loadFileAsText(file: File): Promise<string> {
@@ -72,13 +83,21 @@ export class TopBar extends React.Component<
   state: State = {
     loadUrlDialogOpen: false,
     searchResults: [],
+    wikiTreeLoginState: WikiTreeLoginState.UNKNOWN,
   };
-  inputRef?: Input;
+  /** Make intl appear in this.context. */
+  static contextTypes = {
+    intl: intlShape,
+  };
+
+  urlInputRef: React.RefObject<Input> = React.createRef();
+  wikiTreeLoginFormRef: React.RefObject<HTMLFormElement> = React.createRef();
+  wikiTreeReturnUrlRef: React.RefObject<HTMLInputElement> = React.createRef();
   searchRef?: {setValue(value: string): void};
   searchIndex?: SearchIndex;
 
   /** Handles the "Upload file" button. */
-  async handleUpload(event: React.SyntheticEvent<HTMLInputElement>) {
+  private async handleUpload(event: React.SyntheticEvent<HTMLInputElement>) {
     const files = (event.target as HTMLInputElement).files;
     if (!files || !files.length) {
       return;
@@ -132,20 +151,20 @@ export class TopBar extends React.Component<
   }
 
   /** Opens the "Load from URL" dialog. */
-  handleLoadFromUrl() {
+  private openLoadUrlDialog() {
     this.setState(
       Object.assign({}, this.state, {loadUrlDialogOpen: true}),
-      () => this.inputRef!.focus(),
+      () => this.urlInputRef.current!.focus(),
     );
   }
 
   /** Cancels the "Load from URL" dialog. */
-  handleClose() {
+  private handleClose() {
     this.setState(Object.assign({}, this.state, {loadUrlDialogOpen: false}));
   }
 
   /** Upload button clicked in the "Load from URL" dialog. */
-  handleLoad() {
+  private handleLoad() {
     this.setState(
       Object.assign({}, this.state, {
         loadUrlDialogOpen: false,
@@ -161,7 +180,7 @@ export class TopBar extends React.Component<
   }
 
   /** Called when the URL input is typed into. */
-  handleUrlChange(event: React.SyntheticEvent) {
+  private handleUrlChange(event: React.SyntheticEvent) {
     this.setState(
       Object.assign({}, this.state, {
         url: (event.target as HTMLInputElement).value,
@@ -170,7 +189,7 @@ export class TopBar extends React.Component<
   }
 
   /** On search input change. */
-  handleSearch(input: string | undefined) {
+  private handleSearch(input: string | undefined) {
     if (!input) {
       return;
     }
@@ -181,13 +200,13 @@ export class TopBar extends React.Component<
   }
 
   /** On search result selected. */
-  handleResultSelect(id: string) {
+  private handleResultSelect(id: string) {
     analyticsEvent('search_result_selected');
     this.props.eventHandlers.onSelection({id, generation: 0});
     this.searchRef!.setValue('');
   }
 
-  initializeSearchIndex() {
+  private initializeSearchIndex() {
     if (this.props.gedcom) {
       this.searchIndex = buildSearchIndex(this.props.gedcom);
     }
@@ -203,23 +222,50 @@ export class TopBar extends React.Component<
     }
   }
 
-  componentDidMount() {
+  /**
+   * Redirect to the WikiTree Apps login page with a return URL pointing to
+   * Topola Viewer hosted on apps.wikitree.com.
+   */
+  private wikiTreeLogin() {
+    const wikiTreeTopolaUrl =
+      'https://apps.wikitree.com/apps/wiech13/topola-viewer';
+    // Append '&' because the login page appends '?authcode=...' to this URL.
+    // TODO: remove ?authcode if it is in the current URL.
+    const returnUrl = `${wikiTreeTopolaUrl}${window.location.hash}&`;
+    this.wikiTreeReturnUrlRef.current!.value = returnUrl;
+    this.wikiTreeLoginFormRef.current!.submit();
+  }
+
+  private checkWikiTreeLoginState() {
+    const wikiTreeLoginState =
+      Cookies.get('wikidb_wtb_UserID') !== undefined
+        ? WikiTreeLoginState.LOGGED_IN
+        : WikiTreeLoginState.NOT_LOGGED_IN;
+    if (this.state.wikiTreeLoginState !== wikiTreeLoginState) {
+      const wikiTreeLoginUsername = Cookies.get('wikidb_wtb_UserName');
+      this.setState(
+        Object.assign({}, this.state, {
+          wikiTreeLoginState,
+          wikiTreeLoginUsername,
+        }),
+      );
+    }
+  }
+
+  async componentDidMount() {
+    this.checkWikiTreeLoginState();
     this.initializeSearchIndex();
   }
 
   componentDidUpdate(prevProps: Props) {
+    this.checkWikiTreeLoginState();
     if (prevProps.gedcom !== this.props.gedcom) {
       this.initializeSearchIndex();
     }
   }
 
-  /** Make intl appear in this.context. */
-  static contextTypes = {
-    intl: intlShape,
-  };
-
-  render() {
-    const loadFromUrlModal = (
+  private loadFromUrlModal() {
+    return (
       <Modal
         open={this.state.loadUrlDialogOpen}
         onClose={() => this.handleClose()}
@@ -239,7 +285,7 @@ export class TopBar extends React.Component<
               placeholder="https://"
               fluid
               onChange={(e) => this.handleUrlChange(e)}
-              ref={(ref) => (this.inputRef = ref!)}
+              ref={this.urlInputRef}
             />
             <p>
               <FormattedMessage
@@ -271,8 +317,13 @@ export class TopBar extends React.Component<
         </Modal.Actions>
       </Modal>
     );
+  }
 
-    const chartMenus = this.props.showingChart ? (
+  private chartMenus() {
+    if (!this.props.showingChart) {
+      return null;
+    }
+    return (
       <>
         <Menu.Item as="a" onClick={() => this.props.eventHandlers.onPrint()}>
           <Icon name="print" />
@@ -367,16 +418,21 @@ export class TopBar extends React.Component<
           }
         />
       </>
-    ) : null;
+    );
+  }
 
-    const fileMenus = this.props.standalone ? (
+  private fileMenus() {
+    if (!this.props.standalone) {
+      return null;
+    }
+    return (
       <>
         <Link to="/">
           <Menu.Item>
             <b>Topola Genealogy</b>
           </Menu.Item>
         </Link>
-        <Menu.Item as="a" onClick={() => this.handleLoadFromUrl()}>
+        <Menu.Item as="a" onClick={() => this.openLoadUrlDialog()}>
           <Icon name="cloud download" />
           <FormattedMessage
             id="menu.load_from_url"
@@ -401,44 +457,111 @@ export class TopBar extends React.Component<
           </Menu.Item>
         </label>
       </>
-    ) : null;
-
-    const sourceLink = this.props.standalone ? (
-      <>
-        <Menu.Item
-          as="a"
-          href="https://github.com/PeWu/topola-viewer"
-          position="right"
-          target="_blank"
-        >
-          <FormattedMessage
-            id="menu.github"
-            defaultMessage="Source on GitHub"
-          />
-        </Menu.Item>
-      </>
-    ) : (
-      <>
-        <Menu.Item
-          as="a"
-          href="https://pewu.github.com/topola-viewer"
-          position="right"
-          target="_blank"
-        >
-          <FormattedMessage
-            id="menu.powered_by"
-            defaultMessage="Powered by Topola"
-          />
-        </Menu.Item>
-      </>
     );
+  }
 
+  private wikiTreeLoginMenu() {
+    if (!this.props.showWikiTreeLogin) {
+      return null;
+    }
+    const wikiTreeLogoUrl =
+      'https://www.wikitree.com/photo.php/a/a5/WikiTree_Images.png';
+    switch (this.state.wikiTreeLoginState) {
+      case WikiTreeLoginState.NOT_LOGGED_IN:
+        return (
+          <Menu.Item as="a" onClick={() => this.wikiTreeLogin()}>
+            <img
+              src={wikiTreeLogoUrl}
+              alt="WikiTree logo"
+              style={{width: '24px', height: '24px'}}
+            />
+            <FormattedMessage
+              id="menu.wikitree_login"
+              defaultMessage="Log in to WikiTree"
+            />
+            <form
+              action="https://apps.wikitree.com/api.php"
+              method="POST"
+              style={{display: 'hidden'}}
+              ref={this.wikiTreeLoginFormRef}
+            >
+              <input type="hidden" name="action" value="clientLogin" />
+              <input
+                type="hidden"
+                name="returnURL"
+                ref={this.wikiTreeReturnUrlRef}
+              />
+            </form>
+          </Menu.Item>
+        );
+      case WikiTreeLoginState.LOGGED_IN:
+        const tooltip = this.state.wikiTreeLoginUsername
+          ? this.context.intl.formatMessage(
+              {
+                id: 'menu.wikitree_popup_username',
+                defaultMessage: 'Logged in to WikiTree as {username}',
+              },
+              {username: this.state.wikiTreeLoginUsername},
+            )
+          : this.context.intl.formatMessage({
+              id: 'menu.wikitree_popup',
+              defaultMessage: 'Logged in to WikiTree',
+            });
+        return (
+          <Menu.Item title={tooltip}>
+            <img
+              src={wikiTreeLogoUrl}
+              alt="WikiTree logo"
+              style={{width: '24px', height: '24px'}}
+            />
+            <FormattedMessage
+              id="menu.wikitree_logged_in"
+              defaultMessage="Logged in"
+            />
+          </Menu.Item>
+        );
+      default:
+        return null;
+    }
+  }
+
+  private sourceLink() {
+    return (
+      <Menu.Item
+        as="a"
+        href="https://github.com/PeWu/topola-viewer"
+        target="_blank"
+      >
+        <FormattedMessage id="menu.github" defaultMessage="Source on GitHub" />
+      </Menu.Item>
+    );
+  }
+
+  private poweredByLink() {
+    return (
+      <Menu.Item
+        as="a"
+        href="https://pewu.github.com/topola-viewer"
+        target="_blank"
+      >
+        <FormattedMessage
+          id="menu.powered_by"
+          defaultMessage="Powered by Topola"
+        />
+      </Menu.Item>
+    );
+  }
+
+  render() {
     return (
       <Menu attached="top" inverted color="blue" size="large">
-        {fileMenus}
-        {chartMenus}
-        {sourceLink}
-        {loadFromUrlModal}
+        {this.fileMenus()}
+        {this.chartMenus()}
+        <Menu.Menu position="right">
+          {this.wikiTreeLoginMenu()}
+          {this.props.standalone ? this.sourceLink() : this.poweredByLink()}
+        </Menu.Menu>
+        {this.loadFromUrlModal()}
       </Menu>
     );
   }

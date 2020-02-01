@@ -1,5 +1,6 @@
-import {GedcomData, TopolaData} from './gedcom_util';
+import Cookies from 'js-cookie';
 import {Date, JsonFam, JsonIndi} from 'topola';
+import {GedcomData, TopolaData} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 
 /** WikiTree API getAncestors request. */
@@ -17,7 +18,12 @@ interface GetRelatives {
   getSpouses?: true;
 }
 
-type WikiTreeRequest = GetAncestorsRequest | GetRelatives;
+interface ClientLogin {
+  action: 'clientLogin';
+  authcode: string;
+}
+
+type WikiTreeRequest = GetAncestorsRequest | GetRelatives | ClientLogin;
 
 /** Person structure returned from WikiTree API. */
 interface Person {
@@ -128,13 +134,34 @@ async function getRelatives(keys: string[], handleCors: boolean) {
   return result.concat(fetchedResults);
 }
 
+export async function clientLogin(authcode: string) {
+  const response = await wikiTreeGet(
+    {
+      action: 'clientLogin',
+      authcode,
+    },
+    false,
+  );
+  return response.clientLogin;
+}
+
 /**
  * Loads data from WikiTree to populate an hourglass chart starting from the
  * given person ID.
  */
-export async function loadWikiTree(key: string): Promise<TopolaData> {
+export async function loadWikiTree(
+  key: string,
+  authcode?: string,
+): Promise<TopolaData> {
   // Work around CORS if not in apps.wikitree.com domain.
   const handleCors = window.location.hostname !== 'apps.wikitree.com';
+
+  if (!handleCors && !Cookies.get('wikidb_wtb_UserID') && authcode) {
+    const loginResult = await clientLogin(authcode);
+    if (loginResult.result === 'Success') {
+      sessionStorage.clear();
+    }
+  }
 
   const everyone: Person[] = [];
 
