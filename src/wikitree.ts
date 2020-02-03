@@ -186,9 +186,14 @@ export async function loadWikiTree(
   const ancestorDetails = await getRelatives(ancestorKeys, handleCors);
   everyone.push(...ancestorDetails);
 
+  // Limit the number of generations of descendants because there may be tens of
+  // generations for some profiles.
+  const descendantGenerationLimit = 10;
+
   // Fetch descendants recursively.
   let toFetch = [key];
-  while (toFetch.length > 0) {
+  let generation = 0;
+  while (toFetch.length > 0 && generation <= descendantGenerationLimit) {
     const people = await getRelatives(toFetch, handleCors);
     everyone.push(...people);
     const allSpouses = people.flatMap((person) =>
@@ -199,6 +204,7 @@ export async function loadWikiTree(
     toFetch = people.flatMap((person) =>
       Object.values(person.Children).map((c) => c.Name),
     );
+    generation++;
   }
 
   // Map from person id to the set of families where they are a spouse.
