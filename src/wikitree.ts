@@ -387,7 +387,7 @@ function buildGedcom(indis: JsonIndi[]): GedcomData {
           level: 1,
           pointer: '',
           tag: 'NAME',
-          data: `${indi.firstName} /${indi.lastName}/`,
+          data: `${indi.firstName || ''} /${indi.lastName || ''}/`,
           tree: [],
         },
         {
