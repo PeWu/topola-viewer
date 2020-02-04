@@ -384,7 +384,7 @@ function buildGedcom(indis: JsonIndi[]): GedcomData {
   const gedcomIndis: {[key: string]: GedcomEntry} = {};
   indis.forEach((indi) => {
     // WikiTree URLs replace spaces with underscores.
-    const escapedId = indi.id.replace(' ', '_');
+    const escapedId = indi.id.replace(/ /g, '_');
     gedcomIndis[indi.id] = {
       level: 0,
       pointer: `@${indi.id}@`,
