@@ -383,6 +383,8 @@ function parseDate(date: string, dataStatus?: string) {
 function buildGedcom(indis: JsonIndi[]): GedcomData {
   const gedcomIndis: {[key: string]: GedcomEntry} = {};
   indis.forEach((indi) => {
+    // WikiTree URLs replace spaces with underscores.
+    const escapedId = indi.id.replace(' ', '_');
     gedcomIndis[indi.id] = {
       level: 0,
       pointer: `@${indi.id}@`,
@@ -400,7 +402,7 @@ function buildGedcom(indis: JsonIndi[]): GedcomData {
           level: 1,
           pointer: '',
           tag: 'WWW',
-          data: `https://www.wikitree.com/wiki/${indi.id}`,
+          data: `https://www.wikitree.com/wiki/${escapedId}`,
           tree: [],
         },
       ],
