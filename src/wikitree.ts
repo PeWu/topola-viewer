@@ -317,7 +317,7 @@ function convertPerson(person: Person): JsonIndi {
     indi.sex = 'F';
   }
   if (
-    (person.BirthDate && person.DeathDate !== '0000-00-00') ||
+    (person.BirthDate && person.BirthDate !== '0000-00-00') ||
     person.BirthLocation
   ) {
     const parsedDate = parseDate(
