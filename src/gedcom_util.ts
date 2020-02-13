@@ -4,6 +4,7 @@ import {
   JsonIndi,
   gedcomEntriesToJson,
   JsonImage,
+  JsonEvent,
 } from 'topola';
 import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
 
@@ -58,6 +59,33 @@ function strcmp(a: string, b: string) {
   return 0;
 }
 
+/** Compares dates of the given events. */
+function compareDates(
+  event1: JsonEvent | undefined,
+  event2: JsonEvent | undefined,
+): number {
+  const date1 =
+    event1 && (event1.date || (event1.dateRange && event1.dateRange.from));
+  const date2 =
+    event2 && (event2.date || (event2.dateRange && event2.dateRange.from));
+  if (!date1 || !date1.year || !date2 || !date2.year) {
+    return 0;
+  }
+  if (date1.year !== date2.year) {
+    return date1.year - date2.year;
+  }
+  if (!date1.month || !date2.month) {
+    return 0;
+  }
+  if (date1.month !== date2.month) {
+    return date1.month - date2.month;
+  }
+  if (date1.day && date2.day && date1.day !== date2.day) {
+    return date1.month - date2.month;
+  }
+  return 0;
+}
+
 /** Birth date comparator for individuals. */
 function birthDatesComparator(gedcom: JsonGedcomData) {
   const idToIndiMap = new Map<string, JsonIndi>();
@@ -66,31 +94,29 @@ function birthDatesComparator(gedcom: JsonGedcomData) {
   });
 
   return (indiId1: string, indiId2: string) => {
-    const idComparison = strcmp(indiId1, indiId2);
     const indi1: JsonIndi = idToIndiMap[indiId1];
     const indi2: JsonIndi = idToIndiMap[indiId2];
-    const birth1 = indi1 && indi1.birth;
-    const birth2 = indi2 && indi2.birth;
-    const date1 =
-      birth1 && (birth1.date || (birth1.dateRange && birth1.dateRange.from));
-    const date2 =
-      birth2 && (birth2.date || (birth2.dateRange && birth2.dateRange.from));
-    if (!date1 || !date1.year || !date2 || !date2.year) {
-      return idComparison;
-    }
-    if (date1.year !== date2.year) {
-      return date1.year - date2.year;
-    }
-    if (!date1.month || !date2.month) {
-      return idComparison;
-    }
-    if (date1.month !== date2.month) {
-      return date1.month - date2.month;
-    }
-    if (date1.day && date2.day && date1.day !== date2.day) {
-      return date1.month - date2.month;
-    }
-    return idComparison;
+    return (
+      compareDates(indi1 && indi1.birth, indi2 && indi2.birth) ||
+      strcmp(indiId1, indiId2)
+    );
+  };
+}
+
+/** Marriage date comparator for families. */
+function marriageDatesComparator(gedcom: JsonGedcomData) {
+  const idToFamMap = new Map<string, JsonFam>();
+  gedcom.fams.forEach((fam) => {
+    idToFamMap[fam.id] = fam;
+  });
+
+  return (famId1: string, famId2: string) => {
+    const fam1: JsonFam = idToFamMap[famId1];
+    const fam2: JsonFam = idToFamMap[famId2];
+    return (
+      compareDates(fam1 && fam1.marriage, fam2 && fam2.marriage) ||
+      strcmp(famId1, famId2)
+    );
   };
 }
 
@@ -117,6 +143,34 @@ function sortChildren(gedcom: JsonGedcomData): JsonGedcomData {
   const comparator = birthDatesComparator(gedcom);
   const newFams = gedcom.fams.map((fam) => sortFamilyChildren(fam, comparator));
   return Object.assign({}, gedcom, {fams: newFams});
+}
+
+/**
+ * Sorts spouses by marriage date.
+ * Does not modify the input objects.
+ */
+function sortIndiSpouses(
+  indi: JsonIndi,
+  comparator: (id1: string, id2: string) => number,
+): JsonFam {
+  if (!indi.fams) {
+    return indi;
+  }
+  const newFams = indi.fams.sort(comparator);
+  return Object.assign({}, indi, {fams: newFams});
+}
+
+function sortSpouses(gedcom: JsonGedcomData): JsonGedcomData {
+  const comparator = marriageDatesComparator(gedcom);
+  const newIndis = gedcom.indis.map((indi) =>
+    sortIndiSpouses(indi, comparator),
+  );
+  return Object.assign({}, gedcom, {indis: newIndis});
+}
+
+/** Sorts children and spouses. */
+export function normalizeGedcom(gedcom: JsonGedcomData): JsonGedcomData {
+  return sortSpouses(sortChildren(gedcom));
 }
 
 const IMAGE_EXTENSIONS = ['.jpg', '.png', '.gif'];
@@ -185,7 +239,7 @@ export function convertGedcom(
   }
 
   return {
-    chartData: filterImages(sortChildren(json), images),
+    chartData: filterImages(normalizeGedcom(json), images),
     gedcom: prepareGedcom(entries),
   };
 }

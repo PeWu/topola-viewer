@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 import {Date, JsonFam, JsonIndi} from 'topola';
-import {GedcomData, TopolaData} from './gedcom_util';
+import {GedcomData, TopolaData, normalizeGedcom} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 
 /** WikiTree API getAncestors request. */
@@ -286,8 +286,9 @@ export async function loadWikiTree(
     return fam;
   });
 
+  const chartData = normalizeGedcom({indis, fams});
   const gedcom = buildGedcom(indis);
-  return {chartData: {indis, fams}, gedcom};
+  return {chartData, gedcom};
 }
 
 /** Creates a family identifier given 2 spouse identifiers. */
