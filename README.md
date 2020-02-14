@@ -1,5 +1,7 @@
 # Topola Genealogy Viewer
 
+[![Build Status](https://travis-ci.com/PeWu/topola-viewer.svg?branch=master)](https://travis-ci.com/PeWu/topola-viewer)
+
 View your genealogy data using an interactive chart.
 
 Website: https://pewu.github.io/topola-viewer
