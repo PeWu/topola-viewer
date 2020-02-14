@@ -275,6 +275,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             url,
             standalone,
             chartType,
+            wikiTreeSource: source === 'wikitree',
           }),
         );
         const data =
