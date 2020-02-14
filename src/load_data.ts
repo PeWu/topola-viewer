@@ -10,10 +10,11 @@ export function getSelection(
   indi?: string,
   generation?: number,
 ): IndiInfo {
-  return {
-    id: indi || data.indis[0].id,
-    generation: generation || 0,
-  };
+  // If ID is not given or it doesn't exist in the data, use the first ID in
+  // the data.
+  const id =
+    indi && data.indis.some((i) => i.id === indi) ? indi : data.indis[0].id;
+  return {id, generation: generation || 0};
 }
 
 function prepareData(
