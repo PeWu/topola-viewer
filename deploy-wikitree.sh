@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo Password:
-lftp sftp://wiech13@apps.wikitree.com << EOF
+echo Copying files...
+lftp --env-password sftp://wiech13@apps.wikitree.com << EOF
   mkdir www/topola-viewer.new
   mirror -R build/ www/topola-viewer.new/
   rm -r www/topola-viewer.old
