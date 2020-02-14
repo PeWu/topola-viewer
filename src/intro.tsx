@@ -16,10 +16,7 @@ function GedcomLink(props: {url: string; text: string}) {
 }
 
 function formatBuildDate(dateString: string) {
-  return new Date(dateString)
-    .toISOString()
-    .slice(0, 16)
-    .replace('T', ' ');
+  return dateString.slice(0, 16);
 }
 
 /** The intro page. */
