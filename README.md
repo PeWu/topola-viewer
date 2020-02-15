@@ -35,6 +35,38 @@ Here are some examples from the Web:
 
 If you have data in a genealogy database, you can export your data in GEDCOM format and load it using the "Load from file" menu.
 
+## Integrations
+
+Topola Genealogy Viewer is being integrated into more and more Web and desktop applications.
+Here are the current integrations:
+
+### Gramps
+
+To view your [Gramps](https://gramps-project.org/) data in Topola Genealogy Viewer,
+install *Interactive Family Tree* plugin from the Gramps plugin manager.
+The plugin will add a *Tools->Analysis and Exploration->Interactive Family Tree* menu item to Gramps.
+
+Source code: https://github.com/gramps-project/addons-source/tree/master/Topola
+
+### Webtrees
+
+Embed Topola Genealogy Viewer in your [Webtrees](https://www.webtrees.net/) installation with the
+[Topola interactive tree addon](https://www.webtrees.net/index.php/en/add-ons/download/3-modules/247-topola-interactive-tree).
+Webtrees 2.0 is not supported yet.
+
+Source code: https://github.com/PeWu/topola-webtrees
+
+### WikiTree
+
+You can browse the [WikiTree](https://www.wikitree.com/) genealogy tree using Topola Genealogy Viewer.
+On a WikiTree profile page go to the *Family Tree & Tools* tab and click the *Dynamic Tree by Topola* link.
+
+Example:
+[Stephen Hawking](https://apps.wikitree.com/apps/wiech13/topola-viewer/#/view?source=wikitree&standalone=false&indi=Hawking-7)
+
+Topola Genealogy Viewer is hosted on [apps.wikitree.com](https://apps.wikitree.com/apps/wiech13/topola-viewer)
+to benefit from the ability of being logged in to the WikiTree API.
+
 ## Running locally
 
 ```
