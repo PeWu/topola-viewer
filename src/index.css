@@ -48,10 +48,22 @@ div.ui.errorPopup.message {
 }
 
 div.ui.card.intro {
-  width: 600px;
+  width: 770px;
   margin: auto;
 }
 
 .version {
   color: #888;
+}
+
+.backgroundImage {
+  width: 100%;
+  height: 100%;
+  background-image: url(topola.jpg);
+  background-size: cover;
+  background-position: 0% 20%;
+  position: fixed;
+  z-index: -100;
+  filter: blur(8px) opacity(30%);
+  -webkit-filter: blur(8px) opacity(30%);
 }
