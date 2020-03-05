@@ -1,3 +1,4 @@
+import * as H from 'history';
 import * as queryString from 'query-string';
 import * as React from 'react';
 import {analyticsEvent} from './analytics';
@@ -10,9 +11,9 @@ import {IndiInfo} from 'topola';
 import {intlShape} from 'react-intl';
 import {Intro} from './intro';
 import {Loader, Message, Portal, Responsive} from 'semantic-ui-react';
+import {loadWikiTree} from './wikitree';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './top_bar';
-import {loadWikiTree} from './wikitree';
 
 /** Shows an error message in the middle of the screen. */
 function ErrorMessage(props: {message?: string}) {
@@ -74,6 +75,158 @@ interface GedcomMessage extends EmbeddedMessage {
   gedcom?: string;
 }
 
+/** Interface encapsulating functions specific for a data source. */
+interface DataSource {
+  /**
+   * Returns true if the application is now loading a completely new data set
+   * and the existing one should be wiped.
+   */
+  isNewData(args: Arguments, state: State): boolean;
+  /** Loads data from the data source. */
+  loadData(args: Arguments): Promise<TopolaData>;
+}
+
+/** Files opened from the local computer. */
+class UploadedDataSource implements DataSource {
+  isNewData(args: Arguments, state: State): boolean {
+    return (
+      args.hash !== state.hash ||
+      !!(args.gedcom && !state.loading && !state.data)
+    );
+  }
+
+  async loadData(args: Arguments): Promise<TopolaData> {
+    try {
+      const data = await loadGedcom(args.hash!, args.gedcom, args.images);
+      const software = getSoftware(data.gedcom.head);
+      analyticsEvent('upload_file_loaded', {
+        event_label: software,
+        event_value: (args.images && args.images.size) || 0,
+      });
+      return data;
+    } catch (error) {
+      analyticsEvent('upload_file_error');
+      throw error;
+    }
+  }
+}
+
+/** GEDCOM file loaded by pointing to a URL. */
+class GedcomUrlDataSource implements DataSource {
+  isNewData(args: Arguments, state: State): boolean {
+    return args.url !== state.url;
+  }
+
+  async loadData(args: Arguments): Promise<TopolaData> {
+    try {
+      const data = await loadFromUrl(args.url!, args.handleCors);
+      const software = getSoftware(data.gedcom.head);
+      analyticsEvent('upload_file_loaded', {event_label: software});
+      return data;
+    } catch (error) {
+      analyticsEvent('url_file_error');
+      throw error;
+    }
+  }
+}
+
+/** Loading data from the WikiTree API. */
+class WikiTreeDataSource implements DataSource {
+  isNewData(args: Arguments, state: State): boolean {
+    // WikiTree is always a single data source.
+    return false;
+  }
+
+  async loadData(args: Arguments): Promise<TopolaData> {
+    try {
+      const data = await loadWikiTree(args.indi!, args.authcode);
+      analyticsEvent('wikitree_loaded');
+      return data;
+    } catch (error) {
+      analyticsEvent('wikitree_error');
+      throw error;
+    }
+  }
+}
+
+/** Supported data sources. */
+enum DataSourceEnum {
+  UPLOADED,
+  GEDCOM_URL,
+  WIKITREE,
+}
+
+/** Mapping from data source identifier to data source handler functions. */
+const DATA_SOURCES = new Map([
+  [DataSourceEnum.UPLOADED, new UploadedDataSource()],
+  [DataSourceEnum.GEDCOM_URL, new GedcomUrlDataSource()],
+  [DataSourceEnum.WIKITREE, new WikiTreeDataSource()],
+]);
+
+/** Arguments passed to the application, primarily through URL parameters. */
+interface Arguments {
+  showSidePanel: boolean;
+  embedded: boolean;
+  url?: string;
+  indi?: string;
+  generation?: number;
+  hash?: string;
+  handleCors: boolean;
+  standalone: boolean;
+  source?: DataSourceEnum;
+  authcode?: string;
+  chartType: ChartType;
+  gedcom?: string;
+  images?: Map<string, string>;
+}
+
+/**
+ * Retrieve arguments passed into the application through the URL and uploaded
+ * data.
+ */
+function getArguments(location: H.Location<any>): Arguments {
+  const search = queryString.parse(location.search);
+  const getParam = (name: string) => {
+    const value = search[name];
+    return typeof value === 'string' ? value : undefined;
+  };
+
+  const parsedGen = Number(getParam('gen'));
+  const view = getParam('view');
+  const chartTypes = new Map<string | undefined, ChartType>([
+    ['relatives', ChartType.Relatives],
+    ['fancy', ChartType.Fancy],
+  ]);
+  const hash = getParam('file');
+  const url = getParam('url');
+  const source =
+    getParam('source') === 'wikitree'
+      ? DataSourceEnum.WIKITREE
+      : hash
+      ? DataSourceEnum.UPLOADED
+      : url
+      ? DataSourceEnum.GEDCOM_URL
+      : undefined;
+  return {
+    showSidePanel: getParam('sidePanel') !== 'false', // True by default.
+    embedded: getParam('embedded') === 'true', // False by default.
+    url,
+    indi: getParam('indi'),
+    generation: !isNaN(parsedGen) ? parsedGen : undefined,
+    hash,
+    handleCors: getParam('handleCors') !== 'false', // True by default.
+    standalone: getParam('standalone') !== 'false', // True by default.
+    source,
+    authcode: getParam('?authcode'),
+
+    // Hourglass is the default view.
+    chartType: chartTypes.get(view) || ChartType.Hourglass,
+
+    gedcom: location.state && location.state.data,
+    images: location.state && location.state.images,
+  };
+}
+
 /** Returs true if the changes object has values that are different than those in state. */
 function hasUpdatedValues<T>(state: T, changes: Partial<T> | undefined) {
   if (!changes) {
@@ -107,8 +260,8 @@ interface State {
   chartType: ChartType;
   /** Whether to show the error popup. */
   showErrorPopup: boolean;
-  /** True if data is loaded from WikiTree. */
-  wikiTreeSource: boolean;
+  /** Source of the data. */
+  source?: DataSourceEnum;
   loadingMore?: boolean;
 }
 
@@ -119,7 +272,6 @@ export class App extends React.Component<RouteComponentProps, {}> {
     standalone: true,
     chartType: ChartType.Hourglass,
     showErrorPopup: false,
-    wikiTreeSource: false,
   };
   chartRef: Chart | null = null;
 
@@ -127,23 +279,6 @@ export class App extends React.Component<RouteComponentProps, {}> {
   static contextTypes = {
     intl: intlShape,
   };
-
-  private isNewData(
-    hash: string | undefined,
-    url: string | undefined,
-    gedcom: string | undefined,
-    source: string | undefined,
-  ): boolean {
-    return (
-      !!(hash && hash !== this.state.hash) ||
-      !!(url && this.state.url !== url) ||
-      (!!gedcom && !this.state.loading && !this.state.data) ||
-      (source === 'wikitree' &&
-        !this.state.loading &&
-        !this.state.data &&
-        !this.state.error)
-    );
-  }
 
   /** Sets the state with a new individual selection and chart type. */
   private updateDisplay(
@@ -212,136 +347,97 @@ export class App extends React.Component<RouteComponentProps, {}> {
       return;
     }
 
-    const search = queryString.parse(this.props.location.search);
-    const getParam = (name: string) => {
-      const value = search[name];
-      return typeof value === 'string' ? value : undefined;
-    };
+    const args = getArguments(this.props.location);
 
-    const showSidePanel = getParam('sidePanel') !== 'false'; // True by default.
-    const embedded = getParam('embedded') === 'true'; // False by default.
-
-    if (embedded && !this.state.embedded) {
+    if (args.embedded && !this.state.embedded) {
       this.setState(
         Object.assign({}, this.state, {
           embedded: true,
           standalone: false,
-          showSidePanel,
+          showSidePanel: args.showSidePanel,
         }),
       );
       // Notify the parent window that we are ready.
       window.parent.postMessage('ready', '*');
       window.addEventListener('message', (data) => this.onMessage(data.data));
     }
-    if (embedded) {
+    if (args.embedded) {
       // If the app is embedded, do not run the normal loading code.
       return;
     }
 
-    const url = getParam('url');
-    const indi = getParam('indi');
-    const parsedGen = Number(getParam('gen'));
-    const generation = !isNaN(parsedGen) ? parsedGen : undefined;
-    const hash = getParam('file');
-    const handleCors = getParam('handleCors') !== 'false'; // True by default.
-    const standalone = getParam('standalone') !== 'false'; // True by default.
-    const view = getParam('view');
-    const source = getParam('source');
-    const authcode = getParam('?authcode');
+    const dataSource = DATA_SOURCES.get(args.source!);
 
-    const chartTypes = new Map<string | undefined, ChartType>([
-      ['relatives', ChartType.Relatives],
-      ['fancy', ChartType.Fancy],
-    ]);
-    // Hourglass is the default view.
-    const chartType = chartTypes.get(view) || ChartType.Hourglass;
-
-    const gedcom = this.props.location.state && this.props.location.state.data;
-    const images =
-      this.props.location.state && this.props.location.state.images;
-
-    if (!url && !hash && !source) {
+    if (!dataSource) {
       this.props.history.replace({pathname: '/'});
-    } else if (this.isNewData(hash, url, gedcom, source)) {
+    } else if (
+      (!this.state.loading && !this.state.data && !this.state.error) ||
+      args.source !== this.state.source ||
+      dataSource.isNewData(args, this.state)
+    ) {
+      // Set loading state.
+      this.setState(
+        Object.assign({}, this.state, {
+          data: undefined,
+          selection: undefined,
+          hash: args.hash,
+          error: undefined,
+          loading: true,
+          url: args.url,
+          standalone: args.standalone,
+          chartType: args.chartType,
+          source: args.source,
+        }),
+      );
       try {
-        // Set loading state.
-        this.setState(
-          Object.assign({}, this.state, {
-            data: undefined,
-            selection: undefined,
-            hash,
-            error: undefined,
-            loading: true,
-            url,
-            standalone,
-            chartType,
-            wikiTreeSource: source === 'wikitree',
-          }),
-        );
-        const data =
-          source === 'wikitree'
-            ? await loadWikiTree(indi!, authcode)
-            : hash
-            ? await loadGedcom(hash, gedcom, images)
-            : await loadFromUrl(url!, handleCors);
-
-        const software = getSoftware(data.gedcom.head);
-        if (source === 'wikitree') {
-          analyticsEvent('wikitree_loaded');
-        } else {
-          analyticsEvent(hash ? 'upload_file_loaded' : 'url_file_loaded', {
-            event_label: software,
-            event_value: (images && images.size) || 0,
-          });
-        }
+        const data = await dataSource.loadData(args);
 
         // Set state with data.
         this.setState(
           Object.assign({}, this.state, {
             data,
-            hash,
-            selection: getSelection(data.chartData, indi, generation),
+            hash: args.hash,
+            selection: getSelection(data.chartData, args.indi, args.generation),
             error: undefined,
             loading: false,
-            url,
-            showSidePanel,
-            standalone,
-            chartType,
-            wikiTreeSource: source === 'wikitree',
+            url: args.url,
+            showSidePanel: args.showSidePanel,
+            standalone: args.standalone,
+            chartType: args.chartType,
+            source: args.source,
           }),
         );
       } catch (error) {
-        analyticsEvent(hash ? 'upload_file_error' : 'url_file_error');
         this.setError(error.message);
       }
     } else if (this.state.data && this.state.selection) {
       // Update selection if it has changed in the URL.
       const selection = getSelection(
         this.state.data.chartData,
-        indi,
-        generation,
+        args.indi,
+        args.generation,
       );
       const loadMoreFromWikitree =
-        source === 'wikitree' &&
+        args.source === DataSourceEnum.WIKITREE &&
         (!this.state.selection || this.state.selection.id !== selection.id);
       this.updateDisplay(selection, {
-        chartType,
+        chartType: args.chartType,
         loadingMore: loadMoreFromWikitree || undefined,
       });
       if (loadMoreFromWikitree) {
-        const data = await loadWikiTree(indi!);
+        const data = await loadWikiTree(args.indi!);
         this.setState(
           Object.assign({}, this.state, {
             data,
-            hash,
-            selection: getSelection(data.chartData, indi, generation),
+            hash: args.hash,
+            selection: getSelection(data.chartData, args.indi, args.generation),
             error: undefined,
             loading: false,
-            url,
-            showSidePanel,
-            standalone,
-            chartType,
-            wikiTreeSource: source === 'wikitree',
+            url: args.url,
+            showSidePanel: args.showSidePanel,
+            standalone: args.standalone,
+            chartType: args.chartType,
+            source: args.source,
             loadingMore: false,
           }),
         );
@@ -471,7 +567,9 @@ export class App extends React.Component<RouteComponentProps, {}> {
             <TopBar
               {...props}
               gedcom={this.state.data && this.state.data.gedcom}
-              allowAllRelativesChart={!this.state.wikiTreeSource}
+              allowAllRelativesChart={
+                this.state.source !== DataSourceEnum.WIKITREE
+              }
               showingChart={
                 !!(
                   this.props.history.location.pathname === '/view' &&
@@ -487,7 +585,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
                 onDownloadPng: this.onDownloadPng,
                 onDownloadSvg: this.onDownloadSvg,
               }}
-              showWikiTreeLogin={this.state.wikiTreeSource}
+              showWikiTreeLogin={this.state.source === DataSourceEnum.WIKITREE}
             />
           )}
         />
