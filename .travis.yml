@@ -1,6 +1,12 @@
 language: node_js
 node_js:
   - "node"
+addons:
+  apt:
+    packages:
+      # Ubuntu 16+ does not install this dependency by default, so we need to install it ourselves
+      - libgconf-2-4
 script:
   - npm run build
   - npm test
+  - $(npm bin)/cypress run --record
