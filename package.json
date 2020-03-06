@@ -58,7 +58,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "predeploy-wikitree": "npm run build",
-    "deploy-wikitree": "./deploy-wikitree.sh"
+    "deploy-wikitree": "./deploy-wikitree.sh",
+    "cypress:run": "cypress run"
   },
   "homepage": ".",
   "browserslist": [
