@@ -15,21 +15,39 @@ import {
   CircleRenderer,
 } from 'topola';
 
-/** Called when the view is dragged with the mouse. */
-function zoomed() {
+/**
+ * Called when the view is dragged with the mouse.
+ *
+ * @param size the size of the chart
+ */
+function zoomed(size: [number, number], enableZoom: boolean) {
   const svg = d3.select('#chart');
   const parent = (svg.node() as HTMLElement).parentElement!;
+
+  if (enableZoom) {
+    const scale = d3.event.transform.k;
+    const offsetX = d3.max([0, (parent.clientWidth / scale - size[0]) / 2])!;
+    const offsetY = d3.max([0, (parent.clientHeight / scale - size[1]) / 2])!;
+    svg.attr(
+      'transform',
+      `translate(${-size[0] / 2}, ${-size[1] / 2})
+       scale(${scale})
+       translate(${size[0] / 2 + offsetX}, ${size[1] / 2 + offsetY})`,
+    );
+  }
+
   parent.scrollLeft = -d3.event.transform.x;
   parent.scrollTop = -d3.event.transform.y;
 }
 
 /** Called when the scrollbars are used. */
-function scrolled() {
+function scrolled(enableZoom: boolean) {
   const svg = d3.select('#chart');
   const parent = (svg.node() as HTMLElement).parentElement as Element;
   const x = parent.scrollLeft + parent.clientWidth / 2;
   const y = parent.scrollTop + parent.clientHeight / 2;
-  d3.select(parent).call(d3.zoom().translateTo, x, y);
+  const scale = enableZoom ? d3.zoomTransform(parent).k : 1;
+  d3.select(parent).call(d3.zoom().translateTo, x / scale, y / scale);
 }
 
 /** Loads blob as data URL. */
@@ -116,6 +134,7 @@ export interface ChartProps {
   selection: IndiInfo;
   chartType: ChartType;
   onSelection: (indiInfo: IndiInfo) => void;
+  enableZoom: boolean;
 }
 
 /** Component showing the genealogy chart and handling transition animations. */
@@ -185,13 +204,13 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     const parent = (svg.node() as HTMLElement).parentElement as Element;
 
     d3.select(parent)
-      .on('scroll', scrolled)
+      .on('scroll', () => scrolled(this.props.enableZoom))
       .call(
         d3
           .zoom()
-          .scaleExtent([1, 1])
+          .scaleExtent(this.props.enableZoom ? [0.1, 2] : [1, 1])
           .translateExtent([[0, 0], chartInfo.size])
-          .on('zoom', zoomed),
+          .on('zoom', () => zoomed(chartInfo.size, this.props.enableZoom)),
       );
 
     const scrollTopTween = (scrollTop: number) => {

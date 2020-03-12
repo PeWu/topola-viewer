@@ -178,6 +178,7 @@ interface Arguments {
   chartType: ChartType;
   gedcom?: string;
   images?: Map<string, string>;
+  enableZoom: boolean;
 }
 
 /**
@@ -224,6 +225,7 @@ function getArguments(location: H.Location<any>): Arguments {
 
     gedcom: location.state && location.state.data,
     images: location.state && location.state.images,
+    enableZoom: getParam('enableZoom') === 'true', // False by default.
   };
 }
 
@@ -263,6 +265,8 @@ interface State {
   /** Source of the data. */
   source?: DataSourceEnum;
   loadingMore?: boolean;
+  /** Whether the zoom functionality is enabled. */
+  enableZoom: boolean;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
@@ -272,6 +276,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
     standalone: true,
     chartType: ChartType.Hourglass,
     showErrorPopup: false,
+    enableZoom: false,
   };
   chartRef: Chart | null = null;
 
@@ -387,6 +392,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
           standalone: args.standalone,
           chartType: args.chartType,
           source: args.source,
+          enableZoom: args.enableZoom,
         }),
       );
       try {
@@ -405,6 +411,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             standalone: args.standalone,
             chartType: args.chartType,
             source: args.source,
+            enableZoom: args.enableZoom,
           }),
         );
       } catch (error) {
@@ -438,6 +445,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             standalone: args.standalone,
             chartType: args.chartType,
             source: args.source,
+            enableZoom: args.enableZoom,
             loadingMore: false,
           }),
         );
@@ -541,6 +549,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             chartType={this.state.chartType}
             onSelection={this.onSelection}
             ref={(ref) => (this.chartRef = ref)}
+            enableZoom={this.state.enableZoom}
           />
           {this.state.showSidePanel ? (
             <Responsive minWidth={768} id="sidePanel">
