@@ -21,19 +21,17 @@ import {
  * @param size the size of the chart
  */
 function zoomed(size: [number, number], enableZoom: boolean) {
-  const svg = d3.select('#chart');
-  const parent = (svg.node() as HTMLElement).parentElement!;
+  const parent = d3.select('#svgContainer').node() as Element;
 
   if (enableZoom) {
     const scale = d3.event.transform.k;
-    const offsetX = d3.max([0, (parent.clientWidth / scale - size[0]) / 2])!;
-    const offsetY = d3.max([0, (parent.clientHeight / scale - size[1]) / 2])!;
-    svg.attr(
-      'transform',
-      `translate(${-size[0] / 2}, ${-size[1] / 2})
-       scale(${scale})
-       translate(${size[0] / 2 + offsetX}, ${size[1] / 2 + offsetY})`,
-    );
+    const offsetX = d3.max([0, (parent.clientWidth - size[0] * scale) / 2]);
+    const offsetY = d3.max([0, (parent.clientHeight - size[1] * scale) / 2]);
+    d3.select('#chartSvg')
+      .attr('width', size[0] * scale)
+      .attr('height', size[1] * scale)
+      .attr('transform', `translate(${offsetX}, ${offsetY})`);
+    d3.select('#chart').attr('transform', `scale(${scale})`);
   }
 
   parent.scrollLeft = -d3.event.transform.x;
@@ -42,8 +40,7 @@ function zoomed(size: [number, number], enableZoom: boolean) {
 
 /** Called when the scrollbars are used. */
 function scrolled(enableZoom: boolean) {
-  const svg = d3.select('#chart');
-  const parent = (svg.node() as HTMLElement).parentElement as Element;
+  const parent = d3.select('#svgContainer').node() as Element;
   const x = parent.scrollLeft + parent.clientWidth / 2;
   const y = parent.scrollTop + parent.clientHeight / 2;
   const scale = enableZoom ? d3.zoomTransform(parent).k : 1;
@@ -200,8 +197,10 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       startIndi: this.props.selection.id,
       baseGeneration: this.props.selection.generation,
     });
-    const svg = d3.select('#chart');
-    const parent = (svg.node() as HTMLElement).parentElement as Element;
+    const svg = d3.select('#chartSvg');
+    const parent = d3.select('#svgContainer').node() as Element;
+
+    const scale = this.props.enableZoom ? d3.zoomTransform(parent).k : 1;
 
     d3.select(parent)
       .on('scroll', () => scrolled(this.props.enableZoom))
@@ -230,10 +229,16 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       };
     };
 
-    const dx = parent.clientWidth / 2 - chartInfo.origin[0];
-    const dy = parent.clientHeight / 2 - chartInfo.origin[1];
-    const offsetX = d3.max([0, (parent.clientWidth - chartInfo.size[0]) / 2]);
-    const offsetY = d3.max([0, (parent.clientHeight - chartInfo.size[1]) / 2]);
+    const dx = parent.clientWidth / 2 - chartInfo.origin[0] * scale;
+    const dy = parent.clientHeight / 2 - chartInfo.origin[1] * scale;
+    const offsetX = d3.max([
+      0,
+      (parent.clientWidth - chartInfo.size[0] * scale) / 2,
+    ]);
+    const offsetY = d3.max([
+      0,
+      (parent.clientHeight - chartInfo.size[1] * scale) / 2,
+    ]);
     const svgTransition = svg
       .transition()
       .delay(200)
@@ -241,8 +246,8 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     const transition = args.initialRender ? svg : svgTransition;
     transition
       .attr('transform', `translate(${offsetX}, ${offsetY})`)
-      .attr('width', chartInfo.size[0])
-      .attr('height', chartInfo.size[1]);
+      .attr('width', chartInfo.size[0] * scale)
+      .attr('height', chartInfo.size[1] * scale);
     if (args.initialRender) {
       parent.scrollLeft = -dx;
       parent.scrollTop = -dy;
@@ -280,20 +285,40 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   render() {
     return (
       <div id="svgContainer">
-        <svg id="chart" />
+        <svg id="chartSvg">
+          <g id="chart" />
+        </svg>
       </div>
     );
   }
 
-  private getSvgContents() {
-    const svg = document.getElementById('chart')!.cloneNode(true) as Element;
+  /** Return a copy of the SVG chart but without scaling and positioning. */
+  private getStrippedSvg() {
+    const svg = document.getElementById('chartSvg')!.cloneNode(true) as Element;
+
     svg.removeAttribute('transform');
-    return new XMLSerializer().serializeToString(svg);
+    if (this.props.enableZoom) {
+      const parent = d3.select('#svgContainer').node() as Element;
+      const scale = d3.zoomTransform(parent).k;
+      svg.setAttribute(
+        'width',
+        String(Number(svg.getAttribute('width')) / scale),
+      );
+      svg.setAttribute(
+        'height',
+        String(Number(svg.getAttribute('height')) / scale),
+      );
+      svg.querySelector('#chart')!.removeAttribute('transform');
+    }
+    return svg;
+  }
+
+  private getSvgContents() {
+    return new XMLSerializer().serializeToString(this.getStrippedSvg());
   }
 
   private async getSvgContentsWithInlinedImages() {
-    const svg = document.getElementById('chart')!.cloneNode(true) as Element;
-    svg.removeAttribute('transform');
+    const svg = this.getStrippedSvg();
     await inlineImages(svg);
     return new XMLSerializer().serializeToString(svg);
   }
