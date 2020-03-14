@@ -201,13 +201,22 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     const parent = d3.select('#svgContainer').node() as Element;
 
     const scale = this.props.enableZoom ? d3.zoomTransform(parent).k : 1;
+    const zoomOutFactor = d3.min([
+      1,
+      scale,
+      parent.clientWidth / chartInfo.size[0],
+      parent.clientHeight / chartInfo.size[1],
+    ])!;
+    const extent: [number, number] = this.props.enableZoom
+      ? [d3.max([0.1, zoomOutFactor])!, 2]
+      : [1, 1];
 
     d3.select(parent)
       .on('scroll', () => scrolled(this.props.enableZoom))
       .call(
         d3
           .zoom()
-          .scaleExtent(this.props.enableZoom ? [0.1, 2] : [1, 1])
+          .scaleExtent(extent)
           .translateExtent([[0, 0], chartInfo.size])
           .on('zoom', () => zoomed(chartInfo.size, this.props.enableZoom)),
       );
