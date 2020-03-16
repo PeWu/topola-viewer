@@ -15,6 +15,9 @@ import {
   CircleRenderer,
 } from 'topola';
 
+/** How much to zoom when using the +/- buttons. */
+const ZOOM_FACTOR = 1.3;
+
 /**
  * Called when the view is dragged with the mouse.
  *
@@ -141,6 +144,8 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   private animating = false;
   /** Rendering is required after the current animation finishes. */
   private rerenderRequired = false;
+  /** The d3 zoom behavior object. */
+  private zoomBehavior?: d3.ZoomBehavior<Element, any>;
 
   private getChartType() {
     switch (this.props.chartType) {
@@ -164,6 +169,16 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
         // Use DetailedRenderer by default.
         return DetailedRenderer;
     }
+  }
+
+  private zoom(factor: number) {
+    const parent = d3.select('#svgContainer') as d3.Selection<
+      Element,
+      any,
+      any,
+      any
+    >;
+    this.zoomBehavior!.scaleBy(parent, factor);
   }
 
   /**
@@ -211,15 +226,14 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       ? [d3.max([0.1, zoomOutFactor])!, 2]
       : [1, 1];
 
+    this.zoomBehavior = d3
+      .zoom()
+      .scaleExtent(extent)
+      .translateExtent([[0, 0], chartInfo.size])
+      .on('zoom', () => zoomed(chartInfo.size, this.props.enableZoom));
     d3.select(parent)
       .on('scroll', () => scrolled(this.props.enableZoom))
-      .call(
-        d3
-          .zoom()
-          .scaleExtent(extent)
-          .translateExtent([[0, 0], chartInfo.size])
-          .on('zoom', () => zoomed(chartInfo.size, this.props.enableZoom)),
-      );
+      .call(this.zoomBehavior);
 
     const scrollTopTween = (scrollTop: number) => {
       return () => {
@@ -294,6 +308,14 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   render() {
     return (
       <div id="svgContainer">
+        <div className="zoom">
+          <a className="zoom-in" onClick={() => this.zoom(ZOOM_FACTOR)}>
+            +
+          </a>
+          <a className="zoom-out" onClick={() => this.zoom(1 / ZOOM_FACTOR)}>
+            −
+          </a>
+        </div>
         <svg id="chartSvg">
           <g id="chart" />
         </svg>

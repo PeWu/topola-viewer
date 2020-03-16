@@ -541,7 +541,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             onDismiss={this.onDismissErrorPopup}
           />
           {this.state.loadingMore ? (
-            <Loader active inline size="small" />
+            <Loader active size="small" className="loading-more" />
           ) : null}
           <Chart
             data={this.state.data.chartData}
