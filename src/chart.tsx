@@ -14,6 +14,7 @@ import {
   FancyChart,
   CircleRenderer,
 } from 'topola';
+import { Responsive } from 'semantic-ui-react';
 
 /** How much to zoom when using the +/- buttons. */
 const ZOOM_FACTOR = 1.3;
@@ -309,7 +310,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     return (
       <div id="svgContainer">
         {this.props.enableZoom ? (
-          <div className="zoom">
+          <Responsive minWidth={768} className="zoom">
             <button className="zoom-in" onClick={() => this.zoom(ZOOM_FACTOR)}>
               +
             </button>
@@ -319,7 +320,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
             >
               −
             </button>
-          </div>
+          </Responsive>
         ) : null}
         <svg id="chartSvg">
           <g id="chart" />
