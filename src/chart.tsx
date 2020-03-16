@@ -308,14 +308,19 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   render() {
     return (
       <div id="svgContainer">
-        <div className="zoom">
-          <a className="zoom-in" onClick={() => this.zoom(ZOOM_FACTOR)}>
-            +
-          </a>
-          <a className="zoom-out" onClick={() => this.zoom(1 / ZOOM_FACTOR)}>
-            −
-          </a>
-        </div>
+        {this.props.enableZoom ? (
+          <div className="zoom">
+            <button className="zoom-in" onClick={() => this.zoom(ZOOM_FACTOR)}>
+              +
+            </button>
+            <button
+              className="zoom-out"
+              onClick={() => this.zoom(1 / ZOOM_FACTOR)}
+            >
+              −
+            </button>
+          </div>
+        ) : null}
         <svg id="chartSvg">
           <g id="chart" />
         </svg>
