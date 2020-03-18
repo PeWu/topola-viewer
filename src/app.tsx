@@ -225,7 +225,7 @@ function getArguments(location: H.Location<any>): Arguments {
 
     gedcom: location.state && location.state.data,
     images: location.state && location.state.images,
-    enableZoom: getParam('enableZoom') === 'true', // False by default.
+    enableZoom: getParam('enableZoom') !== 'false', // True by default.
   };
 }
 
