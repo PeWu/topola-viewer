@@ -1,5 +1,5 @@
 import Cookies from 'js-cookie';
-import {Date, JsonFam, JsonIndi} from 'topola';
+import {Date, JsonFam, JsonIndi, DateOrRange} from 'topola';
 import {GedcomData, TopolaData, normalizeGedcom} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 
@@ -241,6 +241,7 @@ export async function loadWikiTree(
     }
     converted.add(person.Id);
     const indi = convertPerson(person);
+    console.log(person, indi);
     if (person.Spouses) {
       Object.values(person.Spouses).forEach((spouse) => {
         const famId = getFamilyId(person.Id, spouse.Id);
@@ -347,13 +348,13 @@ function convertPerson(person: Person): JsonIndi {
  * Parses a date in the format returned by WikiTree and converts in to
  * the format defined by Topola.
  */
-function parseDate(date: string, dataStatus?: string) {
+function parseDate(date: string, dataStatus?: string): DateOrRange | undefined {
   if (!date) {
     return undefined;
   }
   const matchedDate = date.match(/(\d\d\d\d)-(\d\d)-(\d\d)/);
   if (!matchedDate) {
-    return {text: date};
+    return {date: {text: date}};
   }
   const parsedDate: Date = {};
   if (matchedDate[1] !== '0000') {
@@ -366,10 +367,10 @@ function parseDate(date: string, dataStatus?: string) {
     parsedDate.day = ~~matchedDate[3];
   }
   if (dataStatus === 'after') {
-    return {dataRange: {from: parsedDate}};
+    return {dateRange: {from: parsedDate}};
   }
   if (dataStatus === 'before') {
-    return {dataRange: {to: parsedDate}};
+    return {dateRange: {to: parsedDate}};
   }
   if (dataStatus === 'guess') {
     parsedDate.qualifier = 'abt';
