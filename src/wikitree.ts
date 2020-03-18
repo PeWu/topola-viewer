@@ -188,7 +188,7 @@ export async function loadWikiTree(
 
   // Limit the number of generations of descendants because there may be tens of
   // generations for some profiles.
-  const descendantGenerationLimit = 10;
+  const descendantGenerationLimit = 5;
 
   // Fetch descendants recursively.
   let toFetch = [key];
