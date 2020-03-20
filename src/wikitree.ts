@@ -51,6 +51,25 @@ interface Person {
   };
 }
 
+/** Gets item from session storage. Logs exception if one is thrown. */
+function getSessionStorageItem(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch (e) {
+    console.warn('Failed to load data from session storage: ' + e);
+  }
+  return null;
+}
+
+/** Sets item in session storage. Logs exception if one is thrown. */
+function setSessionStorageItem(key: string, value: string) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch (e) {
+    console.warn('Failed to store data in session storage: ' + e);
+  }
+}
+
 /** Sends a request to the WikiTree API. Returns the parsed response JSON. */
 async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
   const requestData = new FormData();
@@ -75,7 +94,7 @@ async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
  */
 async function getAncestors(key: string, handleCors: boolean) {
   const cacheKey = `wikitree:ancestors:${key}`;
-  const cachedData = sessionStorage.getItem(cacheKey);
+  const cachedData = getSessionStorageItem(cacheKey);
   if (cachedData) {
     return JSON.parse(cachedData);
   }
@@ -88,7 +107,7 @@ async function getAncestors(key: string, handleCors: boolean) {
     handleCors,
   );
   const result = response[0].ancestors as Person[];
-  sessionStorage.setItem(cacheKey, JSON.stringify(result));
+  setSessionStorageItem(cacheKey, JSON.stringify(result));
   return result;
 }
 
@@ -100,7 +119,7 @@ async function getRelatives(keys: string[], handleCors: boolean) {
   const result: Person[] = [];
   const keysToFetch: string[] = [];
   keys.forEach((key) => {
-    const cachedData = sessionStorage.getItem(`wikitree:relatives:${key}`);
+    const cachedData = getSessionStorageItem(`wikitree:relatives:${key}`);
     if (cachedData) {
       result.push(JSON.parse(cachedData));
     } else {
@@ -126,7 +145,7 @@ async function getRelatives(keys: string[], handleCors: boolean) {
     (x: {person: Person}) => x.person,
   ) as Person[];
   fetchedResults.forEach((person) => {
-    sessionStorage.setItem(
+    setSessionStorageItem(
       `wikitree:relatives:${person.Name}`,
       JSON.stringify(person),
     );
