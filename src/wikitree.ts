@@ -260,7 +260,6 @@ export async function loadWikiTree(
     }
     converted.add(person.Id);
     const indi = convertPerson(person);
-    console.log(person, indi);
     if (person.Spouses) {
       Object.values(person.Spouses).forEach((spouse) => {
         const famId = getFamilyId(person.Id, spouse.Id);
