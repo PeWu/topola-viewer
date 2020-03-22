@@ -357,7 +357,7 @@ function convertPerson(person: Person): JsonIndi {
     indi.death = Object.assign({}, parsedDate, {place: person.DeathLocation});
   }
   if (person.PhotoData) {
-    indi.images = [{url: `https://wikitree.com${person.PhotoData.path}`}];
+    indi.images = [{url: `https://www.wikitree.com${person.PhotoData.path}`}];
   }
   return indi;
 }
