@@ -12,12 +12,13 @@ interface Props {
   indi: string;
 }
 
-const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI', 'EVEN'];
+const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI', 'EVEN', 'CENS'];
 const EXCLUDED_TAGS = ['NAME', 'SEX', 'FAMC', 'FAMS', 'NOTE', 'SOUR'];
 const TAG_DESCRIPTIONS = new Map([
   ['BAPM', 'Baptism'],
   ['BIRT', 'Birth'],
   ['BURI', 'Burial'],
+  ['CENS', 'Census'],
   ['CHR', 'Christening'],
   ['DEAT', 'Death'],
   ['EMAIL', 'E-mail'],
