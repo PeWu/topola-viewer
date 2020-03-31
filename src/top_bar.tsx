@@ -23,12 +23,18 @@ import {
   Search,
   SearchProps,
   SearchResultProps,
+  Responsive,
 } from 'semantic-ui-react';
 
 enum WikiTreeLoginState {
   UNKNOWN,
   NOT_LOGGED_IN,
   LOGGED_IN,
+}
+
+enum ScreenSize {
+  LARGE,
+  SMALL,
 }
 
 /** Menus and dialogs state. */
@@ -319,126 +325,208 @@ export class TopBar extends React.Component<
     );
   }
 
-  private chartMenus() {
+  private search() {
+    return (
+      <Search
+        onSearchChange={debounce(
+          (_: React.MouseEvent<HTMLElement>, data: SearchProps) =>
+            this.handleSearch(data.value),
+          200,
+        )}
+        onResultSelect={(_, data) => this.handleResultSelect(data.result.id)}
+        results={this.state.searchResults}
+        noResultsMessage={this.context.intl.formatMessage({
+          id: 'menu.search.no_results',
+          defaultMessage: 'No results found',
+        })}
+        placeholder={this.context.intl.formatMessage({
+          id: 'menu.search.placeholder',
+          defaultMessage: 'Search for people',
+        })}
+        selectFirstResult={true}
+        ref={(ref) =>
+          (this.searchRef = (ref as unknown) as {
+            setValue(value: string): void;
+          })
+        }
+      />
+    );
+  }
+
+  private chartMenus(screenSize: ScreenSize) {
     if (!this.props.showingChart) {
       return null;
     }
-    return (
+    const chartTypeItems = (
       <>
-        <Menu.Item as="a" onClick={() => this.props.eventHandlers.onPrint()}>
-          <Icon name="print" />
-          <FormattedMessage id="menu.print" defaultMessage="Print" />
-        </Menu.Item>
+        <Dropdown.Item onClick={() => this.changeView('hourglass')}>
+          <Icon name="hourglass" />
+          <FormattedMessage
+            id="menu.hourglass"
+            defaultMessage="Hourglass chart"
+          />
+        </Dropdown.Item>
+        {this.props.allowAllRelativesChart ? (
+          <Dropdown.Item onClick={() => this.changeView('relatives')}>
+            <Icon name="users" />
+            <FormattedMessage
+              id="menu.relatives"
+              defaultMessage="All relatives"
+            />
+          </Dropdown.Item>
+        ) : null}
+        <Dropdown.Item onClick={() => this.changeView('fancy')}>
+          <Icon name="users" />
+          <FormattedMessage
+            id="menu.fancy"
+            defaultMessage="Fancy tree (experimental)"
+          />
+        </Dropdown.Item>
+      </>
+    );
+    switch (screenSize) {
+      case ScreenSize.LARGE:
+        return (
+          <>
+            <Menu.Item onClick={() => this.props.eventHandlers.onPrint()}>
+              <Icon name="print" />
+              <FormattedMessage id="menu.print" defaultMessage="Print" />
+            </Menu.Item>
 
-        <Dropdown
-          trigger={
-            <div>
-              <Icon name="download" />
-              <FormattedMessage id="menu.download" defaultMessage="Download" />
-            </div>
-          }
-          className="item"
-        >
-          <Dropdown.Menu>
+            <Dropdown
+              trigger={
+                <div>
+                  <Icon name="download" />
+                  <FormattedMessage
+                    id="menu.download"
+                    defaultMessage="Download"
+                  />
+                </div>
+              }
+              className="item"
+            >
+              <Dropdown.Menu>
+                <Dropdown.Item
+                  onClick={() => this.props.eventHandlers.onDownloadPdf()}
+                >
+                  <FormattedMessage
+                    id="menu.pdf_file"
+                    defaultMessage="PDF file"
+                  />
+                </Dropdown.Item>
+                <Dropdown.Item
+                  onClick={() => this.props.eventHandlers.onDownloadPng()}
+                >
+                  <FormattedMessage
+                    id="menu.png_file"
+                    defaultMessage="PNG file"
+                  />
+                </Dropdown.Item>
+                <Dropdown.Item
+                  onClick={() => this.props.eventHandlers.onDownloadSvg()}
+                >
+                  <FormattedMessage
+                    id="menu.svg_file"
+                    defaultMessage="SVG file"
+                  />
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+
+            <Dropdown
+              trigger={
+                <div>
+                  <Icon name="eye" />
+                  <FormattedMessage id="menu.view" defaultMessage="View" />
+                </div>
+              }
+              className="item"
+            >
+              <Dropdown.Menu>{chartTypeItems}</Dropdown.Menu>
+            </Dropdown>
+            {this.search()}
+          </>
+        );
+
+      case ScreenSize.SMALL:
+        return (
+          <>
+            <Dropdown.Item onClick={() => this.props.eventHandlers.onPrint()}>
+              <Icon name="print" />
+              <FormattedMessage id="menu.print" defaultMessage="Print" />
+            </Dropdown.Item>
+
+            <Dropdown.Divider />
+
             <Dropdown.Item
               onClick={() => this.props.eventHandlers.onDownloadPdf()}
             >
-              <FormattedMessage id="menu.pdf_file" defaultMessage="PDF file" />
+              <Icon name="download" />
+              <FormattedMessage
+                id="menu.download_pdf"
+                defaultMessage="Downlod PDF"
+              />
             </Dropdown.Item>
             <Dropdown.Item
               onClick={() => this.props.eventHandlers.onDownloadPng()}
             >
-              <FormattedMessage id="menu.png_file" defaultMessage="PNG file" />
+              <Icon name="download" />
+              <FormattedMessage
+                id="menu.download_png"
+                defaultMessage="Download PNG"
+              />
             </Dropdown.Item>
             <Dropdown.Item
               onClick={() => this.props.eventHandlers.onDownloadSvg()}
             >
-              <FormattedMessage id="menu.svg_file" defaultMessage="SVG file" />
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
-
-        <Dropdown
-          trigger={
-            <div>
-              <Icon name="eye" />
-              <FormattedMessage id="menu.view" defaultMessage="View" />
-            </div>
-          }
-          className="item"
-        >
-          <Dropdown.Menu>
-            <Dropdown.Item onClick={() => this.changeView('hourglass')}>
-              <Icon name="hourglass" />
+              <Icon name="download" />
               <FormattedMessage
-                id="menu.hourglass"
-                defaultMessage="Hourglass chart"
+                id="menu.download_svg"
+                defaultMessage="Download SVG"
               />
             </Dropdown.Item>
-            {this.props.allowAllRelativesChart ? (
-              <Dropdown.Item onClick={() => this.changeView('relatives')}>
-                <Icon name="users" />
-                <FormattedMessage
-                  id="menu.relatives"
-                  defaultMessage="All relatives"
-                />
-              </Dropdown.Item>
-            ) : null}
-            <Dropdown.Item onClick={() => this.changeView('fancy')}>
-              <Icon name="users" />
-              <FormattedMessage
-                id="menu.fancy"
-                defaultMessage="Fancy tree (experimental)"
-              />
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
 
-        <Search
-          onSearchChange={debounce(
-            (_: React.MouseEvent<HTMLElement>, data: SearchProps) =>
-              this.handleSearch(data.value),
-            200,
-          )}
-          onResultSelect={(_, data) => this.handleResultSelect(data.result.id)}
-          results={this.state.searchResults}
-          noResultsMessage={this.context.intl.formatMessage({
-            id: 'menu.search.no_results',
-            defaultMessage: 'No results found',
-          })}
-          placeholder={this.context.intl.formatMessage({
-            id: 'menu.search.placeholder',
-            defaultMessage: 'Search for people',
-          })}
-          selectFirstResult={true}
-          ref={(ref) =>
-            (this.searchRef = (ref as unknown) as {
-              setValue(value: string): void;
-            })
-          }
-        />
-      </>
+            <Dropdown.Divider />
+            {chartTypeItems}
+            <Dropdown.Divider />
+          </>
+        );
+    }
+  }
+
+  private title() {
+    return (
+      <Menu.Item>
+        <b>Topola Genealogy</b>
+      </Menu.Item>
     );
   }
 
-  private fileMenus() {
+  private fileMenus(screenSize: ScreenSize) {
     if (!this.props.standalone) {
       return null;
     }
-    return (
+    const loadUrlItem = (
       <>
-        <Link to="/">
-          <Menu.Item>
-            <b>Topola Genealogy</b>
-          </Menu.Item>
-        </Link>
-        <Menu.Item as="a" onClick={() => this.openLoadUrlDialog()}>
-          <Icon name="cloud download" />
-          <FormattedMessage
-            id="menu.load_from_url"
-            defaultMessage="Load from URL"
-          />
-        </Menu.Item>
+        <Icon name="cloud download" />
+        <FormattedMessage
+          id="menu.load_from_url"
+          defaultMessage="Load from URL"
+        />
+      </>
+    );
+    const loadFileItem = (
+      <>
+        <Icon name="folder open" />
+        <FormattedMessage
+          id="menu.load_from_file"
+          defaultMessage="Load from file"
+        />
+      </>
+    );
+    const commonElements = (
+      <>
+        {this.loadFromUrlModal()}
         <input
           className="hidden"
           type="file"
@@ -447,53 +535,100 @@ export class TopBar extends React.Component<
           multiple
           onChange={(e) => this.handleUpload(e)}
         />
-        <label htmlFor="fileInput">
-          <Menu.Item as="a">
-            <Icon name="folder open" />
-            <FormattedMessage
-              id="menu.load_from_file"
-              defaultMessage="Load from file"
-            />
-          </Menu.Item>
-        </label>
       </>
     );
+    switch (screenSize) {
+      case ScreenSize.LARGE:
+        return (
+          <>
+            <Menu.Item onClick={() => this.openLoadUrlDialog()}>
+              {loadUrlItem}
+            </Menu.Item>
+            <label htmlFor="fileInput">
+              <Menu.Item as="a">{loadFileItem}</Menu.Item>
+            </label>
+            {commonElements}
+          </>
+        );
+
+      case ScreenSize.SMALL:
+        return (
+          <>
+            <Dropdown.Item onClick={() => this.openLoadUrlDialog()}>
+              {loadUrlItem}
+            </Dropdown.Item>
+            <Dropdown.Item as="label" htmlFor="fileInput">
+              {loadFileItem}
+            </Dropdown.Item>
+            <Dropdown.Divider />
+            {commonElements}
+          </>
+        );
+    }
   }
 
-  private wikiTreeLoginMenu() {
+  private wikiTreeLoginMenu(screenSize: ScreenSize) {
     if (!this.props.showWikiTreeLogin) {
       return null;
     }
     const wikiTreeLogoUrl =
       'https://www.wikitree.com/photo.php/a/a5/WikiTree_Images.png';
+
     switch (this.state.wikiTreeLoginState) {
       case WikiTreeLoginState.NOT_LOGGED_IN:
-        return (
-          <Menu.Item as="a" onClick={() => this.wikiTreeLogin()}>
-            <img
-              src={wikiTreeLogoUrl}
-              alt="WikiTree logo"
-              style={{width: '24px', height: '24px'}}
+        const loginForm = (
+          <form
+            action="https://apps.wikitree.com/api.php"
+            method="POST"
+            style={{display: 'hidden'}}
+            ref={this.wikiTreeLoginFormRef}
+          >
+            <input type="hidden" name="action" value="clientLogin" />
+            <input
+              type="hidden"
+              name="returnURL"
+              ref={this.wikiTreeReturnUrlRef}
             />
-            <FormattedMessage
-              id="menu.wikitree_login"
-              defaultMessage="Log in to WikiTree"
-            />
-            <form
-              action="https://apps.wikitree.com/api.php"
-              method="POST"
-              style={{display: 'hidden'}}
-              ref={this.wikiTreeLoginFormRef}
-            >
-              <input type="hidden" name="action" value="clientLogin" />
-              <input
-                type="hidden"
-                name="returnURL"
-                ref={this.wikiTreeReturnUrlRef}
-              />
-            </form>
-          </Menu.Item>
+          </form>
         );
+        switch (screenSize) {
+          case ScreenSize.LARGE:
+            return (
+              <Menu.Item onClick={() => this.wikiTreeLogin()}>
+                <img
+                  src={wikiTreeLogoUrl}
+                  alt="WikiTree logo"
+                  style={{width: '24px', height: '24px'}}
+                />
+                <FormattedMessage
+                  id="menu.wikitree_login"
+                  defaultMessage="Log in to WikiTree"
+                />
+                {loginForm}
+              </Menu.Item>
+            );
+
+          case ScreenSize.SMALL:
+            return (
+              <>
+                <Dropdown.Item onClick={() => this.wikiTreeLogin()}>
+                  <img
+                    src={wikiTreeLogoUrl}
+                    alt="WikiTree logo"
+                    style={{width: '24px', height: '24px'}}
+                  />
+                  <FormattedMessage
+                    id="menu.wikitree_login"
+                    defaultMessage="Log in to WikiTree"
+                  />
+                  {loginForm}
+                </Dropdown.Item>
+                <Dropdown.Divider />
+              </>
+            );
+        }
+        break;
+
       case WikiTreeLoginState.LOGGED_IN:
         const tooltip = this.state.wikiTreeLoginUsername
           ? this.context.intl.formatMessage(
@@ -507,62 +642,129 @@ export class TopBar extends React.Component<
               id: 'menu.wikitree_popup',
               defaultMessage: 'Logged in to WikiTree',
             });
-        return (
-          <Menu.Item title={tooltip}>
-            <img
-              src={wikiTreeLogoUrl}
-              alt="WikiTree logo"
-              style={{width: '24px', height: '24px'}}
-            />
-            <FormattedMessage
-              id="menu.wikitree_logged_in"
-              defaultMessage="Logged in"
-            />
-          </Menu.Item>
-        );
-      default:
-        return null;
+        switch (screenSize) {
+          case ScreenSize.LARGE:
+            return (
+              <Menu.Item title={tooltip}>
+                <img
+                  src={wikiTreeLogoUrl}
+                  alt="WikiTree logo"
+                  style={{width: '24px', height: '24px'}}
+                />
+                <FormattedMessage
+                  id="menu.wikitree_logged_in"
+                  defaultMessage="Logged in"
+                />
+              </Menu.Item>
+            );
+
+          case ScreenSize.SMALL:
+            return (
+              <>
+                <Menu.Item title={tooltip}>
+                  <img
+                    src={wikiTreeLogoUrl}
+                    alt="WikiTree logo"
+                    style={{width: '24px', height: '24px'}}
+                  />
+                  <FormattedMessage
+                    id="menu.wikitree_logged_in"
+                    defaultMessage="Logged in"
+                  />
+                </Menu.Item>
+                <Dropdown.Divider />
+              </>
+            );
+
+          default:
+            return null;
+        }
     }
   }
 
-  private sourceLink() {
+  private mobileMenus() {
     return (
-      <Menu.Item
-        as="a"
-        href="https://github.com/PeWu/topola-viewer"
-        target="_blank"
-      >
-        <FormattedMessage id="menu.github" defaultMessage="Source on GitHub" />
-      </Menu.Item>
+      <>
+        <Dropdown
+          trigger={
+            <div>
+              <Icon name="sidebar" />
+            </div>
+          }
+          className="item"
+          icon={null}
+        >
+          <Dropdown.Menu>
+            {this.fileMenus(ScreenSize.SMALL)}
+            {this.chartMenus(ScreenSize.SMALL)}
+            {this.wikiTreeLoginMenu(ScreenSize.SMALL)}
+
+            <Dropdown.Item
+              href="https://github.com/PeWu/topola-viewer"
+              target="_blank"
+            >
+              <FormattedMessage
+                id="menu.github"
+                defaultMessage="Source on GitHub"
+              />
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+        {this.props.standalone ? (
+          <Link to="/">{this.title()}</Link>
+        ) : (
+          this.title()
+        )}
+      </>
     );
   }
 
-  private poweredByLink() {
+  private desktopMenus() {
     return (
-      <Menu.Item
-        as="a"
-        href="https://pewu.github.com/topola-viewer"
-        target="_blank"
-      >
-        <FormattedMessage
-          id="menu.powered_by"
-          defaultMessage="Powered by Topola"
-        />
-      </Menu.Item>
+      <>
+        {this.props.standalone ? <Link to="/">{this.title()}</Link> : null}
+        {this.fileMenus(ScreenSize.LARGE)}
+        {this.chartMenus(ScreenSize.LARGE)}
+        <Menu.Menu position="right">
+          {this.wikiTreeLoginMenu(ScreenSize.LARGE)}
+          <Menu.Item
+            href="https://github.com/PeWu/topola-viewer"
+            target="_blank"
+          >
+            <FormattedMessage
+              id="menu.github"
+              defaultMessage="GitHub project"
+            />
+          </Menu.Item>
+        </Menu.Menu>
+      </>
     );
   }
 
   render() {
     return (
-      <Menu attached="top" inverted color="blue" size="large">
-        {this.fileMenus()}
-        {this.chartMenus()}
-        <Menu.Menu position="right">
-          {this.wikiTreeLoginMenu()}
-          {this.props.standalone ? this.sourceLink() : this.poweredByLink()}
-        </Menu.Menu>
-        {this.loadFromUrlModal()}
-      </Menu>
+      <>
+        <Responsive
+          as={Menu}
+          attached="top"
+          inverted
+          color="blue"
+          size="large"
+          minWidth={768}
+        >
+          {this.desktopMenus()}
+        </Responsive>
+        <Responsive
+          as={Menu}
+          attached="top"
+          inverted
+          color="blue"
+          size="large"
+          maxWidth={767}
+        >
+          {this.mobileMenus()}
+        </Responsive>
+      </>
     );
   }
 }
