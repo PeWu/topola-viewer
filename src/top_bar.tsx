@@ -349,6 +349,7 @@ export class TopBar extends React.Component<
             setValue(value: string): void;
           })
         }
+        id="search"
       />
     );
   }
