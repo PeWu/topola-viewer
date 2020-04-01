@@ -14,7 +14,7 @@ import {
   FancyChart,
   CircleRenderer,
 } from 'topola';
-import { Responsive } from 'semantic-ui-react';
+import {Responsive} from 'semantic-ui-react';
 
 /** How much to zoom when using the +/- buttons. */
 const ZOOM_FACTOR = 1.3;
@@ -24,30 +24,28 @@ const ZOOM_FACTOR = 1.3;
  *
  * @param size the size of the chart
  */
-function zoomed(size: [number, number], enableZoom: boolean) {
+function zoomed(size: [number, number]) {
   const parent = d3.select('#svgContainer').node() as Element;
 
-  if (enableZoom) {
-    const scale = d3.event.transform.k;
-    const offsetX = d3.max([0, (parent.clientWidth - size[0] * scale) / 2]);
-    const offsetY = d3.max([0, (parent.clientHeight - size[1] * scale) / 2]);
-    d3.select('#chartSvg')
-      .attr('width', size[0] * scale)
-      .attr('height', size[1] * scale)
-      .attr('transform', `translate(${offsetX}, ${offsetY})`);
-    d3.select('#chart').attr('transform', `scale(${scale})`);
-  }
+  const scale = d3.event.transform.k;
+  const offsetX = d3.max([0, (parent.clientWidth - size[0] * scale) / 2]);
+  const offsetY = d3.max([0, (parent.clientHeight - size[1] * scale) / 2]);
+  d3.select('#chartSvg')
+    .attr('width', size[0] * scale)
+    .attr('height', size[1] * scale)
+    .attr('transform', `translate(${offsetX}, ${offsetY})`);
+  d3.select('#chart').attr('transform', `scale(${scale})`);
 
   parent.scrollLeft = -d3.event.transform.x;
   parent.scrollTop = -d3.event.transform.y;
 }
 
 /** Called when the scrollbars are used. */
-function scrolled(enableZoom: boolean) {
+function scrolled() {
   const parent = d3.select('#svgContainer').node() as Element;
   const x = parent.scrollLeft + parent.clientWidth / 2;
   const y = parent.scrollTop + parent.clientHeight / 2;
-  const scale = enableZoom ? d3.zoomTransform(parent).k : 1;
+  const scale = d3.zoomTransform(parent).k;
   d3.select(parent).call(d3.zoom().translateTo, x / scale, y / scale);
 }
 
@@ -135,7 +133,6 @@ export interface ChartProps {
   selection: IndiInfo;
   chartType: ChartType;
   onSelection: (indiInfo: IndiInfo) => void;
-  enableZoom: boolean;
 }
 
 /** Component showing the genealogy chart and handling transition animations. */
@@ -216,24 +213,22 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     const svg = d3.select('#chartSvg');
     const parent = d3.select('#svgContainer').node() as Element;
 
-    const scale = this.props.enableZoom ? d3.zoomTransform(parent).k : 1;
+    const scale = d3.zoomTransform(parent).k;
     const zoomOutFactor = d3.min([
       1,
       scale,
       parent.clientWidth / chartInfo.size[0],
       parent.clientHeight / chartInfo.size[1],
     ])!;
-    const extent: [number, number] = this.props.enableZoom
-      ? [d3.max([0.1, zoomOutFactor])!, 2]
-      : [1, 1];
+    const extent: [number, number] = [d3.max([0.1, zoomOutFactor])!, 2];
 
     this.zoomBehavior = d3
       .zoom()
       .scaleExtent(extent)
       .translateExtent([[0, 0], chartInfo.size])
-      .on('zoom', () => zoomed(chartInfo.size, this.props.enableZoom));
+      .on('zoom', () => zoomed(chartInfo.size));
     d3.select(parent)
-      .on('scroll', () => scrolled(this.props.enableZoom))
+      .on('scroll', scrolled)
       .call(this.zoomBehavior);
 
     const scrollTopTween = (scrollTop: number) => {
@@ -309,19 +304,17 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   render() {
     return (
       <div id="svgContainer">
-        {this.props.enableZoom ? (
-          <Responsive minWidth={768} className="zoom">
-            <button className="zoom-in" onClick={() => this.zoom(ZOOM_FACTOR)}>
-              +
-            </button>
-            <button
-              className="zoom-out"
-              onClick={() => this.zoom(1 / ZOOM_FACTOR)}
-            >
-              −
-            </button>
-          </Responsive>
-        ) : null}
+        <Responsive minWidth={768} className="zoom">
+          <button className="zoom-in" onClick={() => this.zoom(ZOOM_FACTOR)}>
+            +
+          </button>
+          <button
+            className="zoom-out"
+            onClick={() => this.zoom(1 / ZOOM_FACTOR)}
+          >
+            −
+          </button>
+        </Responsive>
         <svg id="chartSvg">
           <g id="chart" />
         </svg>
@@ -334,19 +327,18 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     const svg = document.getElementById('chartSvg')!.cloneNode(true) as Element;
 
     svg.removeAttribute('transform');
-    if (this.props.enableZoom) {
-      const parent = d3.select('#svgContainer').node() as Element;
-      const scale = d3.zoomTransform(parent).k;
-      svg.setAttribute(
-        'width',
-        String(Number(svg.getAttribute('width')) / scale),
-      );
-      svg.setAttribute(
-        'height',
-        String(Number(svg.getAttribute('height')) / scale),
-      );
-      svg.querySelector('#chart')!.removeAttribute('transform');
-    }
+    const parent = d3.select('#svgContainer').node() as Element;
+    const scale = d3.zoomTransform(parent).k;
+    svg.setAttribute(
+      'width',
+      String(Number(svg.getAttribute('width')) / scale),
+    );
+    svg.setAttribute(
+      'height',
+      String(Number(svg.getAttribute('height')) / scale),
+    );
+    svg.querySelector('#chart')!.removeAttribute('transform');
+
     return svg;
   }
 
