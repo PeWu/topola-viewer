@@ -122,3 +122,7 @@ div.ui.card.intro {
   bottom: 0px;
   left: 25px;
 }
+
+.content .ui.image.blockImage {
+  display: block;
+}
