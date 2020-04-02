@@ -1,13 +1,13 @@
 import naturalSort from 'javascript-natural-sort';
 import lunr from 'lunr';
-import {GedcomData, pointerToId} from './gedcom_util';
-import {GedcomEntry} from 'parse-gedcom';
+import {idToIndiMap, idToFamMap} from './gedcom_util';
+import {JsonIndi, JsonFam, JsonGedcomData} from 'topola';
 
 const MAX_RESULTS = 8;
 
 export interface SearchResult {
   id: string;
-  indi: GedcomEntry;
+  indi: JsonIndi;
 }
 
 export interface SearchIndex {
@@ -32,36 +32,28 @@ function compare(a: lunr.Index.Result, b: lunr.Index.Result) {
 }
 
 /** Returns all last names of all husbands as a space-separated string. */
-function getHusbandLastName(indi: GedcomEntry, gedcom: GedcomData): string {
-  return indi.tree
-    .filter((entry) => entry.tag === 'FAMS')
-    .map((entry) => gedcom.fams[pointerToId(entry.data)])
-    .filter((entry) => !!entry)
-    .map((entry) => {
-      const husband = entry.tree.find((entry) => entry.tag === 'HUSB');
-      const husbandId = husband && pointerToId(husband.data);
-      return (
-        husbandId &&
-        husbandId !== pointerToId(indi.pointer) &&
-        gedcom.indis[husbandId]
-      );
-    })
-    .filter((entry) => !!entry)
-    .flatMap((husband) =>
-      (husband as GedcomEntry).tree
-        .filter((entry) => entry.tag === 'NAME')
-        .map((entry) => {
-          const names = entry.data.split('/');
-          return names.length >= 2 ? names[1] : '';
-        }),
-    )
+function getHusbandLastName(
+  indi: JsonIndi,
+  indiMap: Map<String, JsonIndi>,
+  famMap: Map<string, JsonFam>,
+): string {
+  return (indi.fams || [])
+    .map((famId) => famMap.get(famId))
+    .map((fam) => fam && fam.husb)
+    .map((husbId) => husbId && indiMap.get(husbId))
+    .map((husband) => husband && husband.lastName)
     .join(' ');
 }
 
 class LunrSearchIndex implements SearchIndex {
   private index: lunr.Index | undefined;
+  private indiMap: Map<string, JsonIndi>;
+  private famMap: Map<string, JsonFam>;
 
-  constructor(private gedcom: GedcomData) {}
+  constructor(data: JsonGedcomData) {
+    this.indiMap = idToIndiMap(data);
+    this.famMap = idToFamMap(data);
+  }
 
   initialize() {
     const self = this;
@@ -73,25 +65,25 @@ class LunrSearchIndex implements SearchIndex {
       this.field('spouseLastName', {boost: 2});
       this.field('normalizedSpouseLastName', {boost: 2});
 
-      for (let id in self.gedcom.indis) {
-        const indi = self.gedcom.indis[id];
-        const name = indi.tree
-          .filter((entry) => entry.tag === 'NAME')
-          .map((entry) => entry.data)
-          .join(' ');
-        const spouseLastName = getHusbandLastName(indi, self.gedcom);
+      self.indiMap.forEach((indi) => {
+        const name = [indi.firstName, indi.lastName].join(' ');
+        const spouseLastName = getHusbandLastName(
+          indi,
+          self.indiMap,
+          self.famMap,
+        );
         this.add({
-          id,
+          id: indi.id,
           name,
           normalizedName: normalize(name),
           spouseLastName,
           normalizedSpouseLastName: normalize(spouseLastName),
         });
-      }
+      });
     });
   }
 
-  public search(input: string) {
+  public search(input: string): SearchResult[] {
     const query = input
       .split(' ')
       .filter((s) => !!s)
@@ -101,13 +93,13 @@ class LunrSearchIndex implements SearchIndex {
     return results
       .sort(compare)
       .slice(0, MAX_RESULTS)
-      .map((result) => ({id: result.ref, indi: this.gedcom.indis[result.ref]}));
+      .map((result) => ({id: result.ref, indi: this.indiMap.get(result.ref)!}));
   }
 }
 
 /** Builds a search index from data. */
-export function buildSearchIndex(gedcom: GedcomData): SearchIndex {
-  const index = new LunrSearchIndex(gedcom);
+export function buildSearchIndex(data: JsonGedcomData): SearchIndex {
+  const index = new LunrSearchIndex(data);
   index.initialize();
   return index;
 }

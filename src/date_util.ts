@@ -1,4 +1,4 @@
-import {Date as TopolaDate, DateRange, getDate} from 'topola';
+import {Date as TopolaDate, DateRange, getDate, DateOrRange} from 'topola';
 import {InjectedIntl} from 'react-intl';
 
 const DATE_QUALIFIERS = new Map([
@@ -76,9 +76,11 @@ function formatDateRage(dateRange: DateRange, intl: InjectedIntl) {
   return '';
 }
 
-/** Formats a date given in GEDCOM format. */
-export function translateDate(gedcomDate: string, intl: InjectedIntl) {
-  const dateOrRange = getDate(gedcomDate);
+/** Formats a DateOrRange object. */
+export function formatDateOrRange(
+  dateOrRange: DateOrRange | undefined,
+  intl: InjectedIntl,
+): string {
   if (!dateOrRange) {
     return '';
   }
@@ -89,4 +91,9 @@ export function translateDate(gedcomDate: string, intl: InjectedIntl) {
     return formatDateRage(dateOrRange.dateRange, intl);
   }
   return '';
+}
+
+/** Formats a date given in GEDCOM format. */
+export function translateDate(gedcomDate: string, intl: InjectedIntl): string {
+  return formatDateOrRange(getDate(gedcomDate), intl);
 }

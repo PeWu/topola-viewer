@@ -32,6 +32,22 @@ export function pointerToId(pointer: string): string {
   return pointer.substring(1, pointer.length - 1);
 }
 
+export function idToIndiMap(data: JsonGedcomData): Map<string, JsonIndi> {
+  const map = new Map<string, JsonIndi>();
+  data.indis.forEach((indi) => {
+    map.set(indi.id, indi);
+  });
+  return map;
+}
+
+export function idToFamMap(data: JsonGedcomData): Map<string, JsonFam> {
+  const map = new Map<string, JsonFam>();
+  data.fams.forEach((fam) => {
+    map.set(fam.id, fam);
+  });
+  return map;
+}
+
 function prepareGedcom(entries: GedcomEntry[]): GedcomData {
   const head = entries.find((entry) => entry.tag === 'HEAD')!;
   const indis: {[key: string]: GedcomEntry} = {};
@@ -88,14 +104,11 @@ function compareDates(
 
 /** Birth date comparator for individuals. */
 function birthDatesComparator(gedcom: JsonGedcomData) {
-  const idToIndiMap = new Map<string, JsonIndi>();
-  gedcom.indis.forEach((indi) => {
-    idToIndiMap[indi.id] = indi;
-  });
+  const indiMap = idToIndiMap(gedcom);
 
   return (indiId1: string, indiId2: string) => {
-    const indi1: JsonIndi = idToIndiMap[indiId1];
-    const indi2: JsonIndi = idToIndiMap[indiId2];
+    const indi1: JsonIndi | undefined = indiMap.get(indiId1);
+    const indi2: JsonIndi | undefined = indiMap.get(indiId2);
     return (
       compareDates(indi1 && indi1.birth, indi2 && indi2.birth) ||
       strcmp(indiId1, indiId2)
@@ -105,14 +118,11 @@ function birthDatesComparator(gedcom: JsonGedcomData) {
 
 /** Marriage date comparator for families. */
 function marriageDatesComparator(gedcom: JsonGedcomData) {
-  const idToFamMap = new Map<string, JsonFam>();
-  gedcom.fams.forEach((fam) => {
-    idToFamMap[fam.id] = fam;
-  });
+  const famMap = idToFamMap(gedcom);
 
   return (famId1: string, famId2: string) => {
-    const fam1: JsonFam = idToFamMap[famId1];
-    const fam2: JsonFam = idToFamMap[famId2];
+    const fam1: JsonFam | undefined = famMap.get(famId1);
+    const fam2: JsonFam | undefined = famMap.get(famId2);
     return (
       compareDates(fam1 && fam1.marriage, fam2 && fam2.marriage) ||
       strcmp(famId1, famId2)

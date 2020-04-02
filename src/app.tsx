@@ -566,7 +566,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
           render={(props: RouteComponentProps) => (
             <TopBar
               {...props}
-              gedcom={this.state.data && this.state.data.gedcom}
+              data={this.state.data && this.state.data.chartData}
               allowAllRelativesChart={
                 this.state.source !== DataSourceEnum.WIKITREE
               }

@@ -1,17 +1,11 @@
 import * as React from 'react';
-import {GedcomEntry} from 'parse-gedcom';
 import {InjectedIntl} from 'react-intl';
 import {SearchResult} from './search_index';
-import {translateDate} from './date_util';
+import {formatDateOrRange} from './date_util';
+import {JsonIndi} from 'topola';
 
 function getNameLine(result: SearchResult) {
-  const nameTag = result.indi.tree.find((entry) => entry.tag === 'NAME');
-  const name =
-    nameTag &&
-    nameTag.data
-      .split('/')
-      .filter((s) => !!s)
-      .join(' ');
+  const name = [result.indi.firstName, result.indi.lastName].join(' ').trim();
   if (result.id.length > 8) {
     return name;
   }
@@ -22,16 +16,9 @@ function getNameLine(result: SearchResult) {
   );
 }
 
-function getDate(indi: GedcomEntry, tag: string, intl: InjectedIntl) {
-  const eventEntry = indi.tree.find((entry) => entry.tag === tag);
-  const dateEntry =
-    eventEntry && eventEntry.tree.find((entry) => entry.tag === 'DATE');
-  return (dateEntry && translateDate(dateEntry.data, intl)) || '';
-}
-
-function getDescriptionLine(indi: GedcomEntry, intl: InjectedIntl) {
-  const birthDate = getDate(indi, 'BIRT', intl);
-  const deathDate = getDate(indi, 'DEAT', intl);
+function getDescriptionLine(indi: JsonIndi, intl: InjectedIntl) {
+  const birthDate = formatDateOrRange(indi.birth, intl);
+  const deathDate = formatDateOrRange(indi.death, intl);
   if (!deathDate) {
     return birthDate;
   }

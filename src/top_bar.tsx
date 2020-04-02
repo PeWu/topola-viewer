@@ -7,8 +7,7 @@ import {analyticsEvent} from './analytics';
 import {buildSearchIndex, SearchIndex} from './search_index';
 import {displaySearchResult} from './search_util';
 import {FormattedMessage, intlShape} from 'react-intl';
-import {GedcomData} from './gedcom_util';
-import {IndiInfo} from 'topola';
+import {IndiInfo, JsonGedcomData} from 'topola';
 import {Link} from 'react-router-dom';
 import {RouteComponentProps} from 'react-router-dom';
 import {
@@ -58,7 +57,7 @@ interface Props {
   /** True if the application is currently showing a chart. */
   showingChart: boolean;
   /** Data used for the search index. */
-  gedcom?: GedcomData;
+  data?: JsonGedcomData;
   standalone: boolean;
   /** Whether to show the "All relatives" chart type in the menu. */
   allowAllRelativesChart: boolean;
@@ -213,8 +212,8 @@ export class TopBar extends React.Component<
   }
 
   private initializeSearchIndex() {
-    if (this.props.gedcom) {
-      this.searchIndex = buildSearchIndex(this.props.gedcom);
+    if (this.props.data) {
+      this.searchIndex = buildSearchIndex(this.props.data);
     }
   }
 
@@ -265,7 +264,7 @@ export class TopBar extends React.Component<
 
   componentDidUpdate(prevProps: Props) {
     this.checkWikiTreeLoginState();
-    if (prevProps.gedcom !== this.props.gedcom) {
+    if (prevProps.data !== this.props.data) {
       this.initializeSearchIndex();
     }
   }
