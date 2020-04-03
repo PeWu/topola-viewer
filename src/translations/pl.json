@@ -1,6 +1,7 @@
 {
+  "menu.open": "Otwórz",
+  "menu.open_file": "Otwórz plik",
   "menu.load_from_url": "Otwórz URL",
-  "menu.load_from_file": "Otwórz plik",
   "menu.print": "Drukuj",
   "menu.download": "Pobierz",
   "menu.pdf_file": "Plik PDF",
@@ -22,7 +23,7 @@
   "menu.search.no_results": "Brak wyników",
   "intro.title": "Topola Genealogy",
   "intro.description": "Topola Genealogy pozwala przeglądać drzewo genealogiczne w interaktywny sposób.",
-  "intro.instructions": "Kliknij OTWÓRZ URL lub OTWÓRZ PLIK, aby załadować plik GEDCOM. Większość programów genealogicznych posiada funkcję eksportu do pliku GEDCOM.",
+  "intro.instructions": "Kliknij OTWÓRZ PLIK lub OTWÓRZ URL, aby załadować plik GEDCOM. Większość programów genealogicznych posiada funkcję eksportu do pliku GEDCOM.",
   "intro.examples": "Poniżej jest kilka przykładów znalezionych w Internecie:",
   "intro.from": "źródło:",
   "intro.privacy": "Prywatność",

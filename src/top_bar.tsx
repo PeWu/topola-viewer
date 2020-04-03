@@ -506,21 +506,18 @@ export class TopBar extends React.Component<
     if (!this.props.standalone) {
       return null;
     }
+    const openFileItem = (
+      <>
+        <Icon name="folder open" />
+        <FormattedMessage id="menu.open_file" defaultMessage="Open file" />
+      </>
+    );
     const loadUrlItem = (
       <>
         <Icon name="cloud download" />
         <FormattedMessage
           id="menu.load_from_url"
           defaultMessage="Load from URL"
-        />
-      </>
-    );
-    const loadFileItem = (
-      <>
-        <Icon name="folder open" />
-        <FormattedMessage
-          id="menu.load_from_file"
-          defaultMessage="Load from file"
         />
       </>
     );
@@ -539,14 +536,40 @@ export class TopBar extends React.Component<
     );
     switch (screenSize) {
       case ScreenSize.LARGE:
-        return (
+        // Show dropdown if chart is shown, otherwise show individual menu
+        // items.
+        const menus = this.props.showingChart ? (
+          <Dropdown
+            trigger={
+              <div>
+                <Icon name="folder open" />
+                <FormattedMessage id="menu.open" defaultMessage="Open" />
+              </div>
+            }
+            className="item"
+          >
+            <Dropdown.Menu>
+              <Dropdown.Item as="label" htmlFor="fileInput">
+                {openFileItem}
+              </Dropdown.Item>
+              <Dropdown.Item onClick={() => this.openLoadUrlDialog()}>
+                {loadUrlItem}
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        ) : (
           <>
+            <label htmlFor="fileInput">
+              <Menu.Item as="a">{openFileItem}</Menu.Item>
+            </label>
             <Menu.Item onClick={() => this.openLoadUrlDialog()}>
               {loadUrlItem}
             </Menu.Item>
-            <label htmlFor="fileInput">
-              <Menu.Item as="a">{loadFileItem}</Menu.Item>
-            </label>
+          </>
+        );
+        return (
+          <>
+            {menus}
             {commonElements}
           </>
         );
@@ -554,11 +577,11 @@ export class TopBar extends React.Component<
       case ScreenSize.SMALL:
         return (
           <>
+            <Dropdown.Item as="label" htmlFor="fileInput">
+              {openFileItem}
+            </Dropdown.Item>
             <Dropdown.Item onClick={() => this.openLoadUrlDialog()}>
               {loadUrlItem}
-            </Dropdown.Item>
-            <Dropdown.Item as="label" htmlFor="fileInput">
-              {loadFileItem}
             </Dropdown.Item>
             <Dropdown.Divider />
             {commonElements}

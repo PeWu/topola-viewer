@@ -37,7 +37,7 @@ export function Intro() {
         <FormattedMessage
           id="intro.instructions"
           defaultMessage={
-            'Use the LOAD FROM URL or LOAD FROM FILE buttons above to load' +
+            'Use the OPEN FILE or LOAD FROM URL buttons above to load' +
             ' a GEDCOM file. You can export a GEDCOM file from most of the' +
             ' existing genealogy programs and web sites.'
           }
