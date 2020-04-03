@@ -6,7 +6,7 @@ describe('Intro page', () => {
     cy.contains('Here are some examples');
   });
   it('displays menu', () => {
+    cy.contains('Open file');
     cy.contains('Load from URL');
-    cy.contains('Load from file');
   });
 });
