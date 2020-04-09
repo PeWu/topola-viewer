@@ -25,6 +25,9 @@ import {
   Responsive,
 } from 'semantic-ui-react';
 
+const WIKITREE_LOGO_URL =
+  'https://www.wikitree.com/photo.php/a/a5/WikiTree_Images.png';
+
 enum WikiTreeLoginState {
   UNKNOWN,
   NOT_LOGGED_IN,
@@ -39,7 +42,9 @@ enum ScreenSize {
 /** Menus and dialogs state. */
 interface State {
   loadUrlDialogOpen: boolean;
+  wikiTreeIdDialogOpen: boolean;
   url?: string;
+  wikiTreeId?: string;
   wikiTreeLoginState: WikiTreeLoginState;
   wikiTreeLoginUsername?: string;
   searchResults: SearchResultProps[];
@@ -87,6 +92,7 @@ export class TopBar extends React.Component<
 > {
   state: State = {
     loadUrlDialogOpen: false,
+    wikiTreeIdDialogOpen: false,
     searchResults: [],
     wikiTreeLoginState: WikiTreeLoginState.UNKNOWN,
   };
@@ -96,6 +102,7 @@ export class TopBar extends React.Component<
   };
 
   urlInputRef: React.RefObject<Input> = React.createRef();
+  wikiTreeIdInputRef: React.RefObject<Input> = React.createRef();
   wikiTreeLoginFormRef: React.RefObject<HTMLFormElement> = React.createRef();
   wikiTreeReturnUrlRef: React.RefObject<HTMLInputElement> = React.createRef();
   searchRef?: {setValue(value: string): void};
@@ -163,12 +170,24 @@ export class TopBar extends React.Component<
     );
   }
 
-  /** Cancels the "Load from URL" dialog. */
-  private handleClose() {
-    this.setState(Object.assign({}, this.state, {loadUrlDialogOpen: false}));
+  private openWikiTreeIdDialog() {
+    this.setState(
+      Object.assign({}, this.state, {wikiTreeIdDialogOpen: true}),
+      () => this.wikiTreeIdInputRef.current!.focus(),
+    );
   }
 
-  /** Upload button clicked in the "Load from URL" dialog. */
+  /** Cancels any of the open dialogs. */
+  private handleClose() {
+    this.setState(
+      Object.assign({}, this.state, {
+        loadUrlDialogOpen: false,
+        wikiTreeIdDialogOpen: false,
+      }),
+    );
+  }
+
+  /** Load button clicked in the "Load from URL" dialog. */
   private handleLoad() {
     this.setState(
       Object.assign({}, this.state, {
@@ -184,11 +203,43 @@ export class TopBar extends React.Component<
     }
   }
 
-  /** Called when the URL input is typed into. */
-  private handleUrlChange(event: React.SyntheticEvent) {
+  /** Select button clicked in the "Select WikiTree ID" dialog. */
+  private handleSelectWikiTreeId() {
     this.setState(
       Object.assign({}, this.state, {
-        url: (event.target as HTMLInputElement).value,
+        wikiTreeIdDialogOpen: false,
+      }),
+    );
+    if (this.state.wikiTreeId) {
+      analyticsEvent('wikitree_id_selected');
+      const search = queryString.parse(this.props.location.search);
+      const standalone =
+        search.standalone !== undefined ? search.standalone : true;
+      this.props.history.push({
+        pathname: '/view',
+        search: queryString.stringify({
+          indi: this.state.wikiTreeId,
+          source: 'wikitree',
+          standalone,
+        }),
+      });
+    }
+  }
+
+  /** Called when the URL input is typed into. */
+  private handleUrlChange(value: string) {
+    this.setState(
+      Object.assign({}, this.state, {
+        url: value,
+      }),
+    );
+  }
+
+  /** Called when the URL input is typed into. */
+  private handleWikiTreeIdChange(value: string) {
+    this.setState(
+      Object.assign({}, this.state, {
+        wikiTreeId: value,
       }),
     );
   }
@@ -289,7 +340,7 @@ export class TopBar extends React.Component<
             <Input
               placeholder="https://"
               fluid
-              onChange={(e) => this.handleUrlChange(e)}
+              onChange={(e, data) => this.handleUrlChange(data.value)}
               ref={this.urlInputRef}
             />
             <p>
@@ -318,6 +369,95 @@ export class TopBar extends React.Component<
           </Button>
           <Button primary onClick={() => this.handleLoad()}>
             <FormattedMessage id="load_from_url.load" defaultMessage="Load" />
+          </Button>
+        </Modal.Actions>
+      </Modal>
+    );
+  }
+
+  private enterWikiTreeId(event: React.MouseEvent, id: string) {
+    event.preventDefault(); // Do not follow link in href.
+    ((this.wikiTreeIdInputRef.current as unknown) as {
+      inputRef: HTMLInputElement;
+    }).inputRef.value = id;
+    this.handleWikiTreeIdChange(id);
+  }
+
+  private wikiTreeIdModal() {
+    return (
+      <Modal
+        open={this.state.wikiTreeIdDialogOpen}
+        onClose={() => this.handleClose()}
+        centered={false}
+      >
+        <Header>
+          <img
+            src={WIKITREE_LOGO_URL}
+            alt="WikiTree logo"
+            style={{width: '32px', height: '32px'}}
+          />
+          <FormattedMessage
+            id="select_wikitree_id.title"
+            defaultMessage="Select WikiTree ID"
+            children={(txt) => txt}
+          />
+        </Header>
+        <Modal.Content>
+          <Form onSubmit={() => this.handleLoad()}>
+            <p>
+              <FormattedMessage
+                id="select_wikitree_id.comment"
+                defaultMessage={
+                  'Enter a {wikiTreeLink} profile ID. Examples: {example1}, {example2}.'
+                }
+                values={{
+                  wikiTreeLink: (
+                    <a
+                      href="https://wikitree.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      WikiTree
+                    </a>
+                  ),
+                  example1: (
+                    <span
+                      onClick={(e) => this.enterWikiTreeId(e, 'Wojtyla-13')}
+                      className="link-span"
+                    >
+                      Wojtyla-13
+                    </span>
+                  ),
+                  example2: (
+                    <span
+                      onClick={(e) => this.enterWikiTreeId(e, 'Skłodowska-2')}
+                      className="link-span"
+                    >
+                      Skłodowska-2
+                    </span>
+                  ),
+                }}
+              />
+            </p>
+            <Input
+              fluid
+              onChange={(e, data) => this.handleWikiTreeIdChange(data.value)}
+              ref={this.wikiTreeIdInputRef}
+            />
+          </Form>
+        </Modal.Content>
+        <Modal.Actions>
+          <Button secondary onClick={() => this.handleClose()}>
+            <FormattedMessage
+              id="select_wikitree_id.cancel"
+              defaultMessage="Cancel"
+            />
+          </Button>
+          <Button primary onClick={() => this.handleSelectWikiTreeId()}>
+            <FormattedMessage
+              id="select_wikitree_id.load"
+              defaultMessage="Load"
+            />
           </Button>
         </Modal.Actions>
       </Modal>
@@ -521,9 +661,23 @@ export class TopBar extends React.Component<
         />
       </>
     );
+    const loadWikiTreeItem = (
+      <>
+        <img
+          src={WIKITREE_LOGO_URL}
+          alt="WikiTree logo"
+          style={{width: '24px', height: '24px'}}
+        />
+        <FormattedMessage
+          id="menu.select_wikitree_id"
+          defaultMessage="Select WikiTree ID"
+        />
+      </>
+    );
     const commonElements = (
       <>
         {this.loadFromUrlModal()}
+        {this.wikiTreeIdModal()}
         <input
           className="hidden"
           type="file"
@@ -555,6 +709,9 @@ export class TopBar extends React.Component<
               <Dropdown.Item onClick={() => this.openLoadUrlDialog()}>
                 {loadUrlItem}
               </Dropdown.Item>
+              <Dropdown.Item onClick={() => this.openWikiTreeIdDialog()}>
+                {loadWikiTreeItem}
+              </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
         ) : (
@@ -564,6 +721,9 @@ export class TopBar extends React.Component<
             </label>
             <Menu.Item onClick={() => this.openLoadUrlDialog()}>
               {loadUrlItem}
+            </Menu.Item>
+            <Menu.Item onClick={() => this.openWikiTreeIdDialog()}>
+              {loadWikiTreeItem}
             </Menu.Item>
           </>
         );
@@ -583,6 +743,9 @@ export class TopBar extends React.Component<
             <Dropdown.Item onClick={() => this.openLoadUrlDialog()}>
               {loadUrlItem}
             </Dropdown.Item>
+            <Dropdown.Item onClick={() => this.openWikiTreeIdDialog()}>
+              {loadWikiTreeItem}
+            </Dropdown.Item>
             <Dropdown.Divider />
             {commonElements}
           </>
@@ -594,9 +757,6 @@ export class TopBar extends React.Component<
     if (!this.props.showWikiTreeLogin) {
       return null;
     }
-    const wikiTreeLogoUrl =
-      'https://www.wikitree.com/photo.php/a/a5/WikiTree_Images.png';
-
     switch (this.state.wikiTreeLoginState) {
       case WikiTreeLoginState.NOT_LOGGED_IN:
         const loginForm = (
@@ -619,7 +779,7 @@ export class TopBar extends React.Component<
             return (
               <Menu.Item onClick={() => this.wikiTreeLogin()}>
                 <img
-                  src={wikiTreeLogoUrl}
+                  src={WIKITREE_LOGO_URL}
                   alt="WikiTree logo"
                   style={{width: '24px', height: '24px'}}
                 />
@@ -636,7 +796,7 @@ export class TopBar extends React.Component<
               <>
                 <Dropdown.Item onClick={() => this.wikiTreeLogin()}>
                   <img
-                    src={wikiTreeLogoUrl}
+                    src={WIKITREE_LOGO_URL}
                     alt="WikiTree logo"
                     style={{width: '24px', height: '24px'}}
                   />
@@ -670,7 +830,7 @@ export class TopBar extends React.Component<
             return (
               <Menu.Item title={tooltip}>
                 <img
-                  src={wikiTreeLogoUrl}
+                  src={WIKITREE_LOGO_URL}
                   alt="WikiTree logo"
                   style={{width: '24px', height: '24px'}}
                 />
@@ -686,7 +846,7 @@ export class TopBar extends React.Component<
               <>
                 <Menu.Item title={tooltip}>
                   <img
-                    src={wikiTreeLogoUrl}
+                    src={WIKITREE_LOGO_URL}
                     alt="WikiTree logo"
                     style={{width: '24px', height: '24px'}}
                   />
@@ -725,6 +885,7 @@ export class TopBar extends React.Component<
             <Dropdown.Item
               href="https://github.com/PeWu/topola-viewer"
               target="_blank"
+              rel="noopener noreferrer"
             >
               <FormattedMessage
                 id="menu.github"
@@ -753,6 +914,7 @@ export class TopBar extends React.Component<
           <Menu.Item
             href="https://github.com/PeWu/topola-viewer"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <FormattedMessage
               id="menu.github"

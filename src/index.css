@@ -126,3 +126,8 @@ div.ui.card.intro {
 .content .ui.image.blockImage {
   display: block;
 }
+
+.link-span {
+  color: #4183c4;
+  cursor: pointer;
+}

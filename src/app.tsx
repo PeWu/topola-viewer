@@ -133,8 +133,18 @@ class GedcomUrlDataSource implements DataSource {
 /** Loading data from the WikiTree API. */
 class WikiTreeDataSource implements DataSource {
   isNewData(args: Arguments, state: State): boolean {
-    // WikiTree is always a single data source.
-    return false;
+    if (state.selection && state.selection.id === args.indi) {
+      // Selection unchanged -> don't reload.
+      return false;
+    }
+    if (
+      state.data &&
+      state.data.chartData.indis.some((indi) => indi.id === args.indi)
+    ) {
+      // New selection exists in current view -> animate instead of reloading.
+      return false;
+    }
+    return true;
   }
 
   async loadData(args: Arguments): Promise<TopolaData> {
@@ -379,7 +389,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
       this.setState(
         Object.assign({}, this.state, {
           data: undefined,
-          selection: undefined,
+          selection: {id: args.indi},
           hash: args.hash,
           error: undefined,
           loading: true,
