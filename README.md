@@ -43,8 +43,9 @@ Here are the current integrations:
 ### Gramps
 
 To view your [Gramps](https://gramps-project.org/) data in Topola Genealogy Viewer,
-install *Interactive Family Tree* plugin from the Gramps plugin manager.
-The plugin will add a *Tools->Analysis and Exploration->Interactive Family Tree* menu item to Gramps.
+install [*Interactive Family Tree*](https://gramps-project.org/wiki/index.php/Interactive_Family_Tree)
+plugin from the Gramps plugin manager. The plugin will add a
+*Tools->Analysis and Exploration->Interactive Family Tree* menu item to Gramps.
 
 Source code: https://github.com/gramps-project/addons-source/tree/master/Topola
 
