@@ -595,7 +595,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
                 onDownloadPng: this.onDownloadPng,
                 onDownloadSvg: this.onDownloadSvg,
               }}
-              showWikiTreeLogin={this.state.source === DataSourceEnum.WIKITREE}
+              showWikiTreeMenus={this.state.source === DataSourceEnum.WIKITREE}
             />
           )}
         />

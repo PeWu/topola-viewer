@@ -67,8 +67,8 @@ interface Props {
   /** Whether to show the "All relatives" chart type in the menu. */
   allowAllRelativesChart: boolean;
   eventHandlers: EventHandlers;
-  /** Whether to show the 'Log in to WikiTree' button. */
-  showWikiTreeLogin: boolean;
+  /** Whether to show additional WikiTree menus. */
+  showWikiTreeMenus: boolean;
 }
 
 function loadFileAsText(file: File): Promise<string> {
@@ -381,6 +381,7 @@ export class TopBar extends React.Component<
       inputRef: HTMLInputElement;
     }).inputRef.value = id;
     this.handleWikiTreeIdChange(id);
+    this.wikiTreeIdInputRef.current!.focus();
   }
 
   private wikiTreeIdModal() {
@@ -403,7 +404,7 @@ export class TopBar extends React.Component<
           />
         </Header>
         <Modal.Content>
-          <Form onSubmit={() => this.handleLoad()}>
+          <Form onSubmit={() => this.handleSelectWikiTreeId()}>
             <p>
               <FormattedMessage
                 id="select_wikitree_id.comment"
@@ -643,9 +644,50 @@ export class TopBar extends React.Component<
   }
 
   private fileMenus(screenSize: ScreenSize) {
+    const loadWikiTreeItem = (
+      <>
+        <img
+          src={WIKITREE_LOGO_URL}
+          alt="WikiTree logo"
+          className="menu-icon"
+          />
+        <FormattedMessage
+          id="menu.select_wikitree_id"
+          defaultMessage="Select WikiTree ID"
+        />
+      </>
+    );
+
+    // In standalone WikiTree mode, show only the "Select WikiTree ID" menu.
+    if (!this.props.standalone && this.props.showWikiTreeMenus) {
+      switch (screenSize) {
+        case ScreenSize.LARGE:
+          return (
+            <>
+              <Menu.Item onClick={() => this.openWikiTreeIdDialog()}>
+                {loadWikiTreeItem}
+              </Menu.Item>
+              {this.wikiTreeIdModal()}
+            </>
+          );
+        case ScreenSize.SMALL:
+          return (
+            <>
+              <Dropdown.Item onClick={() => this.openWikiTreeIdDialog()}>
+                {loadWikiTreeItem}
+              </Dropdown.Item>
+              <Dropdown.Divider />
+              {this.wikiTreeIdModal()}
+            </>
+          );
+      }
+    }
+
+    // Don't show "open" menus in non-standalone mode.
     if (!this.props.standalone) {
       return null;
     }
+
     const openFileItem = (
       <>
         <Icon name="folder open" />
@@ -658,19 +700,6 @@ export class TopBar extends React.Component<
         <FormattedMessage
           id="menu.load_from_url"
           defaultMessage="Load from URL"
-        />
-      </>
-    );
-    const loadWikiTreeItem = (
-      <>
-        <img
-          src={WIKITREE_LOGO_URL}
-          alt="WikiTree logo"
-          style={{width: '24px', height: '24px'}}
-        />
-        <FormattedMessage
-          id="menu.select_wikitree_id"
-          defaultMessage="Select WikiTree ID"
         />
       </>
     );
@@ -754,7 +783,7 @@ export class TopBar extends React.Component<
   }
 
   private wikiTreeLoginMenu(screenSize: ScreenSize) {
-    if (!this.props.showWikiTreeLogin) {
+    if (!this.props.showWikiTreeMenus) {
       return null;
     }
     switch (this.state.wikiTreeLoginState) {
@@ -781,7 +810,7 @@ export class TopBar extends React.Component<
                 <img
                   src={WIKITREE_LOGO_URL}
                   alt="WikiTree logo"
-                  style={{width: '24px', height: '24px'}}
+                  className="menu-icon"
                 />
                 <FormattedMessage
                   id="menu.wikitree_login"
@@ -798,8 +827,8 @@ export class TopBar extends React.Component<
                   <img
                     src={WIKITREE_LOGO_URL}
                     alt="WikiTree logo"
-                    style={{width: '24px', height: '24px'}}
-                  />
+                    className="menu-icon"
+                    />
                   <FormattedMessage
                     id="menu.wikitree_login"
                     defaultMessage="Log in to WikiTree"
@@ -832,7 +861,7 @@ export class TopBar extends React.Component<
                 <img
                   src={WIKITREE_LOGO_URL}
                   alt="WikiTree logo"
-                  style={{width: '24px', height: '24px'}}
+                  className="menu-icon"
                 />
                 <FormattedMessage
                   id="menu.wikitree_logged_in"
@@ -848,8 +877,8 @@ export class TopBar extends React.Component<
                   <img
                     src={WIKITREE_LOGO_URL}
                     alt="WikiTree logo"
-                    style={{width: '24px', height: '24px'}}
-                  />
+                    className="menu-icon"
+                    />
                   <FormattedMessage
                     id="menu.wikitree_logged_in"
                     defaultMessage="Logged in"

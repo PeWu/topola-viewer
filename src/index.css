@@ -131,3 +131,9 @@ div.ui.card.intro {
   color: #4183c4;
   cursor: pointer;
 }
+
+.ui.menu .item>img:not(.ui).menu-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 5px
+}
