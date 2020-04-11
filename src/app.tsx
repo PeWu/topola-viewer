@@ -4,14 +4,14 @@ import * as React from 'react';
 import {analyticsEvent} from './analytics';
 import {Chart, ChartType} from './chart';
 import {Details} from './details';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, InjectedIntl} from 'react-intl';
 import {getSelection, loadFromUrl, loadGedcom} from './load_data';
 import {getSoftware, TopolaData} from './gedcom_util';
 import {IndiInfo} from 'topola';
 import {intlShape} from 'react-intl';
 import {Intro} from './intro';
 import {Loader, Message, Portal, Responsive} from 'semantic-ui-react';
-import {loadWikiTree} from './wikitree';
+import {loadWikiTree, PRIVATE_ID_PREFIX} from './wikitree';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './top_bar';
 
@@ -132,6 +132,8 @@ class GedcomUrlDataSource implements DataSource {
 
 /** Loading data from the WikiTree API. */
 class WikiTreeDataSource implements DataSource {
+  constructor(private intl: InjectedIntl) {}
+
   isNewData(args: Arguments, state: State): boolean {
     if (state.selection && state.selection.id === args.indi) {
       // Selection unchanged -> don't reload.
@@ -149,7 +151,7 @@ class WikiTreeDataSource implements DataSource {
 
   async loadData(args: Arguments): Promise<TopolaData> {
     try {
-      const data = await loadWikiTree(args.indi!, args.authcode);
+      const data = await loadWikiTree(args.indi!, this.intl, args.authcode);
       analyticsEvent('wikitree_loaded');
       return data;
     } catch (error) {
@@ -165,13 +167,6 @@ enum DataSourceEnum {
   GEDCOM_URL,
   WIKITREE,
 }
-
-/** Mapping from data source identifier to data source handler functions. */
-const DATA_SOURCES = new Map([
-  [DataSourceEnum.UPLOADED, new UploadedDataSource()],
-  [DataSourceEnum.GEDCOM_URL, new GedcomUrlDataSource()],
-  [DataSourceEnum.WIKITREE, new WikiTreeDataSource()],
-]);
 
 /** Arguments passed to the application, primarily through URL parameters. */
 interface Arguments {
@@ -294,6 +289,13 @@ export class App extends React.Component<RouteComponentProps, {}> {
     intl: intlShape,
   };
 
+  /** Mapping from data source identifier to data source handler functions. */
+  private readonly dataSources = new Map([
+    [DataSourceEnum.UPLOADED, new UploadedDataSource()],
+    [DataSourceEnum.GEDCOM_URL, new GedcomUrlDataSource()],
+    [DataSourceEnum.WIKITREE, new WikiTreeDataSource(this.context.intl)],
+  ]);
+
   /** Sets the state with a new individual selection and chart type. */
   private updateDisplay(
     selection: IndiInfo,
@@ -380,7 +382,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
       return;
     }
 
-    const dataSource = DATA_SOURCES.get(args.source!);
+    const dataSource = this.dataSources.get(args.source!);
 
     if (!dataSource) {
       this.props.history.replace({pathname: '/'});
@@ -440,22 +442,42 @@ export class App extends React.Component<RouteComponentProps, {}> {
         loadingMore: loadMoreFromWikitree || undefined,
       });
       if (loadMoreFromWikitree) {
-        const data = await loadWikiTree(args.indi!);
-        this.setState(
-          Object.assign({}, this.state, {
-            data,
-            hash: args.hash,
-            selection: getSelection(data.chartData, args.indi, args.generation),
-            error: undefined,
-            loading: false,
-            url: args.url,
-            showSidePanel: args.showSidePanel,
-            standalone: args.standalone,
-            chartType: args.chartType,
-            source: args.source,
-            loadingMore: false,
-          }),
-        );
+        try {
+          const data = await loadWikiTree(args.indi!, this.context.intl);
+          const selection = getSelection(
+            data.chartData,
+            args.indi,
+            args.generation,
+          );
+          this.setState(
+            Object.assign({}, this.state, {
+              data,
+              hash: args.hash,
+              selection,
+              error: undefined,
+              loading: false,
+              url: args.url,
+              showSidePanel: args.showSidePanel,
+              standalone: args.standalone,
+              chartType: args.chartType,
+              source: args.source,
+              loadingMore: false,
+            }),
+          );
+        } catch (error) {
+          this.showErrorPopup(
+            this.context.intl.formatMessage(
+              {
+                id: 'error.failed_wikitree_load_more',
+                defaultMessage: 'Failed to load data from WikiTree. {error}',
+              },
+              {error},
+            ),
+            {
+              loadingMore: false,
+            },
+          );
+        }
       }
     }
   }
@@ -465,6 +487,10 @@ export class App extends React.Component<RouteComponentProps, {}> {
    * Updates the browser URL.
    */
   private onSelection = (selection: IndiInfo) => {
+    // Don't allow selecting WikiTree private profiles.
+    if (selection.id.startsWith(PRIVATE_ID_PREFIX)) {
+      return;
+    }
     analyticsEvent('selection_changed');
     if (this.state.embedded) {
       // In embedded mode the URL doesn't change.
@@ -484,12 +510,17 @@ export class App extends React.Component<RouteComponentProps, {}> {
     this.chartRef && this.chartRef.print();
   };
 
-  private showErrorPopup(message: string) {
+  private showErrorPopup(message: string, otherStateChanges?: Partial<State>) {
     this.setState(
-      Object.assign({}, this.state, {
-        showErrorPopup: true,
-        error: message,
-      }),
+      Object.assign(
+        {},
+        this.state,
+        {
+          showErrorPopup: true,
+          error: message,
+        },
+        otherStateChanges,
+      ),
     );
   }
 

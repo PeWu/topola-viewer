@@ -60,5 +60,7 @@
   "error.error": "Błąd",
   "error.failed_pdf": "Nie udało się utworzyć pliku PDF. Spróbuj jeszcze raz z mniejszym diagramem lub pobierz plik SVG.",
   "error.failed_png": "Nie udało się utworzyć pliku PNG. Spróbuj jeszcze raz z mniejszym diagramem lub pobierz plik SVG.",
-  "error.failed_to_load_file": "Błąd wczytywania pliku"
+  "error.failed_to_load_file": "Błąd wczytywania pliku",
+  "error.failed_wikitree_load_more": "Błąd podczas pobierania danych z WikiTree. {error}",
+  "wikitree.private": "Prywatne"
 }

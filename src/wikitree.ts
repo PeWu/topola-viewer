@@ -2,6 +2,10 @@ import Cookies from 'js-cookie';
 import {Date, JsonFam, JsonIndi, DateOrRange} from 'topola';
 import {GedcomData, TopolaData, normalizeGedcom} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
+import {InjectedIntl} from 'react-intl';
+
+/** Prefix for IDs of private individuals. */
+export const PRIVATE_ID_PREFIX = '~Private';
 
 /**
  * Cookie where the logged in user name is stored. This cookie is shared
@@ -109,7 +113,10 @@ async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
  * Retrieves ancestors from WikiTree for the given person ID.
  * Uses sessionStorage for caching responses.
  */
-async function getAncestors(key: string, handleCors: boolean) {
+async function getAncestors(
+  key: string,
+  handleCors: boolean,
+): Promise<Person[]> {
   const cacheKey = `wikitree:ancestors:${key}`;
   const cachedData = getSessionStorageItem(cacheKey);
   if (cachedData) {
@@ -132,7 +139,10 @@ async function getAncestors(key: string, handleCors: boolean) {
  * Retrieves relatives from WikiTree for the given array of person IDs.
  * Uses sessionStorage for caching responses.
  */
-async function getRelatives(keys: string[], handleCors: boolean) {
+async function getRelatives(
+  keys: string[],
+  handleCors: boolean,
+): Promise<Person[]> {
   const result: Person[] = [];
   const keysToFetch: string[] = [];
   keys.forEach((key) => {
@@ -201,6 +211,7 @@ export function getLoggedInUserName(): string | undefined {
  */
 export async function loadWikiTree(
   key: string,
+  intl: InjectedIntl,
   authcode?: string,
 ): Promise<TopolaData> {
   // Work around CORS if not in apps.wikitree.com domain.
@@ -235,7 +246,50 @@ export async function loadWikiTree(
     .map((person) => person.Name)
     .filter((key) => !!key);
   const ancestorDetails = await getRelatives(ancestorKeys, handleCors);
+
+  // Map from person id to father id if the father profile is private.
+  const privateFathers: Map<number, number> = new Map();
+  // Map from person id to mother id if the mother profile is private.
+  const privateMothers: Map<number, number> = new Map();
+
+  // Andujst private individual ids so that there are no collisions in the case
+  // that ancestors were collected for more than one person.
+  ancestors.forEach((ancestorList, index) => {
+    const offset = 1000 * index;
+    // Adjust ids by offset.
+    ancestorList.forEach((person) => {
+      if (person.Id < 0) {
+        person.Id -= offset;
+        person.Name = `${PRIVATE_ID_PREFIX}${person.Id}`;
+      }
+      if (person.Father < 0) {
+        person.Father -= offset;
+        privateFathers.set(person.Id, person.Father);
+      }
+      if (person.Mother < 0) {
+        person.Mother -= offset;
+        privateMothers.set(person.Id, person.Mother);
+      }
+    });
+  });
+
+  // Set the Father and Mother fields again because getRelatives doesn't return
+  // private parents.
+  ancestorDetails.forEach((person) => {
+    const privateFather = privateFathers.get(person.Id);
+    if (privateFather) {
+      person.Father = privateFather;
+    }
+    const privateMother = privateMothers.get(person.Id);
+    if (privateMother) {
+      person.Mother = privateMother;
+    }
+  });
   everyone.push(...ancestorDetails);
+
+  // Collect private individuals.
+  const privateAncestors = ancestors.flat().filter((person) => person.Id < 0);
+  everyone.push(...privateAncestors);
 
   // Limit the number of generations of descendants because there may be tens of
   // generations for some profiles.
@@ -291,7 +345,7 @@ export async function loadWikiTree(
       return;
     }
     converted.add(person.Id);
-    const indi = convertPerson(person);
+    const indi = convertPerson(person, intl);
     if (person.Spouses) {
       Object.values(person.Spouses).forEach((spouse) => {
         const famId = getFamilyId(person.Id, spouse.Id);
@@ -350,11 +404,18 @@ function getFamilyId(spouse1: number, spouse2: number) {
   return `${spouse2}_${spouse1}`;
 }
 
-function convertPerson(person: Person): JsonIndi {
+function convertPerson(person: Person, intl: InjectedIntl): JsonIndi {
   const indi: JsonIndi = {
     id: person.Name,
   };
-  if (person.FirstName !== 'Unknown') {
+  if (person.Name.startsWith(PRIVATE_ID_PREFIX)) {
+    indi.hideId = true;
+    indi.firstName = intl.formatMessage({
+      id: 'wikitree.private',
+      defaultMessage: 'Private',
+    });
+  }
+  if (person.FirstName && person.FirstName !== 'Unknown') {
     indi.firstName = person.FirstName;
   }
   if (person.LastNameAtBirth !== 'Unknown') {
@@ -450,15 +511,17 @@ function buildGedcom(indis: JsonIndi[]): GedcomData {
           data: `${indi.firstName || ''} /${indi.lastName || ''}/`,
           tree: [],
         },
-        {
-          level: 1,
-          pointer: '',
-          tag: 'WWW',
-          data: `https://www.wikitree.com/wiki/${escapedId}`,
-          tree: [],
-        },
       ],
     };
+    if (!indi.id.startsWith('~')) {
+      gedcomIndis[indi.id].tree.push({
+        level: 1,
+        pointer: '',
+        tag: 'WWW',
+        data: `https://www.wikitree.com/wiki/${escapedId}`,
+        tree: [],
+      });
+    }
   });
 
   return {
