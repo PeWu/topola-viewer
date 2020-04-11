@@ -78,8 +78,8 @@ async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
     requestData.append(key, request[key]);
   }
   const apiUrl = handleCors
-    ? 'https://cors-anywhere.herokuapp.com/https://apps.wikitree.com/api.php'
-    : 'https://apps.wikitree.com/api.php';
+    ? 'https://cors-anywhere.herokuapp.com/https://api.wikitree.com/api.php'
+    : 'https://api.wikitree.com/api.php';
   const response = await window.fetch(apiUrl, {
     method: 'POST',
     body: requestData,
