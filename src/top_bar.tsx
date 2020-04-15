@@ -790,7 +790,7 @@ export class TopBar extends React.Component<
       case WikiTreeLoginState.NOT_LOGGED_IN:
         const loginForm = (
           <form
-            action="https://apps.wikitree.com/api.php"
+            action="https://api.wikitree.com/api.php"
             method="POST"
             style={{display: 'hidden'}}
             ref={this.wikiTreeLoginFormRef}
