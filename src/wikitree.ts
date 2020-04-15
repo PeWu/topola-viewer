@@ -83,6 +83,7 @@ async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
   const response = await window.fetch(apiUrl, {
     method: 'POST',
     body: requestData,
+    credentials: handleCors ? undefined : 'include',
   });
   const responseBody = await response.text();
   return JSON.parse(responseBody);
