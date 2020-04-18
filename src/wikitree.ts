@@ -3,6 +3,12 @@ import {Date, JsonFam, JsonIndi, DateOrRange} from 'topola';
 import {GedcomData, TopolaData, normalizeGedcom} from './gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 
+/**
+ * Cookie where the logged in user name is stored. This cookie is shared
+ * between apps hosted on apps.wikitree.com.
+ */
+const USER_NAME_COOKIE = 'wikidb_wtb_UserName';
+
 /** WikiTree API getAncestors request. */
 interface GetAncestorsRequest {
   action: 'getAncestors';
@@ -11,19 +17,29 @@ interface GetAncestorsRequest {
 }
 
 /** WikiTree API getRelatives request. */
-interface GetRelatives {
+interface GetRelativesRequest {
   action: 'getRelatives';
   keys: string;
   getChildren?: true;
   getSpouses?: true;
 }
 
-interface ClientLogin {
+/** WikiTree API clientLogin request. */
+interface ClientLoginRequest {
   action: 'clientLogin';
   authcode: string;
 }
 
-type WikiTreeRequest = GetAncestorsRequest | GetRelatives | ClientLogin;
+/** WikiTree API clientLogin response. */
+interface ClientLoginResponse {
+  result: string;
+  username: string;
+}
+
+type WikiTreeRequest =
+  | GetAncestorsRequest
+  | GetRelativesRequest
+  | ClientLoginRequest;
 
 /** Person structure returned from WikiTree API. */
 interface Person {
@@ -154,7 +170,9 @@ async function getRelatives(keys: string[], handleCors: boolean) {
   return result.concat(fetchedResults);
 }
 
-export async function clientLogin(authcode: string) {
+export async function clientLogin(
+  authcode: string,
+): Promise<ClientLoginResponse> {
   const response = await wikiTreeGet(
     {
       action: 'clientLogin',
@@ -163,6 +181,18 @@ export async function clientLogin(authcode: string) {
     false,
   );
   return response.clientLogin;
+}
+
+/**
+ * Returnes the logged in user name or undefined if not logged in.
+ *
+ * This is not an authoritative answer. The result of this function relies on
+ * the cookies set on the apps.wikitree.com domain under which this application
+ * is hosted. The authoritative source of login information is in cookies set on
+ * the api.wikitree.com domain.
+ */
+export function getLoggedInUserName(): string | undefined {
+  return Cookies.get(USER_NAME_COOKIE);
 }
 
 /**
@@ -176,10 +206,11 @@ export async function loadWikiTree(
   // Work around CORS if not in apps.wikitree.com domain.
   const handleCors = window.location.hostname !== 'apps.wikitree.com';
 
-  if (!handleCors && !Cookies.get('wikidb_wtb_UserID') && authcode) {
+  if (!handleCors && !getLoggedInUserName() && authcode) {
     const loginResult = await clientLogin(authcode);
     if (loginResult.result === 'Success') {
       sessionStorage.clear();
+      Cookies.set(USER_NAME_COOKIE, loginResult.username);
     }
   }
 

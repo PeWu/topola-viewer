@@ -1,12 +1,12 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
-import Cookies from 'js-cookie';
 import debounce from 'debounce';
 import md5 from 'md5';
 import {analyticsEvent} from './analytics';
 import {buildSearchIndex, SearchIndex} from './search_index';
 import {displaySearchResult} from './search_util';
 import {FormattedMessage, intlShape} from 'react-intl';
+import {getLoggedInUserName} from './wikitree';
 import {IndiInfo, JsonGedcomData} from 'topola';
 import {Link} from 'react-router-dom';
 import {RouteComponentProps} from 'react-router-dom';
@@ -293,12 +293,11 @@ export class TopBar extends React.Component<
   }
 
   private checkWikiTreeLoginState() {
-    const wikiTreeLoginState =
-      Cookies.get('wikidb_wtb_UserID') !== undefined
-        ? WikiTreeLoginState.LOGGED_IN
-        : WikiTreeLoginState.NOT_LOGGED_IN;
+    const wikiTreeLoginUsername = getLoggedInUserName();
+    const wikiTreeLoginState = wikiTreeLoginUsername
+      ? WikiTreeLoginState.LOGGED_IN
+      : WikiTreeLoginState.NOT_LOGGED_IN;
     if (this.state.wikiTreeLoginState !== wikiTreeLoginState) {
-      const wikiTreeLoginUsername = Cookies.get('wikidb_wtb_UserName');
       this.setState(
         Object.assign({}, this.state, {
           wikiTreeLoginState,
@@ -650,7 +649,7 @@ export class TopBar extends React.Component<
           src={WIKITREE_LOGO_URL}
           alt="WikiTree logo"
           className="menu-icon"
-          />
+        />
         <FormattedMessage
           id="menu.select_wikitree_id"
           defaultMessage="Select WikiTree ID"
@@ -828,7 +827,7 @@ export class TopBar extends React.Component<
                     src={WIKITREE_LOGO_URL}
                     alt="WikiTree logo"
                     className="menu-icon"
-                    />
+                  />
                   <FormattedMessage
                     id="menu.wikitree_login"
                     defaultMessage="Log in to WikiTree"
@@ -878,7 +877,7 @@ export class TopBar extends React.Component<
                     src={WIKITREE_LOGO_URL}
                     alt="WikiTree logo"
                     className="menu-icon"
-                    />
+                  />
                   <FormattedMessage
                     id="menu.wikitree_logged_in"
                     defaultMessage="Logged in"
