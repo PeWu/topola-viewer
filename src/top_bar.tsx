@@ -24,9 +24,7 @@ import {
   SearchResultProps,
   Responsive,
 } from 'semantic-ui-react';
-
-const WIKITREE_LOGO_URL =
-  'https://www.wikitree.com/photo.php/a/a5/WikiTree_Images.png';
+import wikitreeLogo from './wikitree.png';
 
 enum WikiTreeLoginState {
   UNKNOWN,
@@ -392,7 +390,7 @@ export class TopBar extends React.Component<
       >
         <Header>
           <img
-            src={WIKITREE_LOGO_URL}
+            src={wikitreeLogo}
             alt="WikiTree logo"
             style={{width: '32px', height: '32px'}}
           />
@@ -646,7 +644,7 @@ export class TopBar extends React.Component<
     const loadWikiTreeItem = (
       <>
         <img
-          src={WIKITREE_LOGO_URL}
+          src={wikitreeLogo}
           alt="WikiTree logo"
           className="menu-icon"
         />
@@ -807,7 +805,7 @@ export class TopBar extends React.Component<
             return (
               <Menu.Item onClick={() => this.wikiTreeLogin()}>
                 <img
-                  src={WIKITREE_LOGO_URL}
+                  src={wikitreeLogo}
                   alt="WikiTree logo"
                   className="menu-icon"
                 />
@@ -824,7 +822,7 @@ export class TopBar extends React.Component<
               <>
                 <Dropdown.Item onClick={() => this.wikiTreeLogin()}>
                   <img
-                    src={WIKITREE_LOGO_URL}
+                    src={wikitreeLogo}
                     alt="WikiTree logo"
                     className="menu-icon"
                   />
@@ -858,7 +856,7 @@ export class TopBar extends React.Component<
             return (
               <Menu.Item title={tooltip}>
                 <img
-                  src={WIKITREE_LOGO_URL}
+                  src={wikitreeLogo}
                   alt="WikiTree logo"
                   className="menu-icon"
                 />
@@ -874,7 +872,7 @@ export class TopBar extends React.Component<
               <>
                 <Menu.Item title={tooltip}>
                   <img
-                    src={WIKITREE_LOGO_URL}
+                    src={wikitreeLogo}
                     alt="WikiTree logo"
                     className="menu-icon"
                   />
