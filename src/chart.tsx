@@ -133,6 +133,7 @@ export interface ChartProps {
   selection: IndiInfo;
   chartType: ChartType;
   onSelection: (indiInfo: IndiInfo) => void;
+  freezeAnimation?: boolean;
 }
 
 /** Component showing the genealogy chart and handling transition animations. */
@@ -188,6 +189,11 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     // Wait for animation to finish if animation is in progress.
     if (!args.initialRender && this.animating) {
       this.rerenderRequired = true;
+      return;
+    }
+
+    // Freeze changing selection after initial rendering.
+    if (!args.initialRender && this.props.freezeAnimation) {
       return;
     }
 

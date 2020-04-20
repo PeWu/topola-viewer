@@ -188,6 +188,7 @@ interface Arguments {
   chartType: ChartType;
   gedcom?: string;
   images?: Map<string, string>;
+  freezeAnimation?: boolean;
 }
 
 /**
@@ -228,6 +229,7 @@ function getArguments(location: H.Location<any>): Arguments {
     standalone: getParam('standalone') !== 'false', // True by default.
     source,
     authcode: getParam('?authcode'),
+    freezeAnimation: getParam('freeze') === 'true', // False by default
 
     // Hourglass is the default view.
     chartType: chartTypes.get(view) || ChartType.Hourglass,
@@ -273,6 +275,8 @@ interface State {
   /** Source of the data. */
   source?: DataSourceEnum;
   loadingMore?: boolean;
+  /** Freeze animations after initial chart render. */
+  freezeAnimation?: boolean;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
@@ -415,6 +419,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             standalone: args.standalone,
             chartType: args.chartType,
             source: args.source,
+            freezeAnimation: args.freezeAnimation,
           }),
         );
       } catch (error) {
@@ -550,6 +555,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             selection={this.state.selection}
             chartType={this.state.chartType}
             onSelection={this.onSelection}
+            freezeAnimation={this.state.freezeAnimation}
             ref={(ref) => (this.chartRef = ref)}
           />
           {this.state.showSidePanel ? (
