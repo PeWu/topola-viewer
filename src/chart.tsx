@@ -1,8 +1,12 @@
-import * as d3 from 'd3';
 import * as React from 'react';
 import jsPDF from 'jspdf';
+import {event, select, Selection} from 'd3-selection';
+import {interpolateNumber} from 'd3-interpolate';
 import {intlShape} from 'react-intl';
+import {max, min} from 'd3-array';
+import {Responsive} from 'semantic-ui-react';
 import {saveAs} from 'file-saver';
+import {zoom, ZoomBehavior, zoomTransform} from 'd3-zoom';
 import {
   JsonGedcomData,
   ChartHandle,
@@ -14,7 +18,6 @@ import {
   FancyChart,
   CircleRenderer,
 } from 'topola';
-import {Responsive} from 'semantic-ui-react';
 
 /** How much to zoom when using the +/- buttons. */
 const ZOOM_FACTOR = 1.3;
@@ -25,28 +28,28 @@ const ZOOM_FACTOR = 1.3;
  * @param size the size of the chart
  */
 function zoomed(size: [number, number]) {
-  const parent = d3.select('#svgContainer').node() as Element;
+  const parent = select('#svgContainer').node() as Element;
 
-  const scale = d3.event.transform.k;
-  const offsetX = d3.max([0, (parent.clientWidth - size[0] * scale) / 2]);
-  const offsetY = d3.max([0, (parent.clientHeight - size[1] * scale) / 2]);
-  d3.select('#chartSvg')
+  const scale = event.transform.k;
+  const offsetX = max([0, (parent.clientWidth - size[0] * scale) / 2]);
+  const offsetY = max([0, (parent.clientHeight - size[1] * scale) / 2]);
+  select('#chartSvg')
     .attr('width', size[0] * scale)
     .attr('height', size[1] * scale)
     .attr('transform', `translate(${offsetX}, ${offsetY})`);
-  d3.select('#chart').attr('transform', `scale(${scale})`);
+  select('#chart').attr('transform', `scale(${scale})`);
 
-  parent.scrollLeft = -d3.event.transform.x;
-  parent.scrollTop = -d3.event.transform.y;
+  parent.scrollLeft = -event.transform.x;
+  parent.scrollTop = -event.transform.y;
 }
 
 /** Called when the scrollbars are used. */
 function scrolled() {
-  const parent = d3.select('#svgContainer').node() as Element;
+  const parent = select('#svgContainer').node() as Element;
   const x = parent.scrollLeft + parent.clientWidth / 2;
   const y = parent.scrollTop + parent.clientHeight / 2;
-  const scale = d3.zoomTransform(parent).k;
-  d3.select(parent).call(d3.zoom().translateTo, x / scale, y / scale);
+  const scale = zoomTransform(parent).k;
+  select(parent).call(zoom().translateTo, x / scale, y / scale);
 }
 
 /** Loads blob as data URL. */
@@ -144,7 +147,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   /** Rendering is required after the current animation finishes. */
   private rerenderRequired = false;
   /** The d3 zoom behavior object. */
-  private zoomBehavior?: d3.ZoomBehavior<Element, any>;
+  private zoomBehavior?: ZoomBehavior<Element, any>;
 
   private getChartType() {
     switch (this.props.chartType) {
@@ -171,12 +174,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   }
 
   private zoom(factor: number) {
-    const parent = d3.select('#svgContainer') as d3.Selection<
-      Element,
-      any,
-      any,
-      any
-    >;
+    const parent = select('#svgContainer') as Selection<Element, any, any, any>;
     this.zoomBehavior!.scaleBy(parent, factor);
   }
 
@@ -198,7 +196,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     }
 
     if (args.initialRender) {
-      (d3.select('#chart').node() as HTMLElement).innerHTML = '';
+      (select('#chart').node() as HTMLElement).innerHTML = '';
       this.chart = createChart({
         json: this.props.data,
         chartType: this.getChartType(),
@@ -216,30 +214,29 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       startIndi: this.props.selection.id,
       baseGeneration: this.props.selection.generation,
     });
-    const svg = d3.select('#chartSvg');
-    const parent = d3.select('#svgContainer').node() as Element;
+    const svg = select('#chartSvg');
+    const parent = select('#svgContainer').node() as Element;
 
-    const scale = d3.zoomTransform(parent).k;
-    const zoomOutFactor = d3.min([
+    const scale = zoomTransform(parent).k;
+    const zoomOutFactor = min([
       1,
       scale,
       parent.clientWidth / chartInfo.size[0],
       parent.clientHeight / chartInfo.size[1],
     ])!;
-    const extent: [number, number] = [d3.max([0.1, zoomOutFactor])!, 2];
+    const extent: [number, number] = [max([0.1, zoomOutFactor])!, 2];
 
-    this.zoomBehavior = d3
-      .zoom()
+    this.zoomBehavior = zoom()
       .scaleExtent(extent)
       .translateExtent([[0, 0], chartInfo.size])
       .on('zoom', () => zoomed(chartInfo.size));
-    d3.select(parent)
+    select(parent)
       .on('scroll', scrolled)
       .call(this.zoomBehavior);
 
     const scrollTopTween = (scrollTop: number) => {
       return () => {
-        const i = d3.interpolateNumber(parent.scrollTop, scrollTop);
+        const i = interpolateNumber(parent.scrollTop, scrollTop);
         return (t: number) => {
           parent.scrollTop = i(t);
         };
@@ -247,7 +244,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     };
     const scrollLeftTween = (scrollLeft: number) => {
       return () => {
-        const i = d3.interpolateNumber(parent.scrollLeft, scrollLeft);
+        const i = interpolateNumber(parent.scrollLeft, scrollLeft);
         return (t: number) => {
           parent.scrollLeft = i(t);
         };
@@ -256,11 +253,11 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
 
     const dx = parent.clientWidth / 2 - chartInfo.origin[0] * scale;
     const dy = parent.clientHeight / 2 - chartInfo.origin[1] * scale;
-    const offsetX = d3.max([
+    const offsetX = max([
       0,
       (parent.clientWidth - chartInfo.size[0] * scale) / 2,
     ]);
-    const offsetY = d3.max([
+    const offsetY = max([
       0,
       (parent.clientHeight - chartInfo.size[1] * scale) / 2,
     ]);
@@ -333,8 +330,8 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     const svg = document.getElementById('chartSvg')!.cloneNode(true) as Element;
 
     svg.removeAttribute('transform');
-    const parent = d3.select('#svgContainer').node() as Element;
-    const scale = d3.zoomTransform(parent).k;
+    const parent = select('#svgContainer').node() as Element;
+    const scale = zoomTransform(parent).k;
     svg.setAttribute(
       'width',
       String(Number(svg.getAttribute('width')) / scale),
