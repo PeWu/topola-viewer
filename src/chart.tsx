@@ -7,6 +7,7 @@ import {max, min} from 'd3-array';
 import {Responsive} from 'semantic-ui-react';
 import {saveAs} from 'file-saver';
 import {zoom, ZoomBehavior, zoomTransform} from 'd3-zoom';
+import 'd3-transition';
 import {
   JsonGedcomData,
   ChartHandle,
