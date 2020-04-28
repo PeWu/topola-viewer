@@ -60,6 +60,8 @@ interface Person {
   DeathDate: string;
   BirthLocation: string;
   DeathLocation: string;
+  BirthDateDecade: string;
+  DeathDateDecade: string;
   marriage_location: string;
   marriage_date: string;
   DataStatus?: {
@@ -68,6 +70,7 @@ interface Person {
   };
   PhotoData?: {
     path: string;
+    url: string;
   };
 }
 
@@ -431,26 +434,30 @@ function convertPerson(person: Person, intl: InjectedIntl): JsonIndi {
   }
   if (
     (person.BirthDate && person.BirthDate !== '0000-00-00') ||
-    person.BirthLocation
+    person.BirthLocation ||
+    person.BirthDateDecade !== 'unknown'
   ) {
     const parsedDate = parseDate(
       person.BirthDate,
       person.DataStatus && person.DataStatus.BirthDate,
     );
-    indi.birth = Object.assign({}, parsedDate, {place: person.BirthLocation});
+    const date = parsedDate || parseDecade(person.BirthDateDecade);
+    indi.birth = Object.assign({}, date, {place: person.BirthLocation});
   }
   if (
     (person.DeathDate && person.DeathDate !== '0000-00-00') ||
-    person.DeathLocation
+    person.DeathLocation ||
+    person.DeathDateDecade !== 'unknown'
   ) {
     const parsedDate = parseDate(
       person.DeathDate,
       person.DataStatus && person.DataStatus.DeathDate,
     );
-    indi.death = Object.assign({}, parsedDate, {place: person.DeathLocation});
+    const date = parsedDate || parseDecade(person.DeathDateDecade);
+    indi.death = Object.assign({}, date, {place: person.DeathLocation});
   }
   if (person.PhotoData) {
-    indi.images = [{url: `https://www.wikitree.com${person.PhotoData.path}`}];
+    indi.images = [{url: `https://www.wikitree.com${person.PhotoData.url}`}];
   }
   return indi;
 }
@@ -487,6 +494,10 @@ function parseDate(date: string, dataStatus?: string): DateOrRange | undefined {
     parsedDate.qualifier = 'abt';
   }
   return {date: parsedDate};
+}
+
+function parseDecade(decade: string): DateOrRange | undefined {
+  return decade !== 'unknown' ? {date: {text: decade}} : undefined;
 }
 
 /**
