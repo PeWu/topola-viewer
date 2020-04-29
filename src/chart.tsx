@@ -1,5 +1,4 @@
 import * as React from 'react';
-import jsPDF from 'jspdf';
 import {event, select, Selection} from 'd3-selection';
 import {interpolateNumber} from 'd3-interpolate';
 import {intlShape} from 'react-intl';
@@ -395,8 +394,10 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
   }
 
   async downloadPdf() {
+    // Lazy load jspdf.
+    const {default: jspdf} = await import('jspdf');
     const canvas = await this.drawOnCanvas();
-    const doc = new jsPDF({
+    const doc = new jspdf({
       orientation: canvas.width > canvas.height ? 'l' : 'p',
       unit: 'pt',
       format: [canvas.width, canvas.height],
