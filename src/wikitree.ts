@@ -51,6 +51,7 @@ interface Person {
   Name: string;
   FirstName: string;
   LastNameAtBirth: string;
+  RealName: string;
   Spouses: {[key: number]: Person};
   Children: {[key: number]: Person};
   Mother: number;
@@ -420,6 +421,8 @@ function convertPerson(person: Person, intl: InjectedIntl): JsonIndi {
   }
   if (person.FirstName && person.FirstName !== 'Unknown') {
     indi.firstName = person.FirstName;
+  } else if (person.RealName && person.RealName !== 'Unknown') {
+    indi.firstName = person.RealName;
   }
   if (person.LastNameAtBirth !== 'Unknown') {
     indi.lastName = person.LastNameAtBirth;
