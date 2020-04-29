@@ -1,20 +1,28 @@
 {
   "files": {
-    "main.css": "./static/css/main.a3606e6e.chunk.css",
-    "main.js": "./static/js/main.4562ee2a.chunk.js",
-    "main.js.map": "./static/js/main.4562ee2a.chunk.js.map",
-    "runtime~main.js": "./static/js/runtime~main.d653cc00.js",
-    "runtime~main.js.map": "./static/js/runtime~main.d653cc00.js.map",
-    "static/css/2.9c7c3dac.chunk.css": "./static/css/2.9c7c3dac.chunk.css",
-    "static/js/2.b09d1985.chunk.js": "./static/js/2.b09d1985.chunk.js",
-    "static/js/2.b09d1985.chunk.js.map": "./static/js/2.b09d1985.chunk.js.map",
+    "main.css": "./static/css/main.e470b262.chunk.css",
+    "main.js": "./static/js/main.1a765e3c.chunk.js",
+    "main.js.map": "./static/js/main.1a765e3c.chunk.js.map",
+    "runtime-main.js": "./static/js/runtime-main.d33a0780.js",
+    "runtime-main.js.map": "./static/js/runtime-main.d33a0780.js.map",
+    "static/css/2.8e9053bd.chunk.css": "./static/css/2.8e9053bd.chunk.css",
+    "static/js/2.6d547e44.chunk.js": "./static/js/2.6d547e44.chunk.js",
+    "static/js/2.6d547e44.chunk.js.map": "./static/js/2.6d547e44.chunk.js.map",
     "index.html": "./index.html",
-    "precache-manifest.c69ed09a88403d8cd82004e3b6b54292.js": "./precache-manifest.c69ed09a88403d8cd82004e3b6b54292.js",
+    "precache-manifest.80e18bde905f09cdff242022bca9aef2.js": "./precache-manifest.80e18bde905f09cdff242022bca9aef2.js",
     "service-worker.js": "./service-worker.js",
-    "static/css/2.9c7c3dac.chunk.css.map": "./static/css/2.9c7c3dac.chunk.css.map",
-    "static/css/main.a3606e6e.chunk.css.map": "./static/css/main.a3606e6e.chunk.css.map",
+    "static/css/2.8e9053bd.chunk.css.map": "./static/css/2.8e9053bd.chunk.css.map",
+    "static/css/main.e470b262.chunk.css.map": "./static/css/main.e470b262.chunk.css.map",
+    "static/js/2.6d547e44.chunk.js.LICENSE.txt": "./static/js/2.6d547e44.chunk.js.LICENSE.txt",
     "static/media/semantic.min.css": "./static/media/outline-icons.ef60a4f6.woff",
     "static/media/index.css": "./static/media/topola.060eef13.jpg",
     "static/media/wikitree.png": "./static/media/wikitree.1dee3d66.png"
-  }
+  },
+  "entrypoints": [
+    "static/js/runtime-main.d33a0780.js",
+    "static/css/2.8e9053bd.chunk.css",
+    "static/js/2.6d547e44.chunk.js",
+    "static/css/main.e470b262.chunk.css",
+    "static/js/main.1a765e3c.chunk.js"
+  ]
 }
