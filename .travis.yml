@@ -7,10 +7,7 @@ addons:
       # Ubuntu 16+ does not install this dependency by default, so we need to install it ourselves
       - libgconf-2-4
 
-before_script:
-  - npm start -- --verbose &
-
 script:
   - npm run build
   - npm test
-  - npm run cypress:run
+  - npm run cy:start-and-run

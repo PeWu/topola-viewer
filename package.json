@@ -53,6 +53,7 @@
     "gh-pages": "^2.0.1",
     "prettier": "^1.15.3",
     "react-scripts": "^3.0.1",
+    "start-server-and-test": "^1.11.0",
     "tslint-config-prettier": "^1.17.0",
     "typescript": "latest"
   },
@@ -65,7 +66,8 @@
     "deploy": "gh-pages -d build",
     "predeploy-wikitree": "npm run build",
     "deploy-wikitree": "./deploy-wikitree.sh",
-    "cypress:run": "cypress run"
+    "cy:run": "cypress run",
+    "cy:start-and-run": "start-server-and-test start http://localhost:3000 cy:run"
   },
   "homepage": ".",
   "browserslist": [
