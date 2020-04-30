@@ -8,7 +8,7 @@ addons:
       - libgconf-2-4
 
 before_script:
-  - npm start &
+  - npm start -- --verbose &
 
 script:
   - npm run build
