@@ -45,6 +45,16 @@ export async function loadFromUrl(
   } catch (e) {
     console.warn('Failed to load data from session storage: ' + e);
   }
+
+  const driveUrlMatch1 = url.match(/https:\/\/drive\.google\.com\/file\/d\/(.*)\/.*/);
+  if (driveUrlMatch1) {
+    url = `https://drive.google.com/uc?id=${driveUrlMatch1[1]}&export=download`;
+  }
+  const driveUrlMatch2 = url.match(/https:\/\/drive\.google\.com\/open\?id=([^&]*)&?.*/);
+  if (driveUrlMatch2) {
+    url = `https://drive.google.com/uc?id=${driveUrlMatch2[1]}&export=download`;
+  }
+
   const urlToFetch = handleCors
     ? 'https://cors-anywhere.herokuapp.com/' + url
     : url;
