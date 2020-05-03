@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
-import {Date, JsonFam, JsonIndi, DateOrRange} from 'topola';
-import {GedcomData, TopolaData, normalizeGedcom} from './gedcom_util';
+import {Date, DateOrRange, JsonFam, JsonIndi} from 'topola';
+import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {InjectedIntl} from 'react-intl';
 

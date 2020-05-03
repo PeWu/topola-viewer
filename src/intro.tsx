@@ -110,9 +110,7 @@ export function Intro() {
       <p className="ui right aligned version">
         version: {formatBuildDate(process.env.REACT_APP_GIT_TIME!)} (
         <a
-          href={`https://github.com/PeWu/topola-viewer/commit/${
-            process.env.REACT_APP_GIT_SHA
-          }`}
+          href={`https://github.com/PeWu/topola-viewer/commit/${process.env.REACT_APP_GIT_SHA}`}
         >
           {process.env.REACT_APP_GIT_SHA}
         </a>

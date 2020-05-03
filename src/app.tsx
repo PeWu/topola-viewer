@@ -1,19 +1,19 @@
 import * as H from 'history';
 import * as queryString from 'query-string';
 import * as React from 'react';
-import {analyticsEvent} from './analytics';
+import {analyticsEvent} from './util/analytics';
 import {Chart, ChartType} from './chart';
 import {Details} from './details';
 import {FormattedMessage, InjectedIntl} from 'react-intl';
-import {getSelection, loadFromUrl, loadGedcom} from './load_data';
-import {getSoftware, TopolaData} from './gedcom_util';
+import {getSelection, loadFromUrl, loadGedcom} from './datasource/load_data';
+import {getSoftware, TopolaData} from './util/gedcom_util';
 import {IndiInfo} from 'topola';
 import {intlShape} from 'react-intl';
 import {Intro} from './intro';
 import {Loader, Message, Portal, Responsive} from 'semantic-ui-react';
-import {loadWikiTree, PRIVATE_ID_PREFIX} from './wikitree';
+import {loadWikiTree, PRIVATE_ID_PREFIX} from './datasource/wikitree';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
-import {TopBar} from './top_bar';
+import {TopBar} from './menu/top_bar';
 
 /** Shows an error message in the middle of the screen. */
 function ErrorMessage(props: {message?: string}) {

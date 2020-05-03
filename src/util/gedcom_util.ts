@@ -1,3 +1,4 @@
+import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
 import {
   JsonFam,
   JsonGedcomData,
@@ -6,7 +7,6 @@ import {
   JsonImage,
   JsonEvent,
 } from 'topola';
-import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
 
 export interface GedcomData {
   /** The HEAD entry. */

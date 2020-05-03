@@ -1,7 +1,7 @@
-import naturalSort from 'javascript-natural-sort';
 import lunr from 'lunr';
-import {idToIndiMap, idToFamMap} from './gedcom_util';
-import {JsonIndi, JsonFam, JsonGedcomData} from 'topola';
+import naturalSort from 'javascript-natural-sort';
+import {idToFamMap, idToIndiMap} from '../util/gedcom_util';
+import {JsonFam, JsonGedcomData, JsonIndi} from 'topola';
 
 const MAX_RESULTS = 8;
 

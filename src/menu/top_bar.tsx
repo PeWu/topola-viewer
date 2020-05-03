@@ -2,11 +2,12 @@ import * as queryString from 'query-string';
 import * as React from 'react';
 import debounce from 'debounce';
 import md5 from 'md5';
-import {analyticsEvent} from './analytics';
+import wikitreeLogo from './wikitree.png';
+import {analyticsEvent} from '../util/analytics';
 import {buildSearchIndex, SearchIndex} from './search_index';
 import {displaySearchResult} from './search_util';
 import {FormattedMessage, intlShape} from 'react-intl';
-import {getLoggedInUserName} from './wikitree';
+import {getLoggedInUserName} from '../datasource/wikitree';
 import {IndiInfo, JsonGedcomData} from 'topola';
 import {Link} from 'react-router-dom';
 import {RouteComponentProps} from 'react-router-dom';
@@ -24,7 +25,6 @@ import {
   SearchResultProps,
   Responsive,
 } from 'semantic-ui-react';
-import wikitreeLogo from './wikitree.png';
 
 enum WikiTreeLoginState {
   UNKNOWN,
@@ -643,11 +643,7 @@ export class TopBar extends React.Component<
   private fileMenus(screenSize: ScreenSize) {
     const loadWikiTreeItem = (
       <>
-        <img
-          src={wikitreeLogo}
-          alt="WikiTree logo"
-          className="menu-icon"
-        />
+        <img src={wikitreeLogo} alt="WikiTree logo" className="menu-icon" />
         <FormattedMessage
           id="menu.select_wikitree_id"
           defaultMessage="Select WikiTree ID"

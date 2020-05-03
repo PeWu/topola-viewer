@@ -1,4 +1,4 @@
-import {Date as TopolaDate, DateRange, getDate, DateOrRange} from 'topola';
+import {Date as TopolaDate, DateOrRange, DateRange, getDate} from 'topola';
 import {InjectedIntl} from 'react-intl';
 
 const DATE_QUALIFIERS = new Map([

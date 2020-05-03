@@ -2,10 +2,10 @@ import * as React from 'react';
 import flatMap from 'array.prototype.flatmap';
 import Linkify from 'react-linkify';
 import {FormattedMessage, InjectedIntl} from 'react-intl';
-import {GedcomData, pointerToId} from './gedcom_util';
+import {GedcomData, pointerToId} from './util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {intlShape} from 'react-intl';
-import {translateDate} from './date_util';
+import {translateDate} from './util/date_util';
 
 interface Props {
   gedcom: GedcomData;

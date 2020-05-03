@@ -1,8 +1,8 @@
 import * as React from 'react';
+import {formatDateOrRange} from '../util/date_util';
 import {InjectedIntl} from 'react-intl';
-import {SearchResult} from './search_index';
-import {formatDateOrRange} from './date_util';
 import {JsonIndi} from 'topola';
+import {SearchResult} from './search_index';
 
 function getNameLine(result: SearchResult) {
   const name = [result.indi.firstName, result.indi.lastName].join(' ').trim();
