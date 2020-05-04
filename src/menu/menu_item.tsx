@@ -19,12 +19,15 @@ export class MenuItem extends React.Component<
   Props & MenuItemProps & DropdownItemProps
 > {
   render() {
+    const newProps = {...this.props};
+    // Remove menuType from props to avoid error message in the console.
+    delete newProps.menuType;
     return (
       <>
         {this.props.menuType === MenuType.Menu ? (
-          <Menu.Item {...this.props}>{this.props.children}</Menu.Item>
+          <Menu.Item {...newProps}>{this.props.children}</Menu.Item>
         ) : (
-          <Dropdown.Item {...this.props}>{this.props.children}</Dropdown.Item>
+          <Dropdown.Item {...newProps}>{this.props.children}</Dropdown.Item>
         )}
       </>
     );

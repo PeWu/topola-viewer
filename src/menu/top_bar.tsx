@@ -1,10 +1,6 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
-import debounce from 'debounce';
-import {analyticsEvent} from '../util/analytics';
-import {buildSearchIndex, SearchIndex} from './search_index';
-import {displaySearchResult} from './search_util';
-import {FormattedMessage, intlShape} from 'react-intl';
+import {FormattedMessage} from 'react-intl';
 import {IndiInfo, JsonGedcomData} from 'topola';
 import {Link} from 'react-router-dom';
 import {MenuType} from './menu_item';
@@ -12,24 +8,12 @@ import {RouteComponentProps} from 'react-router-dom';
 import {UploadMenu} from './upload_menu';
 import {UrlMenu} from './url_menu';
 import {WikiTreeLoginMenu, WikiTreeMenu} from './wikitree_menu';
-import {
-  Icon,
-  Menu,
-  Dropdown,
-  Search,
-  SearchProps,
-  SearchResultProps,
-  Responsive,
-} from 'semantic-ui-react';
+import {Icon, Menu, Dropdown, Responsive} from 'semantic-ui-react';
+import {SearchBar} from './search';
 
 enum ScreenSize {
   LARGE,
   SMALL,
-}
-
-/** Menus and dialogs state. */
-interface State {
-  searchResults: SearchResultProps[];
 }
 
 interface EventHandlers {
@@ -53,45 +37,7 @@ interface Props {
   showWikiTreeMenus: boolean;
 }
 
-export class TopBar extends React.Component<
-  RouteComponentProps & Props,
-  State
-> {
-  state: State = {
-    searchResults: [],
-  };
-  /** Make intl appear in this.context. */
-  static contextTypes = {
-    intl: intlShape,
-  };
-
-  searchRef?: {setValue(value: string): void};
-  searchIndex?: SearchIndex;
-
-  /** On search input change. */
-  private handleSearch(input: string | undefined) {
-    if (!input) {
-      return;
-    }
-    const results = this.searchIndex!.search(input).map((result) =>
-      displaySearchResult(result, this.context.intl),
-    );
-    this.setState(Object.assign({}, this.state, {searchResults: results}));
-  }
-
-  /** On search result selected. */
-  private handleResultSelect(id: string) {
-    analyticsEvent('search_result_selected');
-    this.props.eventHandlers.onSelection({id, generation: 0});
-    this.searchRef!.setValue('');
-  }
-
-  private initializeSearchIndex() {
-    if (this.props.data) {
-      this.searchIndex = buildSearchIndex(this.props.data);
-    }
-  }
-
+export class TopBar extends React.Component<RouteComponentProps & Props> {
   private changeView(view: string) {
     const location = this.props.location;
     const search = queryString.parse(location.search);
@@ -100,45 +46,6 @@ export class TopBar extends React.Component<
       location.search = queryString.stringify(search);
       this.props.history.push(location);
     }
-  }
-
-  componentDidMount() {
-    this.initializeSearchIndex();
-  }
-
-  componentDidUpdate(prevProps: Props) {
-    if (prevProps.data !== this.props.data) {
-      this.initializeSearchIndex();
-    }
-  }
-
-  private search() {
-    return (
-      <Search
-        onSearchChange={debounce(
-          (_: React.MouseEvent<HTMLElement>, data: SearchProps) =>
-            this.handleSearch(data.value),
-          200,
-        )}
-        onResultSelect={(_, data) => this.handleResultSelect(data.result.id)}
-        results={this.state.searchResults}
-        noResultsMessage={this.context.intl.formatMessage({
-          id: 'menu.search.no_results',
-          defaultMessage: 'No results found',
-        })}
-        placeholder={this.context.intl.formatMessage({
-          id: 'menu.search.placeholder',
-          defaultMessage: 'Search for people',
-        })}
-        selectFirstResult={true}
-        ref={(ref) =>
-          (this.searchRef = (ref as unknown) as {
-            setValue(value: string): void;
-          })
-        }
-        id="search"
-      />
-    );
   }
 
   private chartMenus(screenSize: ScreenSize) {
@@ -232,7 +139,11 @@ export class TopBar extends React.Component<
             >
               <Dropdown.Menu>{chartTypeItems}</Dropdown.Menu>
             </Dropdown>
-            {this.search()}
+            <SearchBar
+              data={this.props.data!}
+              onSelection={this.props.eventHandlers.onSelection}
+              {...this.props}
+            />
           </>
         );
 
