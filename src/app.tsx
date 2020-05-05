@@ -52,6 +52,14 @@ function ErrorPopup(props: ErrorPopupProps) {
   );
 }
 
+enum AppState {
+  INITIAL,
+  LOADING,
+  ERROR,
+  SHOWING_CHART,
+  LOADING_MORE,
+}
+
 /**
  * Message types used in embedded mode.
  * When the parent is ready to receive messages, it sends PARENT_READY.
@@ -91,7 +99,11 @@ class UploadedDataSource implements DataSource {
   isNewData(args: Arguments, state: State): boolean {
     return (
       args.hash !== state.hash ||
-      !!(args.gedcom && !state.loading && !state.data)
+      !!(
+        args.gedcom &&
+        state.state !== AppState.LOADING &&
+        state.state !== AppState.SHOWING_CHART
+      )
     );
   }
 
@@ -245,6 +257,8 @@ function hasUpdatedValues<T>(state: T, changes: Partial<T> | undefined) {
 }
 
 interface State {
+  /** State of the application. */
+  state: AppState;
   /** Loaded data. */
   data?: TopolaData;
   /** Selected individual. */
@@ -253,8 +267,6 @@ interface State {
   hash?: string;
   /** Error to display. */
   error?: string;
-  /** True if data is currently being loaded. */
-  loading: boolean;
   /** URL of the data that is loaded or is being loaded. */
   url?: string;
   /** Whether the side panel is shown. */
@@ -269,14 +281,13 @@ interface State {
   showErrorPopup: boolean;
   /** Source of the data. */
   source?: DataSourceEnum;
-  loadingMore?: boolean;
   /** Freeze animations after initial chart render. */
   freezeAnimation?: boolean;
 }
 
 export class App extends React.Component<RouteComponentProps, {}> {
   state: State = {
-    loading: false,
+    state: AppState.INITIAL,
     embedded: false,
     standalone: true,
     chartType: ChartType.Hourglass,
@@ -317,8 +328,8 @@ export class App extends React.Component<RouteComponentProps, {}> {
   private setError(error: string) {
     this.setState(
       Object.assign({}, this.state, {
-        error: error,
-        loading: false,
+        state: AppState.ERROR,
+        error,
       }),
     );
   }
@@ -341,10 +352,9 @@ export class App extends React.Component<RouteComponentProps, {}> {
         // Set state with data.
         this.setState(
           Object.assign({}, this.state, {
+            state: AppState.SHOWING_CHART,
             data,
             selection: getSelection(data.chartData),
-            error: undefined,
-            loading: false,
           }),
         );
       } catch (error) {
@@ -360,14 +370,19 @@ export class App extends React.Component<RouteComponentProps, {}> {
 
   async componentDidUpdate() {
     if (this.props.location.pathname !== '/view') {
+      if (this.state.state !== AppState.INITIAL) {
+        this.setState(Object.assign({}, this.state, {state: AppState.INITIAL}));
+      }
       return;
     }
 
     const args = getArguments(this.props.location);
 
     if (args.embedded && !this.state.embedded) {
+      // Enter embedded mode.
       this.setState(
         Object.assign({}, this.state, {
+          state: AppState.LOADING,
           embedded: true,
           standalone: false,
           showSidePanel: args.showSidePanel,
@@ -387,18 +402,16 @@ export class App extends React.Component<RouteComponentProps, {}> {
     if (!dataSource) {
       this.props.history.replace({pathname: '/'});
     } else if (
-      (!this.state.loading && !this.state.data && !this.state.error) ||
+      this.state.state === AppState.INITIAL ||
       args.source !== this.state.source ||
       dataSource.isNewData(args, this.state)
     ) {
       // Set loading state.
       this.setState(
         Object.assign({}, this.state, {
-          data: undefined,
+          state: AppState.LOADING,
           selection: {id: args.indi},
           hash: args.hash,
-          error: undefined,
-          loading: true,
           url: args.url,
           standalone: args.standalone,
           chartType: args.chartType,
@@ -411,11 +424,10 @@ export class App extends React.Component<RouteComponentProps, {}> {
         // Set state with data.
         this.setState(
           Object.assign({}, this.state, {
+            state: AppState.SHOWING_CHART,
             data,
             hash: args.hash,
             selection: getSelection(data.chartData, args.indi, args.generation),
-            error: undefined,
-            loading: false,
             url: args.url,
             showSidePanel: args.showSidePanel,
             standalone: args.standalone,
@@ -427,10 +439,13 @@ export class App extends React.Component<RouteComponentProps, {}> {
       } catch (error) {
         this.setError(error.message);
       }
-    } else if (this.state.data && this.state.selection) {
+    } else if (
+      this.state.state === AppState.SHOWING_CHART ||
+      this.state.state === AppState.LOADING_MORE
+    ) {
       // Update selection if it has changed in the URL.
       const selection = getSelection(
-        this.state.data.chartData,
+        this.state.data!.chartData,
         args.indi,
         args.generation,
       );
@@ -439,7 +454,9 @@ export class App extends React.Component<RouteComponentProps, {}> {
         (!this.state.selection || this.state.selection.id !== selection.id);
       this.updateDisplay(selection, {
         chartType: args.chartType,
-        loadingMore: loadMoreFromWikitree || undefined,
+        state: loadMoreFromWikitree
+          ? AppState.LOADING_MORE
+          : AppState.SHOWING_CHART,
       });
       if (loadMoreFromWikitree) {
         try {
@@ -451,17 +468,15 @@ export class App extends React.Component<RouteComponentProps, {}> {
           );
           this.setState(
             Object.assign({}, this.state, {
+              state: AppState.SHOWING_CHART,
               data,
               hash: args.hash,
               selection,
-              error: undefined,
-              loading: false,
               url: args.url,
               showSidePanel: args.showSidePanel,
               standalone: args.standalone,
               chartType: args.chartType,
               source: args.source,
-              loadingMore: false,
             }),
           );
         } catch (error) {
@@ -473,9 +488,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
               },
               {error},
             ),
-            {
-              loadingMore: false,
-            },
+            {state: AppState.SHOWING_CHART},
           );
         }
       }
@@ -561,7 +574,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
     this.chartRef && this.chartRef.downloadSvg();
   };
 
-  onDismissErrorPopup = () => {
+  private onDismissErrorPopup = () => {
     this.setState(
       Object.assign({}, this.state, {
         showErrorPopup: false,
@@ -570,40 +583,45 @@ export class App extends React.Component<RouteComponentProps, {}> {
   };
 
   private renderMainArea = () => {
-    if (this.state.data && this.state.selection) {
-      return (
-        <div id="content">
-          <ErrorPopup
-            open={this.state.showErrorPopup}
-            message={this.state.error}
-            onDismiss={this.onDismissErrorPopup}
-          />
-          {this.state.loadingMore ? (
-            <Loader active size="small" className="loading-more" />
-          ) : null}
-          <Chart
-            data={this.state.data.chartData}
-            selection={this.state.selection}
-            chartType={this.state.chartType}
-            onSelection={this.onSelection}
-            freezeAnimation={this.state.freezeAnimation}
-            ref={(ref) => (this.chartRef = ref)}
-          />
-          {this.state.showSidePanel ? (
-            <Responsive minWidth={768} id="sidePanel">
-              <Details
-                gedcom={this.state.data.gedcom}
-                indi={this.state.selection.id}
-              />
-            </Responsive>
-          ) : null}
-        </div>
-      );
+    switch (this.state.state) {
+      case AppState.SHOWING_CHART:
+      case AppState.LOADING_MORE:
+        return (
+          <div id="content">
+            <ErrorPopup
+              open={this.state.showErrorPopup}
+              message={this.state.error}
+              onDismiss={this.onDismissErrorPopup}
+            />
+            {this.state.state === AppState.LOADING_MORE ? (
+              <Loader active size="small" className="loading-more" />
+            ) : null}
+            <Chart
+              data={this.state.data!.chartData}
+              selection={this.state.selection!}
+              chartType={this.state.chartType}
+              onSelection={this.onSelection}
+              freezeAnimation={this.state.freezeAnimation}
+              ref={(ref) => (this.chartRef = ref)}
+            />
+            {this.state.showSidePanel ? (
+              <Responsive minWidth={768} id="sidePanel">
+                <Details
+                  gedcom={this.state.data!.gedcom}
+                  indi={this.state.selection!.id}
+                />
+              </Responsive>
+            ) : null}
+          </div>
+        );
+
+      case AppState.ERROR:
+        return <ErrorMessage message={this.state.error!} />;
+
+      case AppState.INITIAL:
+      case AppState.LOADING:
+        return <Loader active size="large" />;
     }
-    if (this.state.error) {
-      return <ErrorMessage message={this.state.error!} />;
-    }
-    return <Loader active size="large" />;
   };
 
   render() {
@@ -618,11 +636,9 @@ export class App extends React.Component<RouteComponentProps, {}> {
                 this.state.source !== DataSourceEnum.WIKITREE
               }
               showingChart={
-                !!(
-                  this.props.history.location.pathname === '/view' &&
-                  this.state.data &&
-                  this.state.selection
-                )
+                this.props.history.location.pathname === '/view' &&
+                (this.state.state === AppState.SHOWING_CHART ||
+                  this.state.state === AppState.LOADING_MORE)
               }
               standalone={this.state.standalone}
               eventHandlers={{
