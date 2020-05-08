@@ -1,5 +1,6 @@
 {
   "viewportWidth": 1280,
   "viewportHeight": 1024,
+  "chromeWebSecurity": false,
   "baseUrl": "http://localhost:3000/#"
 }
