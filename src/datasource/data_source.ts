@@ -6,6 +6,7 @@ export enum DataSourceEnum {
   UPLOADED,
   GEDCOM_URL,
   WIKITREE,
+  EMBEDDED,
 }
 
 /** Source specification together with individual selection. */

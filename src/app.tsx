@@ -3,19 +3,19 @@ import * as queryString from 'query-string';
 import * as React from 'react';
 import {analyticsEvent} from './util/analytics';
 import {Chart, ChartType} from './chart';
-import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {Details} from './details';
+import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
 import {FormattedMessage} from 'react-intl';
-import {getSoftware, TopolaData} from './util/gedcom_util';
+import {TopolaData} from './util/gedcom_util';
 import {IndiInfo} from 'topola';
 import {intlShape} from 'react-intl';
 import {Intro} from './intro';
 import {Loader, Message, Portal, Responsive} from 'semantic-ui-react';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './menu/top_bar';
+import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {
   getSelection,
-  loadGedcom,
   UploadSourceSpec,
   UrlSourceSpec,
   GedcomUrlDataSource,
@@ -73,37 +73,17 @@ enum AppState {
   LOADING_MORE,
 }
 
-/**
- * Message types used in embedded mode.
- * When the parent is ready to receive messages, it sends PARENT_READY.
- * When the child (this app) is ready to receive messages, it sends READY.
- * When the child receives PARENT_READY, it sends READY.
- * When the parent receives READY, it sends data in a GEDCOM message.
- */
-enum EmbeddedMessageType {
-  GEDCOM = 'gedcom',
-  READY = 'ready',
-  PARENT_READY = 'parent_ready',
-}
-
-/** Message sent to parent or received from parent in embedded mode. */
-interface EmbeddedMessage {
-  message: EmbeddedMessageType;
-}
-
-interface GedcomMessage extends EmbeddedMessage {
-  message: EmbeddedMessageType.GEDCOM;
-  gedcom?: string;
-}
-
-type DataSourceSpec = UrlSourceSpec | UploadSourceSpec | WikiTreeSourceSpec;
+type DataSourceSpec =
+  | UrlSourceSpec
+  | UploadSourceSpec
+  | WikiTreeSourceSpec
+  | EmbeddedSourceSpec;
 
 /** Arguments passed to the application, primarily through URL parameters. */
 interface Arguments {
   sourceSpec?: DataSourceSpec;
   selection?: IndiInfo;
   chartType: ChartType;
-  embedded: boolean;
   standalone: boolean;
   freezeAnimation?: boolean;
   showSidePanel: boolean;
@@ -128,6 +108,7 @@ function getArguments(location: H.Location<any>): Arguments {
 
   const hash = getParam('file');
   const url = getParam('url');
+  const embedded = getParam('embedded') === 'true'; // False by default.
   var sourceSpec: DataSourceSpec | undefined = undefined;
   if (getParam('source') === 'wikitree') {
     sourceSpec = {
@@ -147,6 +128,8 @@ function getArguments(location: H.Location<any>): Arguments {
       url,
       handleCors: getParam('handleCors') !== 'false', // True by default.
     };
+  } else if (embedded) {
+    sourceSpec = {source: DataSourceEnum.EMBEDDED};
   }
 
   const indi = getParam('indi');
@@ -162,13 +145,15 @@ function getArguments(location: H.Location<any>): Arguments {
     chartType: chartTypes.get(view) || ChartType.Hourglass,
 
     showSidePanel: getParam('sidePanel') !== 'false', // True by default.
-    embedded: getParam('embedded') === 'true', // False by default.
-    standalone: getParam('standalone') !== 'false', // True by default.
+    standalone: getParam('standalone') !== 'false' && !embedded,
     freezeAnimation: getParam('freeze') === 'true', // False by default
   };
 }
 
-/** Returs true if the changes object has values that are different than those in state. */
+/**
+ * Returs true if the changes object has values that are different than those
+ * in state.
+ */
 function hasUpdatedValues<T>(state: T, changes: Partial<T> | undefined) {
   if (!changes) {
     return false;
@@ -189,8 +174,6 @@ interface State {
   error?: string;
   /** Whether the side panel is shown. */
   showSidePanel?: boolean;
-  /** Whether the app is in embedded mode, i.e. embedded in an iframe. */
-  embedded: boolean;
   /** Whether the app is in standalone mode, i.e. showing 'open file' menus. */
   standalone: boolean;
   /** Type of displayed chart. */
@@ -206,7 +189,6 @@ interface State {
 export class App extends React.Component<RouteComponentProps, {}> {
   state: State = {
     state: AppState.INITIAL,
-    embedded: false,
     standalone: true,
     chartType: ChartType.Hourglass,
     showErrorPopup: false,
@@ -245,36 +227,6 @@ export class App extends React.Component<RouteComponentProps, {}> {
     );
   }
 
-  private async onMessage(message: EmbeddedMessage) {
-    if (message.message === EmbeddedMessageType.PARENT_READY) {
-      // Parent didn't receive the first 'ready' message, so we need to send it again.
-      window.parent.postMessage({message: EmbeddedMessageType.READY}, '*');
-    } else if (message.message === EmbeddedMessageType.GEDCOM) {
-      const gedcom = (message as GedcomMessage).gedcom;
-      if (!gedcom) {
-        return;
-      }
-      try {
-        const data = await loadGedcom('', gedcom);
-        const software = getSoftware(data.gedcom.head);
-        analyticsEvent('embedded_file_loaded', {
-          event_label: software,
-        });
-        // Set state with data.
-        this.setState(
-          Object.assign({}, this.state, {
-            state: AppState.SHOWING_CHART,
-            data,
-            selection: getSelection(data.chartData),
-          }),
-        );
-      } catch (error) {
-        analyticsEvent('embedded_file_error');
-        this.setError(error.message);
-      }
-    }
-  }
-
   componentDidMount() {
     this.componentDidUpdate();
   }
@@ -284,6 +236,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
   private readonly wikiTreeDataSource = new WikiTreeDataSource(
     this.context.intl,
   );
+  private readonly embeddedDataSource = new EmbeddedDataSource();
 
   private isNewData(sourceSpec: DataSourceSpec, selection?: IndiInfo) {
     if (
@@ -317,6 +270,12 @@ export class App extends React.Component<RouteComponentProps, {}> {
           oldSouce as SourceSelection<WikiTreeSourceSpec>,
           this.state.data,
         );
+      case DataSourceEnum.EMBEDDED:
+        return this.embeddedDataSource.isNewData(
+          newSource as SourceSelection<EmbeddedSourceSpec>,
+          oldSouce as SourceSelection<EmbeddedSourceSpec>,
+          this.state.data,
+        );
     }
   }
 
@@ -328,6 +287,8 @@ export class App extends React.Component<RouteComponentProps, {}> {
         return this.gedcomUrlDataSource.loadData({spec: sourceSpec, selection});
       case DataSourceEnum.WIKITREE:
         return this.wikiTreeDataSource.loadData({spec: sourceSpec, selection});
+      case DataSourceEnum.EMBEDDED:
+        return this.embeddedDataSource.loadData({spec: sourceSpec, selection});
     }
   }
 
@@ -340,25 +301,6 @@ export class App extends React.Component<RouteComponentProps, {}> {
     }
 
     const args = getArguments(this.props.location);
-
-    if (args.embedded && !this.state.embedded) {
-      // Enter embedded mode.
-      this.setState(
-        Object.assign({}, this.state, {
-          state: AppState.LOADING,
-          embedded: true,
-          standalone: false,
-          showSidePanel: args.showSidePanel,
-        }),
-      );
-      // Notify the parent window that we are ready.
-      window.parent.postMessage('ready', '*');
-      window.addEventListener('message', (data) => this.onMessage(data.data));
-    }
-    if (args.embedded) {
-      // If the app is embedded, do not run the normal loading code.
-      return;
-    }
 
     if (!args.sourceSpec) {
       this.props.history.replace({pathname: '/'});
@@ -447,11 +389,6 @@ export class App extends React.Component<RouteComponentProps, {}> {
       return;
     }
     analyticsEvent('selection_changed');
-    if (this.state.embedded) {
-      // In embedded mode the URL doesn't change.
-      this.updateDisplay(selection);
-      return;
-    }
     const location = this.props.location;
     const search = queryString.parse(location.search);
     search.indi = selection.id;
