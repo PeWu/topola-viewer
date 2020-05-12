@@ -1,4 +1,6 @@
-import {convertGedcom, TopolaData} from '../util/gedcom_util';
+import {analyticsEvent} from '../util/analytics';
+import {convertGedcom, getSoftware, TopolaData} from '../util/gedcom_util';
+import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 import {IndiInfo, JsonGedcomData} from 'topola';
 
 /**
@@ -90,4 +92,75 @@ export async function loadGedcom(
     throw new Error('Error loading data. Please upload your file again.');
   }
   return prepareData(gedcom, hash, images);
+}
+
+export interface UploadSourceSpec {
+  source: DataSourceEnum.UPLOADED;
+  gedcom?: string;
+  /** Hash of the GEDCOM contents. */
+  hash: string;
+  images?: Map<string, string>;
+}
+
+/** Files opened from the local computer. */
+export class UploadedDataSource implements DataSource<UploadSourceSpec> {
+  // isNewData(args: Arguments, state: State): boolean {
+  isNewData(
+    newSource: SourceSelection<UploadSourceSpec>,
+    oldSource: SourceSelection<UploadSourceSpec>,
+    data?: TopolaData,
+  ): boolean {
+    return newSource.spec.hash !== oldSource.spec.hash;
+  }
+
+  async loadData(
+    source: SourceSelection<UploadSourceSpec>,
+  ): Promise<TopolaData> {
+    try {
+      const data = await loadGedcom(
+        source.spec.hash,
+        source.spec.gedcom,
+        source.spec.images,
+      );
+      const software = getSoftware(data.gedcom.head);
+      analyticsEvent('upload_file_loaded', {
+        event_label: software,
+        event_value: (source.spec.images && source.spec.images.size) || 0,
+      });
+      return data;
+    } catch (error) {
+      analyticsEvent('upload_file_error');
+      throw error;
+    }
+  }
+}
+
+export interface UrlSourceSpec {
+  source: DataSourceEnum.GEDCOM_URL;
+  /** URL of the data that is loaded or is being loaded. */
+  url: string;
+  handleCors: boolean;
+}
+
+/** GEDCOM file loaded by pointing to a URL. */
+export class GedcomUrlDataSource implements DataSource<UrlSourceSpec> {
+  isNewData(
+    newSource: SourceSelection<UrlSourceSpec>,
+    oldSource: SourceSelection<UrlSourceSpec>,
+    data?: TopolaData,
+  ): boolean {
+    return newSource.spec.url !== oldSource.spec.url;
+  }
+
+  async loadData(source: SourceSelection<UrlSourceSpec>): Promise<TopolaData> {
+    try {
+      const data = await loadFromUrl(source.spec.url, source.spec.handleCors);
+      const software = getSoftware(data.gedcom.head);
+      analyticsEvent('upload_file_loaded', {event_label: software});
+      return data;
+    } catch (error) {
+      analyticsEvent('url_file_error');
+      throw error;
+    }
+  }
 }

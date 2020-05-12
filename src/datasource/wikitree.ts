@@ -1,4 +1,6 @@
 import Cookies from 'js-cookie';
+import {analyticsEvent} from '../util/analytics';
+import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 import {Date, DateOrRange, JsonFam, JsonIndi} from 'topola';
 import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
@@ -558,4 +560,56 @@ function getSet<K, V>(map: Map<K, Set<V>>, key: K): Set<V> {
   const newSet = new Set<V>();
   map.set(key, newSet);
   return newSet;
+}
+
+export interface WikiTreeSourceSpec {
+  source: DataSourceEnum.WIKITREE;
+  authcode?: string;
+}
+
+/** Loading data from the WikiTree API. */
+export class WikiTreeDataSource implements DataSource<WikiTreeSourceSpec> {
+  constructor(private intl: InjectedIntl) {}
+
+  isNewData(
+    newSource: SourceSelection<WikiTreeSourceSpec>,
+    oldSource: SourceSelection<WikiTreeSourceSpec>,
+    data?: TopolaData,
+  ): boolean {
+    if (!newSource.selection) {
+      return false;
+    }
+    if (oldSource.selection?.id === newSource.selection.id) {
+      // Selection unchanged -> don't reload.
+      return false;
+    }
+    if (
+      data &&
+      data.chartData.indis.some((indi) => indi.id === newSource.selection?.id)
+    ) {
+      // New selection exists in current view -> animate instead of reloading.
+      return false;
+    }
+    return true;
+  }
+
+  async loadData(
+    source: SourceSelection<WikiTreeSourceSpec>,
+  ): Promise<TopolaData> {
+    if (!source.selection) {
+      throw new Error('WikiTree id needs to be provided');
+    }
+    try {
+      const data = await loadWikiTree(
+        source.selection.id,
+        this.intl,
+        source.spec.authcode,
+      );
+      analyticsEvent('wikitree_loaded');
+      return data;
+    } catch (error) {
+      analyticsEvent('wikitree_error');
+      throw error;
+    }
+  }
 }
