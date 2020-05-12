@@ -7,14 +7,15 @@ import {IndiInfo, JsonGedcomData} from 'topola';
  */
 export function getSelection(
   data: JsonGedcomData,
-  indi?: string,
-  generation?: number,
+  selection?: IndiInfo,
 ): IndiInfo {
   // If ID is not given or it doesn't exist in the data, use the first ID in
   // the data.
   const id =
-    indi && data.indis.some((i) => i.id === indi) ? indi : data.indis[0].id;
-  return {id, generation: generation || 0};
+    selection && data.indis.some((i) => i.id === selection.id)
+      ? selection.id
+      : data.indis[0].id;
+  return {id, generation: selection?.generation || 0};
 }
 
 function prepareData(

@@ -83,37 +83,80 @@ interface GedcomMessage extends EmbeddedMessage {
   gedcom?: string;
 }
 
+/** Supported data sources. */
+enum DataSourceEnum {
+  UPLOADED,
+  GEDCOM_URL,
+  WIKITREE,
+}
+
+interface UploadSourceSpec {
+  source: DataSourceEnum.UPLOADED;
+  gedcom?: string;
+  /** Hash of the GEDCOM contents. */
+  hash: string;
+  images?: Map<string, string>;
+}
+
+interface UrlSourceSpec {
+  source: DataSourceEnum.GEDCOM_URL;
+  /** URL of the data that is loaded or is being loaded. */
+  url: string;
+  handleCors: boolean;
+}
+
+interface WikiTreeSourceSpec {
+  source: DataSourceEnum.WIKITREE;
+  authcode?: string;
+}
+
+type DataSourceSpec = UrlSourceSpec | UploadSourceSpec | WikiTreeSourceSpec;
+
+/** Source specification together with individual selection. */
+interface SourceSelection<SourceSpecT> {
+  spec: SourceSpecT;
+  selection?: IndiInfo;
+}
+
 /** Interface encapsulating functions specific for a data source. */
-interface DataSource {
+interface DataSource<SourceSpecT> {
   /**
    * Returns true if the application is now loading a completely new data set
    * and the existing one should be wiped.
    */
-  isNewData(args: Arguments, state: State): boolean;
+  isNewData(
+    newSource: SourceSelection<SourceSpecT>,
+    oldSource: SourceSelection<SourceSpecT>,
+    data?: TopolaData,
+  ): boolean;
   /** Loads data from the data source. */
-  loadData(args: Arguments): Promise<TopolaData>;
+  loadData(spec: SourceSelection<SourceSpecT>): Promise<TopolaData>;
 }
 
 /** Files opened from the local computer. */
-class UploadedDataSource implements DataSource {
-  isNewData(args: Arguments, state: State): boolean {
-    return (
-      args.hash !== state.hash ||
-      !!(
-        args.gedcom &&
-        state.state !== AppState.LOADING &&
-        state.state !== AppState.SHOWING_CHART
-      )
-    );
+class UploadedDataSource implements DataSource<UploadSourceSpec> {
+  // isNewData(args: Arguments, state: State): boolean {
+  isNewData(
+    newSource: SourceSelection<UploadSourceSpec>,
+    oldSource: SourceSelection<UploadSourceSpec>,
+    data?: TopolaData,
+  ): boolean {
+    return newSource.spec.hash !== oldSource.spec.hash;
   }
 
-  async loadData(args: Arguments): Promise<TopolaData> {
+  async loadData(
+    source: SourceSelection<UploadSourceSpec>,
+  ): Promise<TopolaData> {
     try {
-      const data = await loadGedcom(args.hash!, args.gedcom, args.images);
+      const data = await loadGedcom(
+        source.spec.hash,
+        source.spec.gedcom,
+        source.spec.images,
+      );
       const software = getSoftware(data.gedcom.head);
       analyticsEvent('upload_file_loaded', {
         event_label: software,
-        event_value: (args.images && args.images.size) || 0,
+        event_value: (source.spec.images && source.spec.images.size) || 0,
       });
       return data;
     } catch (error) {
@@ -124,14 +167,18 @@ class UploadedDataSource implements DataSource {
 }
 
 /** GEDCOM file loaded by pointing to a URL. */
-class GedcomUrlDataSource implements DataSource {
-  isNewData(args: Arguments, state: State): boolean {
-    return args.url !== state.url;
+class GedcomUrlDataSource implements DataSource<UrlSourceSpec> {
+  isNewData(
+    newSource: SourceSelection<UrlSourceSpec>,
+    oldSource: SourceSelection<UrlSourceSpec>,
+    data?: TopolaData,
+  ): boolean {
+    return newSource.spec.url !== oldSource.spec.url;
   }
 
-  async loadData(args: Arguments): Promise<TopolaData> {
+  async loadData(source: SourceSelection<UrlSourceSpec>): Promise<TopolaData> {
     try {
-      const data = await loadFromUrl(args.url!, args.handleCors);
+      const data = await loadFromUrl(source.spec.url, source.spec.handleCors);
       const software = getSoftware(data.gedcom.head);
       analyticsEvent('upload_file_loaded', {event_label: software});
       return data;
@@ -143,17 +190,24 @@ class GedcomUrlDataSource implements DataSource {
 }
 
 /** Loading data from the WikiTree API. */
-class WikiTreeDataSource implements DataSource {
+class WikiTreeDataSource implements DataSource<WikiTreeSourceSpec> {
   constructor(private intl: InjectedIntl) {}
 
-  isNewData(args: Arguments, state: State): boolean {
-    if (state.selection && state.selection.id === args.indi) {
+  isNewData(
+    newSource: SourceSelection<WikiTreeSourceSpec>,
+    oldSource: SourceSelection<WikiTreeSourceSpec>,
+    data?: TopolaData,
+  ): boolean {
+    if (!newSource.selection) {
+      return false;
+    }
+    if (oldSource.selection?.id === newSource.selection.id) {
       // Selection unchanged -> don't reload.
       return false;
     }
     if (
-      state.data &&
-      state.data.chartData.indis.some((indi) => indi.id === args.indi)
+      data &&
+      data.chartData.indis.some((indi) => indi.id === newSource.selection?.id)
     ) {
       // New selection exists in current view -> animate instead of reloading.
       return false;
@@ -161,9 +215,18 @@ class WikiTreeDataSource implements DataSource {
     return true;
   }
 
-  async loadData(args: Arguments): Promise<TopolaData> {
+  async loadData(
+    source: SourceSelection<WikiTreeSourceSpec>,
+  ): Promise<TopolaData> {
+    if (!source.selection) {
+      throw new Error('WikiTree id needs to be provided');
+    }
     try {
-      const data = await loadWikiTree(args.indi!, this.intl, args.authcode);
+      const data = await loadWikiTree(
+        source.selection.id,
+        this.intl,
+        source.spec.authcode,
+      );
       analyticsEvent('wikitree_loaded');
       return data;
     } catch (error) {
@@ -173,29 +236,15 @@ class WikiTreeDataSource implements DataSource {
   }
 }
 
-/** Supported data sources. */
-enum DataSourceEnum {
-  UPLOADED,
-  GEDCOM_URL,
-  WIKITREE,
-}
-
 /** Arguments passed to the application, primarily through URL parameters. */
 interface Arguments {
-  showSidePanel: boolean;
-  embedded: boolean;
-  url?: string;
-  indi?: string;
-  generation?: number;
-  hash?: string;
-  handleCors: boolean;
-  standalone: boolean;
-  source?: DataSourceEnum;
-  authcode?: string;
+  sourceSpec?: DataSourceSpec;
+  selection?: IndiInfo;
   chartType: ChartType;
-  gedcom?: string;
-  images?: Map<string, string>;
+  embedded: boolean;
+  standalone: boolean;
   freezeAnimation?: boolean;
+  showSidePanel: boolean;
 }
 
 /**
@@ -209,40 +258,51 @@ function getArguments(location: H.Location<any>): Arguments {
     return typeof value === 'string' ? value : undefined;
   };
 
-  const parsedGen = Number(getParam('gen'));
   const view = getParam('view');
   const chartTypes = new Map<string | undefined, ChartType>([
     ['relatives', ChartType.Relatives],
     ['fancy', ChartType.Fancy],
   ]);
+
   const hash = getParam('file');
   const url = getParam('url');
-  const source =
-    getParam('source') === 'wikitree'
-      ? DataSourceEnum.WIKITREE
-      : hash
-      ? DataSourceEnum.UPLOADED
-      : url
-      ? DataSourceEnum.GEDCOM_URL
-      : undefined;
-  return {
-    showSidePanel: getParam('sidePanel') !== 'false', // True by default.
-    embedded: getParam('embedded') === 'true', // False by default.
-    url,
-    indi: getParam('indi'),
-    generation: !isNaN(parsedGen) ? parsedGen : undefined,
-    hash,
-    handleCors: getParam('handleCors') !== 'false', // True by default.
-    standalone: getParam('standalone') !== 'false', // True by default.
-    source,
-    authcode: getParam('?authcode'),
-    freezeAnimation: getParam('freeze') === 'true', // False by default
+  var sourceSpec: DataSourceSpec | undefined = undefined;
+  if (getParam('source') === 'wikitree') {
+    sourceSpec = {
+      source: DataSourceEnum.WIKITREE,
+      authcode: getParam('?authcode'),
+    };
+  } else if (hash) {
+    sourceSpec = {
+      source: DataSourceEnum.UPLOADED,
+      hash,
+      gedcom: location.state && location.state.data,
+      images: location.state && location.state.images,
+    };
+  } else if (url) {
+    sourceSpec = {
+      source: DataSourceEnum.GEDCOM_URL,
+      url,
+      handleCors: getParam('handleCors') !== 'false', // True by default.
+    };
+  }
 
+  const indi = getParam('indi');
+  const parsedGen = Number(getParam('gen'));
+  const selection = indi
+    ? {id: indi, generation: !isNaN(parsedGen) ? parsedGen : 0}
+    : undefined;
+
+  return {
+    sourceSpec,
+    selection,
     // Hourglass is the default view.
     chartType: chartTypes.get(view) || ChartType.Hourglass,
 
-    gedcom: location.state && location.state.data,
-    images: location.state && location.state.images,
+    showSidePanel: getParam('sidePanel') !== 'false', // True by default.
+    embedded: getParam('embedded') === 'true', // False by default.
+    standalone: getParam('standalone') !== 'false', // True by default.
+    freezeAnimation: getParam('freeze') === 'true', // False by default
   };
 }
 
@@ -263,12 +323,8 @@ interface State {
   data?: TopolaData;
   /** Selected individual. */
   selection?: IndiInfo;
-  /** Hash of the GEDCOM contents. */
-  hash?: string;
   /** Error to display. */
   error?: string;
-  /** URL of the data that is loaded or is being loaded. */
-  url?: string;
   /** Whether the side panel is shown. */
   showSidePanel?: boolean;
   /** Whether the app is in embedded mode, i.e. embedded in an iframe. */
@@ -279,8 +335,8 @@ interface State {
   chartType: ChartType;
   /** Whether to show the error popup. */
   showErrorPopup: boolean;
-  /** Source of the data. */
-  source?: DataSourceEnum;
+  /** Specification of the source of the data. */
+  sourceSpec?: DataSourceSpec;
   /** Freeze animations after initial chart render. */
   freezeAnimation?: boolean;
 }
@@ -299,13 +355,6 @@ export class App extends React.Component<RouteComponentProps, {}> {
   static contextTypes = {
     intl: intlShape,
   };
-
-  /** Mapping from data source identifier to data source handler functions. */
-  private readonly dataSources = new Map([
-    [DataSourceEnum.UPLOADED, new UploadedDataSource()],
-    [DataSourceEnum.GEDCOM_URL, new GedcomUrlDataSource()],
-    [DataSourceEnum.WIKITREE, new WikiTreeDataSource(this.context.intl)],
-  ]);
 
   /** Sets the state with a new individual selection and chart type. */
   private updateDisplay(
@@ -368,6 +417,58 @@ export class App extends React.Component<RouteComponentProps, {}> {
     this.componentDidUpdate();
   }
 
+  private readonly uploadedDataSource = new UploadedDataSource();
+  private readonly gedcomUrlDataSource = new GedcomUrlDataSource();
+  private readonly wikiTreeDataSource = new WikiTreeDataSource(
+    this.context.intl,
+  );
+
+  private isNewData(sourceSpec: DataSourceSpec, selection?: IndiInfo) {
+    if (
+      !this.state.sourceSpec ||
+      this.state.sourceSpec.source !== sourceSpec.source
+    ) {
+      // New data source means new data.
+      return true;
+    }
+    const newSource = {spec: sourceSpec, selection};
+    const oldSouce = {
+      spec: this.state.sourceSpec,
+      selection: this.state.selection,
+    };
+    switch (newSource.spec.source) {
+      case DataSourceEnum.UPLOADED:
+        return this.uploadedDataSource.isNewData(
+          newSource as SourceSelection<UploadSourceSpec>,
+          oldSouce as SourceSelection<UploadSourceSpec>,
+          this.state.data,
+        );
+      case DataSourceEnum.GEDCOM_URL:
+        return this.gedcomUrlDataSource.isNewData(
+          newSource as SourceSelection<UrlSourceSpec>,
+          oldSouce as SourceSelection<UrlSourceSpec>,
+          this.state.data,
+        );
+      case DataSourceEnum.WIKITREE:
+        return this.wikiTreeDataSource.isNewData(
+          newSource as SourceSelection<WikiTreeSourceSpec>,
+          oldSouce as SourceSelection<WikiTreeSourceSpec>,
+          this.state.data,
+        );
+    }
+  }
+
+  private loadData(sourceSpec: DataSourceSpec, selection?: IndiInfo) {
+    switch (sourceSpec.source) {
+      case DataSourceEnum.UPLOADED:
+        return this.uploadedDataSource.loadData({spec: sourceSpec, selection});
+      case DataSourceEnum.GEDCOM_URL:
+        return this.gedcomUrlDataSource.loadData({spec: sourceSpec, selection});
+      case DataSourceEnum.WIKITREE:
+        return this.wikiTreeDataSource.loadData({spec: sourceSpec, selection});
+    }
+  }
+
   async componentDidUpdate() {
     if (this.props.location.pathname !== '/view') {
       if (this.state.state !== AppState.INITIAL) {
@@ -397,43 +498,30 @@ export class App extends React.Component<RouteComponentProps, {}> {
       return;
     }
 
-    const dataSource = this.dataSources.get(args.source!);
-
-    if (!dataSource) {
+    if (!args.sourceSpec) {
       this.props.history.replace({pathname: '/'});
     } else if (
       this.state.state === AppState.INITIAL ||
-      args.source !== this.state.source ||
-      dataSource.isNewData(args, this.state)
+      this.isNewData(args.sourceSpec, args.selection)
     ) {
       // Set loading state.
       this.setState(
         Object.assign({}, this.state, {
           state: AppState.LOADING,
-          selection: {id: args.indi},
-          hash: args.hash,
-          url: args.url,
+          sourceSpec: args.sourceSpec,
+          selection: args.selection,
           standalone: args.standalone,
           chartType: args.chartType,
-          source: args.source,
         }),
       );
       try {
-        const data = await dataSource.loadData(args);
-
+        const data = await this.loadData(args.sourceSpec, args.selection);
         // Set state with data.
         this.setState(
           Object.assign({}, this.state, {
             state: AppState.SHOWING_CHART,
             data,
-            hash: args.hash,
-            selection: getSelection(data.chartData, args.indi, args.generation),
-            url: args.url,
-            showSidePanel: args.showSidePanel,
-            standalone: args.standalone,
-            chartType: args.chartType,
-            source: args.source,
-            freezeAnimation: args.freezeAnimation,
+            selection: getSelection(data.chartData, args.selection),
           }),
         );
       } catch (error) {
@@ -446,11 +534,10 @@ export class App extends React.Component<RouteComponentProps, {}> {
       // Update selection if it has changed in the URL.
       const selection = getSelection(
         this.state.data!.chartData,
-        args.indi,
-        args.generation,
+        args.selection,
       );
       const loadMoreFromWikitree =
-        args.source === DataSourceEnum.WIKITREE &&
+        args.sourceSpec.source === DataSourceEnum.WIKITREE &&
         (!this.state.selection || this.state.selection.id !== selection.id);
       this.updateDisplay(selection, {
         chartType: args.chartType,
@@ -460,23 +547,16 @@ export class App extends React.Component<RouteComponentProps, {}> {
       });
       if (loadMoreFromWikitree) {
         try {
-          const data = await loadWikiTree(args.indi!, this.context.intl);
-          const selection = getSelection(
-            data.chartData,
-            args.indi,
-            args.generation,
+          const data = await loadWikiTree(
+            args.selection!.id,
+            this.context.intl,
           );
+          const selection = getSelection(data.chartData, args.selection);
           this.setState(
             Object.assign({}, this.state, {
               state: AppState.SHOWING_CHART,
               data,
-              hash: args.hash,
               selection,
-              url: args.url,
-              showSidePanel: args.showSidePanel,
-              standalone: args.standalone,
-              chartType: args.chartType,
-              source: args.source,
             }),
           );
         } catch (error) {
@@ -633,7 +713,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
               {...props}
               data={this.state.data && this.state.data.chartData}
               allowAllRelativesChart={
-                this.state.source !== DataSourceEnum.WIKITREE
+                this.state.sourceSpec?.source !== DataSourceEnum.WIKITREE
               }
               showingChart={
                 this.props.history.location.pathname === '/view' &&
@@ -648,7 +728,9 @@ export class App extends React.Component<RouteComponentProps, {}> {
                 onDownloadPng: this.onDownloadPng,
                 onDownloadSvg: this.onDownloadSvg,
               }}
-              showWikiTreeMenus={this.state.source === DataSourceEnum.WIKITREE}
+              showWikiTreeMenus={
+                this.state.sourceSpec?.source === DataSourceEnum.WIKITREE
+              }
             />
           )}
         />
