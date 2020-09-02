@@ -1,8 +1,10 @@
 import * as locale_en from 'react-intl/locale-data/en';
 import * as locale_pl from 'react-intl/locale-data/pl';
+import * as locale_ru from 'react-intl/locale-data/ru';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import messages_pl from './translations/pl.json';
+import messages_ru from './translations/ru.json';
 import {addLocaleData} from 'react-intl';
 import {App} from './app';
 import {detect} from 'detect-browser';
@@ -12,10 +14,11 @@ import './index.css';
 import 'semantic-ui-css/semantic.min.css';
 import 'canvas-toBlob';
 
-addLocaleData([...locale_en, ...locale_pl]);
+addLocaleData([...locale_en, ...locale_pl, ...locale_ru]);
 
 const messages = {
   pl: messages_pl,
+  ru: messages_ru,
 };
 const language = navigator.language && navigator.language.split(/[-_]/)[0];
 
