@@ -52,7 +52,7 @@
     "cypress": "^4.0.1",
     "gh-pages": "^2.0.1",
     "prettier": "^1.15.3",
-    "react-scripts": "^3.0.1",
+    "react-scripts": "^3.4.3",
     "start-server-and-test": "^1.11.0",
     "tslint-config-prettier": "^1.17.0",
     "typescript": "latest"
