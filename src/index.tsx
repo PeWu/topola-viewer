@@ -1,9 +1,9 @@
-import * as locale_pl from 'react-intl/locale-data/de';
+import * as locale_de from 'react-intl/locale-data/de';
 import * as locale_en from 'react-intl/locale-data/en';
-import * as locale_pl from 'react-intl/locale-data/fr';
-import * as locale_pl from 'react-intl/locale-data/it';
+import * as locale_fr from 'react-intl/locale-data/fr';
+import * as locale_it from 'react-intl/locale-data/it';
 import * as locale_pl from 'react-intl/locale-data/pl';
-import * as locale_pl from 'react-intl/locale-data/ru';
+import * as locale_ru from 'react-intl/locale-data/ru';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import messages_de from './translations/de.json';
