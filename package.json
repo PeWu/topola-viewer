@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "src/index.tsx",
   "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.1.0",
+    "@typescript-eslint/parser": "^4.1.0",
     "array.prototype.flatmap": "^1.2.1",
     "canvas-toBlob": "^1.0.0",
     "d3-array": "^2.4.0",

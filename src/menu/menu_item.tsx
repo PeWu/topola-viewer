@@ -12,7 +12,7 @@ export enum MenuType {
 }
 
 interface Props {
-  menuType: MenuType;
+  menuType?: MenuType;
 }
 
 export class MenuItem extends React.Component<
