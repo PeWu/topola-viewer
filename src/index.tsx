@@ -23,7 +23,11 @@ import 'canvas-toBlob';
 addLocaleData([...locale_de, ...locale_en, ...locale_fr, ...locale_it, ...locale_pl, ...locale_ru]);
 
 const messages = {
+  de: messages_de,
+  fr: messages_fr,
+  it: messages_it,
   pl: messages_pl,
+  ru: messages_ru,
 };
 const language = navigator.language && navigator.language.split(/[-_]/)[0];
 
@@ -33,7 +37,7 @@ if (browser && browser.name === 'ie') {
   ReactDOM.render(
     <p>
       Topola Genealogy Viewer does not support Internet Explorer. Please try a
-      different browser.
+      different (modern) browser.
     </p>,
     document.querySelector('#root'),
   );
