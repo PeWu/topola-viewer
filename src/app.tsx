@@ -326,6 +326,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
             state: AppState.SHOWING_CHART,
             data,
             selection: getSelection(data.chartData, args.selection),
+            showSidePanel: args.showSidePanel,
           }),
         );
       } catch (error) {
