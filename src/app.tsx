@@ -27,6 +27,7 @@ import {
   WikiTreeDataSource,
   WikiTreeSourceSpec,
 } from './datasource/wikitree';
+import {getI18nMessage} from './util/error_i18n';
 
 /** Shows an error message in the middle of the screen. */
 function ErrorMessage(props: {message?: string}) {
@@ -330,7 +331,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
           }),
         );
       } catch (error) {
-        this.setError(error.message);
+        this.setError(getI18nMessage(error, this.context.intl));
       }
     } else if (
       this.state.state === AppState.SHOWING_CHART ||

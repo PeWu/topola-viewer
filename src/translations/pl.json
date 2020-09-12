@@ -62,5 +62,10 @@
   "error.failed_png": "Nie udało się utworzyć pliku PNG. Spróbuj jeszcze raz z mniejszym diagramem lub pobierz plik SVG.",
   "error.failed_to_load_file": "Błąd wczytywania pliku",
   "error.failed_wikitree_load_more": "Błąd podczas pobierania danych z WikiTree. {error}",
+  "error.GEDCOM_READ_FAILED": "Błąd wczytywania pliku GEDCOM",
+  "error.ERROR_LOADING_UPLOADED_FILE": "Błąd wczytywania danych. Otwórz ponownie plik.",
+  "error.WIKITREE_ID_NOT_PROVIDED": "Identyfikator WikiTree nie został podany",
+  "error.WIKITREE_PROFILE_NOT_ACCESSIBLE": "Profil WikiTree {id} nie jest dostępny",
+  "error.WIKITREE_PROFILE_NOT_FOUND": "Profil WikiTree {id} nie istnieje",
   "wikitree.private": "Prywatne"
 }

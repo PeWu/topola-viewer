@@ -5,6 +5,7 @@ import {Date, DateOrRange, JsonFam, JsonIndi} from 'topola';
 import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {InjectedIntl} from 'react-intl';
+import {TopolaError} from '../util/error';
 
 /** Prefix for IDs of private individuals. */
 export const PRIVATE_ID_PREFIX = '~Private';
@@ -172,7 +173,12 @@ async function getRelatives(
     handleCors,
   );
   if (response[0].items === null) {
-    throw new Error(`WikiTree profile ${keysToFetch[0]} not found.`);
+    const id = keysToFetch[0];
+    throw new TopolaError(
+      'WIKITREE_PROFILE_NOT_FOUND',
+      `WikiTree profile ${id} not found`,
+      {id},
+    );
   }
   const fetchedResults = response[0].items.map(
     (x: {person: Person}) => x.person,
@@ -236,8 +242,11 @@ export async function loadWikiTree(
   // Fetch the ancestors of the input person and ancestors of his/her spouses.
   const firstPerson = await getRelatives([key], handleCors);
   if (!firstPerson[0].Name) {
-    throw new Error(
-      `WikiTree profile ${key} is not accessible. Try logging in.`,
+    const id = key;
+    throw new TopolaError(
+      'WIKITREE_PROFILE_NOT_ACCESSIBLE',
+      `WikiTree profile ${id} is not accessible. Try logging in.`,
+      {id},
     );
   }
 
@@ -597,7 +606,10 @@ export class WikiTreeDataSource implements DataSource<WikiTreeSourceSpec> {
     source: SourceSelection<WikiTreeSourceSpec>,
   ): Promise<TopolaData> {
     if (!source.selection) {
-      throw new Error('WikiTree id needs to be provided');
+      throw new TopolaError(
+        'WIKITREE_ID_NOT_PROVIDED',
+        'WikiTree id needs to be provided',
+      );
     }
     try {
       const data = await loadWikiTree(

@@ -304,7 +304,7 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
             >
               <FormattedMessage
                 id="menu.github"
-                defaultMessage="Source on GitHub"
+                defaultMessage="GitHub project"
               />
             </Dropdown.Item>
           </Dropdown.Menu>
