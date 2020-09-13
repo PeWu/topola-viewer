@@ -15,14 +15,22 @@ interface Props {
 const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI', 'EVEN', 'CENS'];
 const EXCLUDED_TAGS = ['NAME', 'SEX', 'FAMC', 'FAMS', 'NOTE', 'SOUR'];
 const TAG_DESCRIPTIONS = new Map([
+  ['ADOP', 'Adoption'],
   ['BAPM', 'Baptism'],
   ['BIRT', 'Birth'],
   ['BURI', 'Burial'],
   ['CENS', 'Census'],
   ['CHR', 'Christening'],
+  ['CREM', 'Cremation'],
   ['DEAT', 'Death'],
+  ['EDUC', 'Education'],
   ['EMAIL', 'E-mail'],
+  ['EMIG', 'Emigration'],
   ['EVEN', 'Event'],
+  ['FACT', 'Fact'],
+  ['IMMI', 'Immigration'],
+  ['MILT', 'Military services'],
+  ['NATU', 'Naturalization'],
   ['OCCU', 'Occupation'],
   ['TITL', 'Title'],
   ['WWW', 'WWW'],
