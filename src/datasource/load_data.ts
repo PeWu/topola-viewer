@@ -2,6 +2,7 @@ import {analyticsEvent} from '../util/analytics';
 import {convertGedcom, getSoftware, TopolaData} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 import {IndiInfo, JsonGedcomData} from 'topola';
+import {TopolaError} from '../util/error';
 
 /**
  * Returns a valid IndiInfo object, either with the given indi and generation
@@ -89,7 +90,10 @@ export async function loadGedcom(
     console.warn('Failed to load data from session storage: ' + e);
   }
   if (!gedcom) {
-    throw new Error('Error loading data. Please upload your file again.');
+    throw new TopolaError(
+      'ERROR_LOADING_UPLOADED_FILE',
+      'Error loading data. Please upload your file again.',
+    );
   }
   return prepareData(gedcom, hash, images);
 }
