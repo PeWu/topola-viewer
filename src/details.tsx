@@ -37,10 +37,11 @@ const TAG_DESCRIPTIONS = new Map([
 ]);
 
 function translateTag(tag: string) {
+  const normalizedTag = tag.replaceAll('_', '');
   return (
     <FormattedMessage
-      id={`gedcom.${tag}`}
-      defaultMessage={TAG_DESCRIPTIONS.get(tag) || tag}
+      id={`gedcom.${normalizedTag}`}
+      defaultMessage={TAG_DESCRIPTIONS.get(normalizedTag) || normalizedTag}
     />
   );
 }

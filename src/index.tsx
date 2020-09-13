@@ -20,7 +20,14 @@ import './index.css';
 import 'semantic-ui-css/semantic.min.css';
 import 'canvas-toBlob';
 
-addLocaleData([...locale_de, ...locale_en, ...locale_fr, ...locale_it, ...locale_pl, ...locale_ru]);
+addLocaleData([
+  ...locale_de,
+  ...locale_en,
+  ...locale_fr,
+  ...locale_it,
+  ...locale_pl,
+  ...locale_ru,
+]);
 
 const messages = {
   de: messages_de,
