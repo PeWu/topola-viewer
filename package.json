@@ -3,8 +3,6 @@
   "version": "1.0.0",
   "main": "src/index.tsx",
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.1.0",
-    "@typescript-eslint/parser": "^4.1.0",
     "array.prototype.flatmap": "^1.2.1",
     "canvas-toBlob": "^1.0.0",
     "d3-array": "^2.4.0",
@@ -51,6 +49,8 @@
     "@types/react-dom": "*",
     "@types/react-intl": "^2.3.15",
     "@types/react-router-dom": "^4.3.1",
+    "@typescript-eslint/eslint-plugin": "^4.1.1",
+    "@typescript-eslint/parser": "^4.1.1",
     "cypress": "^4.0.1",
     "gh-pages": "^2.0.1",
     "prettier": "^1.15.3",
@@ -77,5 +77,14 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ],
+    "rules": {
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-use-before-define": "off"
+    }
+  }
 }
