@@ -3,6 +3,14 @@ import naturalSort from 'javascript-natural-sort';
 import {idToFamMap, idToIndiMap} from '../util/gedcom_util';
 import {JsonFam, JsonGedcomData, JsonIndi} from 'topola';
 
+// TODO: Add type declarations and use import instead of require.
+require('lunr-languages/lunr.stemmer.support')(lunr);
+require('lunr-languages/lunr.multi')(lunr);
+require('lunr-languages/lunr.de')(lunr);
+require('lunr-languages/lunr.fr')(lunr);
+require('lunr-languages/lunr.it')(lunr);
+require('lunr-languages/lunr.ru')(lunr);
+
 const MAX_RESULTS = 8;
 
 export interface SearchResult {
@@ -58,6 +66,7 @@ class LunrSearchIndex implements SearchIndex {
   initialize() {
     const self = this;
     this.index = lunr(function() {
+      this.use((lunr as any).multiLanguage('de', 'en', 'fr', 'it', 'ru'));
       this.ref('id');
       this.field('id');
       this.field('name', {boost: 10});

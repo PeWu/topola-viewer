@@ -18,6 +18,7 @@
     "js-cookie": "^2.2.1",
     "jspdf": "^1.5.3",
     "lunr": "^2.3.6",
+    "lunr-languages": "^1.4.0",
     "md5": "^2.2.1",
     "parse-gedcom": "^1.0.5",
     "query-string": "^5.1.1",
