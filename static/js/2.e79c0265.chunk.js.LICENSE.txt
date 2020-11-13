@@ -87,6 +87,57 @@ object-assign
  * Released under the MIT license
  */
 
+/*!
+ * Lunr languages, `French` language
+ * https://github.com/MihaiValentin/lunr-languages
+ *
+ * Copyright 2014, Mihai Valentin
+ * http://www.mozilla.org/MPL/
+ */
+
+/*!
+ * Lunr languages, `German` language
+ * https://github.com/MihaiValentin/lunr-languages
+ *
+ * Copyright 2014, Mihai Valentin
+ * http://www.mozilla.org/MPL/
+ */
+
+/*!
+ * Lunr languages, `Italian` language
+ * https://github.com/MihaiValentin/lunr-languages
+ *
+ * Copyright 2014, Mihai Valentin
+ * http://www.mozilla.org/MPL/
+ */
+
+/*!
+ * Lunr languages, `Russian` language
+ * https://github.com/MihaiValentin/lunr-languages
+ *
+ * Copyright 2014, Mihai Valentin
+ * http://www.mozilla.org/MPL/
+ */
+
+/*!
+ * Snowball JavaScript Library v0.3
+ * http://code.google.com/p/urim/
+ * http://snowball.tartarus.org/
+ *
+ * Copyright 2010, Oleg Mazko
+ * http://www.mozilla.org/MPL/
+ */
+
+/*!
+ * based on
+ * Snowball JavaScript Library v0.3
+ * http://code.google.com/p/urim/
+ * http://snowball.tartarus.org/
+ *
+ * Copyright 2010, Oleg Mazko
+ * http://www.mozilla.org/MPL/
+ */
+
 /*! @source http://purl.eligrey.com/github/canvas-toBlob.js/blob/master/canvas-toBlob.js */
 
 /**
