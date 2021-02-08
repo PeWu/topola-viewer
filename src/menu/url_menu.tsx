@@ -96,8 +96,8 @@ export class UrlMenu extends React.Component<
                 }
                 values={{
                   link: (
-                    <a href="https://cors-anywhere.herokuapp.com/">
-                      cors-anywhere.herokuapp.com
+                    <a href="https://topola-cors.herokuapp.com/">
+                      topola-cors.herokuapp.com
                     </a>
                   ),
                 }}

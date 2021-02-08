@@ -105,7 +105,7 @@ async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
     requestData.append(key, request[key]);
   }
   const apiUrl = handleCors
-    ? 'https://cors-anywhere.herokuapp.com/https://api.wikitree.com/api.php'
+    ? 'https://topola-cors.herokuapp.com/https://api.wikitree.com/api.php'
     : 'https://api.wikitree.com/api.php';
   const response = await window.fetch(apiUrl, {
     method: 'POST',

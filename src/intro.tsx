@@ -102,7 +102,7 @@ export function Intro() {
           }
           values={{
             link: (
-              <a href="https://cors-anywhere.herokuapp.com/">cors-anywhere</a>
+              <a href="https://topola-cors.herokuapp.com/">cors-anywhere</a>
             ),
           }}
         />
