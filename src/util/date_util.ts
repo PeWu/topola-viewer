@@ -28,7 +28,7 @@ function formatDate(date: TopolaDate, intl: InjectedIntl) {
       defaultMessage: DATE_QUALIFIERS.get(qualifier) || qualifier,
     });
 
-  const formatOptions = {
+  const formatOptions: Intl.DateTimeFormatOptions = {
     day: hasDay ? 'numeric' : undefined,
     month: hasMonth ? 'long' : undefined,
     year: hasYear ? 'numeric' : undefined,
