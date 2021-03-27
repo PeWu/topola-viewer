@@ -16,7 +16,7 @@
     "history": "^4.7.2",
     "javascript-natural-sort": "^0.7.1",
     "js-cookie": "^2.2.1",
-    "jspdf": "^1.5.3",
+    "jspdf": "^2.3.1",
     "lunr": "^2.3.6",
     "lunr-languages": "^1.4.0",
     "md5": "^2.2.1",
