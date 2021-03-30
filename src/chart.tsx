@@ -1,11 +1,17 @@
 import * as React from 'react';
-import {event, select, Selection} from 'd3-selection';
+import {select, Selection} from 'd3-selection';
 import {interpolateNumber} from 'd3-interpolate';
 import {intlShape} from 'react-intl';
 import {max, min} from 'd3-array';
 import {Responsive} from 'semantic-ui-react';
 import {saveAs} from 'file-saver';
-import {zoom, ZoomBehavior, zoomTransform} from 'd3-zoom';
+import {
+  D3ZoomEvent,
+  zoom,
+  ZoomBehavior,
+  ZoomedElementBaseType,
+  zoomTransform,
+} from 'd3-zoom';
 import 'd3-transition';
 import {
   JsonGedcomData,
@@ -27,7 +33,10 @@ const ZOOM_FACTOR = 1.3;
  *
  * @param size the size of the chart
  */
-function zoomed(size: [number, number]) {
+function zoomed(
+  size: [number, number],
+  event: D3ZoomEvent<ZoomedElementBaseType, unknown>,
+) {
   const parent = select('#svgContainer').node() as Element;
 
   const scale = event.transform.k;
@@ -229,10 +238,8 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     this.zoomBehavior = zoom()
       .scaleExtent(extent)
       .translateExtent([[0, 0], chartInfo.size])
-      .on('zoom', () => zoomed(chartInfo.size));
-    select(parent)
-      .on('scroll', scrolled)
-      .call(this.zoomBehavior);
+      .on('zoom', (event) => zoomed(chartInfo.size, event));
+    select(parent).on('scroll', scrolled).call(this.zoomBehavior);
 
     const scrollTopTween = (scrollTop: number) => {
       return () => {
@@ -261,10 +268,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
       0,
       (parent.clientHeight - chartInfo.size[1] * scale) / 2,
     ]);
-    const svgTransition = svg
-      .transition()
-      .delay(200)
-      .duration(500);
+    const svgTransition = svg.transition().delay(200).duration(500);
     const transition = args.initialRender ? svg : svgTransition;
     transition
       .attr('transform', `translate(${offsetX}, ${offsetY})`)

@@ -15,10 +15,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
     "suppressImplicitAnyIndexErrors": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "src"
