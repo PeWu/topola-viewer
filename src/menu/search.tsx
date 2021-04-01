@@ -4,7 +4,7 @@ import {analyticsEvent} from '../util/analytics';
 import {buildSearchIndex, SearchIndex, SearchResult} from './search_index';
 import {formatDateOrRange} from '../util/date_util';
 import {IndiInfo, JsonGedcomData} from 'topola';
-import {intlShape} from 'react-intl';
+import {injectIntl, WrappedComponentProps} from 'react-intl';
 import {JsonIndi} from 'topola';
 import {RouteComponentProps} from 'react-router-dom';
 import {Search, SearchProps, SearchResultProps} from 'semantic-ui-react';
@@ -32,24 +32,20 @@ interface State {
 }
 
 /** Displays and handles the search box in the top bar. */
-export class SearchBar extends React.Component<
-  RouteComponentProps & Props,
+class SearchBarComponent extends React.Component<
+  RouteComponentProps & WrappedComponentProps & Props,
   State
 > {
   state: State = {
     searchResults: [],
-  };
-  /** Make intl appear in this.context. */
-  static contextTypes = {
-    intl: intlShape,
   };
 
   searchRef?: {setValue(value: string): void};
   searchIndex?: SearchIndex;
 
   private getDescriptionLine(indi: JsonIndi) {
-    const birthDate = formatDateOrRange(indi.birth, this.context.intl);
-    const deathDate = formatDateOrRange(indi.death, this.context.intl);
+    const birthDate = formatDateOrRange(indi.birth, this.props.intl);
+    const deathDate = formatDateOrRange(indi.death, this.props.intl);
     if (!deathDate) {
       return birthDate;
     }
@@ -108,11 +104,11 @@ export class SearchBar extends React.Component<
         )}
         onResultSelect={(_, data) => this.handleResultSelect(data.result.id)}
         results={this.state.searchResults}
-        noResultsMessage={this.context.intl.formatMessage({
+        noResultsMessage={this.props.intl.formatMessage({
           id: 'menu.search.no_results',
           defaultMessage: 'No results found',
         })}
-        placeholder={this.context.intl.formatMessage({
+        placeholder={this.props.intl.formatMessage({
           id: 'menu.search.placeholder',
           defaultMessage: 'Search for people',
         })}
@@ -127,3 +123,4 @@ export class SearchBar extends React.Component<
     );
   }
 }
+export const SearchBar = injectIntl(SearchBarComponent);

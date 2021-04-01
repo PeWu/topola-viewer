@@ -2,13 +2,12 @@ import * as H from 'history';
 import * as queryString from 'query-string';
 import * as React from 'react';
 import {analyticsEvent} from './util/analytics';
-import {Chart, ChartType} from './chart';
+import {Chart, ChartComponent, ChartType} from './chart';
 import {Details} from './details';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, WrappedComponentProps} from 'react-intl';
 import {TopolaData} from './util/gedcom_util';
 import {IndiInfo} from 'topola';
-import {intlShape} from 'react-intl';
 import {Intro} from './intro';
 import {Loader, Message, Portal, Responsive} from 'semantic-ui-react';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
@@ -187,19 +186,17 @@ interface State {
   freezeAnimation?: boolean;
 }
 
-export class App extends React.Component<RouteComponentProps, {}> {
+export class App extends React.Component<
+  RouteComponentProps & WrappedComponentProps,
+  {}
+> {
   state: State = {
     state: AppState.INITIAL,
     standalone: true,
     chartType: ChartType.Hourglass,
     showErrorPopup: false,
   };
-  chartRef: Chart | null = null;
-
-  /** Make intl appear in this.context. */
-  static contextTypes = {
-    intl: intlShape,
-  };
+  chartRef: ChartComponent | null = null;
 
   /** Sets the state with a new individual selection and chart type. */
   private updateDisplay(
@@ -234,9 +231,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
 
   private readonly uploadedDataSource = new UploadedDataSource();
   private readonly gedcomUrlDataSource = new GedcomUrlDataSource();
-  private readonly wikiTreeDataSource = new WikiTreeDataSource(
-    this.context.intl,
-  );
+  private readonly wikiTreeDataSource = new WikiTreeDataSource(this.props.intl);
   private readonly embeddedDataSource = new EmbeddedDataSource();
 
   private isNewData(sourceSpec: DataSourceSpec, selection?: IndiInfo) {
@@ -331,7 +326,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
           }),
         );
       } catch (error) {
-        this.setError(getI18nMessage(error, this.context.intl));
+        this.setError(getI18nMessage(error, this.props.intl));
       }
     } else if (
       this.state.state === AppState.SHOWING_CHART ||
@@ -353,10 +348,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
       });
       if (loadMoreFromWikitree) {
         try {
-          const data = await loadWikiTree(
-            args.selection!.id,
-            this.context.intl,
-          );
+          const data = await loadWikiTree(args.selection!.id, this.props.intl);
           const selection = getSelection(data.chartData, args.selection);
           this.setState(
             Object.assign({}, this.state, {
@@ -367,7 +359,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
           );
         } catch (error) {
           this.showErrorPopup(
-            this.context.intl.formatMessage(
+            this.props.intl.formatMessage(
               {
                 id: 'error.failed_wikitree_load_more',
                 defaultMessage: 'Failed to load data from WikiTree. {error}',
@@ -424,7 +416,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
       this.chartRef && (await this.chartRef.downloadPdf());
     } catch (e) {
       this.showErrorPopup(
-        this.context.intl.formatMessage({
+        this.props.intl.formatMessage({
           id: 'error.failed_pdf',
           defaultMessage:
             'Failed to generate PDF file.' +
@@ -440,7 +432,7 @@ export class App extends React.Component<RouteComponentProps, {}> {
       this.chartRef && (await this.chartRef.downloadPng());
     } catch (e) {
       this.showErrorPopup(
-        this.context.intl.formatMessage({
+        this.props.intl.formatMessage({
           id: 'error.failed_png',
           defaultMessage:
             'Failed to generate PNG file.' +

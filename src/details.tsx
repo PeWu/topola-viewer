@@ -1,10 +1,14 @@
 import * as React from 'react';
 import flatMap from 'array.prototype.flatmap';
 import Linkify from 'react-linkify';
-import {FormattedMessage, InjectedIntl} from 'react-intl';
+import {
+  FormattedMessage,
+  injectIntl,
+  IntlShape,
+  WrappedComponentProps,
+} from 'react-intl';
 import {GedcomData, pointerToId} from './util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
-import {intlShape} from 'react-intl';
 import {translateDate} from './util/date_util';
 
 interface Props {
@@ -76,7 +80,7 @@ function getData(entry: GedcomEntry) {
   return result;
 }
 
-function eventDetails(entry: GedcomEntry, intl: InjectedIntl) {
+function eventDetails(entry: GedcomEntry, intl: IntlShape) {
   const lines = [];
   if (entry.data && entry.data.length > 1) {
     lines.push(<i>{entry.data}</i>);
@@ -205,12 +209,10 @@ function dereference(entry: GedcomEntry, gedcom: GedcomData) {
   return entry;
 }
 
-export class Details extends React.Component<Props, {}> {
-  /** Make intl appear in this.context. */
-  static contextTypes = {
-    intl: intlShape,
-  };
-
+class DetailsComponent extends React.Component<
+  Props & WrappedComponentProps,
+  {}
+> {
   render() {
     const entries = this.props.gedcom.indis[this.props.indi].tree;
     const entriesWithData = entries
@@ -221,7 +223,7 @@ export class Details extends React.Component<Props, {}> {
       <div className="ui segments" id="details">
         {getDetails(entries, ['NAME'], nameDetails)}
         {getDetails(entries, EVENT_TAGS, (entry) =>
-          eventDetails(entry, this.context.intl as InjectedIntl),
+          eventDetails(entry, this.props.intl),
         )}
         {getOtherDetails(entriesWithData)}
         {getDetails(entriesWithData, ['NOTE'], noteDetails)}
@@ -229,3 +231,4 @@ export class Details extends React.Component<Props, {}> {
     );
   }
 }
+export const Details = injectIntl(DetailsComponent);

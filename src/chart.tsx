@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {select, Selection} from 'd3-selection';
 import {interpolateNumber} from 'd3-interpolate';
-import {intlShape} from 'react-intl';
+import {injectIntl, WrappedComponentProps} from 'react-intl';
 import {max, min} from 'd3-array';
 import {Responsive} from 'semantic-ui-react';
 import {saveAs} from 'file-saver';
@@ -149,7 +149,10 @@ export interface ChartProps {
 }
 
 /** Component showing the genealogy chart and handling transition animations. */
-export class Chart extends React.PureComponent<ChartProps, {}> {
+export class ChartComponent extends React.PureComponent<
+  ChartProps & WrappedComponentProps,
+  {}
+> {
   private chart?: ChartHandle;
   /** Animation is in progress. */
   private animating = false;
@@ -214,7 +217,7 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
         indiCallback: (info) => this.props.onSelection(info),
         animate: true,
         updateSvgSize: false,
-        locale: this.context.intl.locale,
+        locale: this.props.intl.locale,
       });
     } else {
       this.chart!.setData(this.props.data);
@@ -302,11 +305,6 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     const initialRender = this.props.chartType !== prevProps.chartType;
     this.renderChart({initialRender});
   }
-
-  /** Make intl appear in this.context. */
-  static contextTypes = {
-    intl: intlShape,
-  };
 
   render() {
     return (
@@ -410,3 +408,4 @@ export class Chart extends React.PureComponent<ChartProps, {}> {
     doc.save('topola.pdf');
   }
 }
+export const Chart = injectIntl(ChartComponent, {forwardRef: true});

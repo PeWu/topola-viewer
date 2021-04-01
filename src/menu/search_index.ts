@@ -65,7 +65,7 @@ class LunrSearchIndex implements SearchIndex {
 
   initialize() {
     const self = this;
-    this.index = lunr(function() {
+    this.index = lunr(function () {
       this.use((lunr as any).multiLanguage('de', 'en', 'fr', 'it', 'ru'));
       this.ref('id');
       this.field('id');

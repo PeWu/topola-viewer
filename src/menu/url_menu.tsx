@@ -77,7 +77,6 @@ export class UrlMenu extends React.Component<
           <FormattedMessage
             id="load_from_url.title"
             defaultMessage="Load from URL"
-            children={(txt) => txt}
           />
         </Header>
         <Modal.Content>

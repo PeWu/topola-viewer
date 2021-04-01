@@ -2,7 +2,7 @@ import * as queryString from 'query-string';
 import * as React from 'react';
 import wikitreeLogo from './wikitree.png';
 import {analyticsEvent} from '../util/analytics';
-import {FormattedMessage, intlShape} from 'react-intl';
+import {FormattedMessage, injectIntl, WrappedComponentProps} from 'react-intl';
 import {getLoggedInUserName} from '../datasource/wikitree';
 import {MenuItem, MenuType} from './menu_item';
 import {RouteComponentProps} from 'react-router-dom';
@@ -106,7 +106,6 @@ export class WikiTreeMenu extends React.Component<
           <FormattedMessage
             id="select_wikitree_id.title"
             defaultMessage="Select WikiTree ID"
-            children={(txt) => txt}
           />
         </Header>
         <Modal.Content>
@@ -196,16 +195,12 @@ interface LoginState {
 }
 
 /** Displays and handles the "Log in to WikiTree" menu. */
-export class WikiTreeLoginMenu extends React.Component<
-  RouteComponentProps & Props,
+class WikiTreeLoginMenuComponent extends React.Component<
+  RouteComponentProps & WrappedComponentProps & Props,
   LoginState
 > {
   state: LoginState = {
     wikiTreeLoginState: WikiTreeLoginState.UNKNOWN,
-  };
-  /** Make intl appear in this.context. */
-  static contextTypes = {
-    intl: intlShape,
   };
 
   wikiTreeLoginFormRef: React.RefObject<HTMLFormElement> = React.createRef();
@@ -285,14 +280,14 @@ export class WikiTreeLoginMenu extends React.Component<
 
       case WikiTreeLoginState.LOGGED_IN:
         const tooltip = this.state.wikiTreeLoginUsername
-          ? this.context.intl.formatMessage(
+          ? this.props.intl.formatMessage(
               {
                 id: 'menu.wikitree_popup_username',
                 defaultMessage: 'Logged in to WikiTree as {username}',
               },
               {username: this.state.wikiTreeLoginUsername},
             )
-          : this.context.intl.formatMessage({
+          : this.props.intl.formatMessage({
               id: 'menu.wikitree_popup',
               defaultMessage: 'Logged in to WikiTree',
             });
@@ -309,3 +304,4 @@ export class WikiTreeLoginMenu extends React.Component<
     return null;
   }
 }
+export const WikiTreeLoginMenu = injectIntl(WikiTreeLoginMenuComponent);

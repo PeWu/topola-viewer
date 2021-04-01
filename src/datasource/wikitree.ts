@@ -4,7 +4,7 @@ import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 import {Date, DateOrRange, JsonFam, JsonIndi} from 'topola';
 import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
-import {InjectedIntl} from 'react-intl';
+import {IntlShape} from 'react-intl';
 import {TopolaError} from '../util/error';
 
 /** Prefix for IDs of private individuals. */
@@ -223,7 +223,7 @@ export function getLoggedInUserName(): string | undefined {
  */
 export async function loadWikiTree(
   key: string,
-  intl: InjectedIntl,
+  intl: IntlShape,
   authcode?: string,
 ): Promise<TopolaData> {
   // Work around CORS if not in apps.wikitree.com domain.
@@ -419,7 +419,7 @@ function getFamilyId(spouse1: number, spouse2: number) {
   return `${spouse2}_${spouse1}`;
 }
 
-function convertPerson(person: Person, intl: InjectedIntl): JsonIndi {
+function convertPerson(person: Person, intl: IntlShape): JsonIndi {
   const indi: JsonIndi = {
     id: person.Name,
   };
@@ -578,7 +578,7 @@ export interface WikiTreeSourceSpec {
 
 /** Loading data from the WikiTree API. */
 export class WikiTreeDataSource implements DataSource<WikiTreeSourceSpec> {
-  constructor(private intl: InjectedIntl) {}
+  constructor(private intl: IntlShape) {}
 
   isNewData(
     newSource: SourceSelection<WikiTreeSourceSpec>,
