@@ -74,17 +74,6 @@ export function Intro() {
           </a>
           )
         </li>
-        <li>
-          <GedcomLink
-            url="http://genealogyoflife.com/tng/gedcom/HarryPotter.ged"
-            text="Harry Potter"
-          />{' '}
-          (<FormattedMessage id="intro.from" defaultMessage="from" />{' '}
-          <a href="http://famousfamilytrees.blogspot.com/">
-            Famous Family Trees
-          </a>
-          )
-        </li>
       </ul>
       <p>
         <b>
