@@ -1,9 +1,10 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
 import logo from './topola.jpg';
-import {Card, Grid, Image, Responsive} from 'semantic-ui-react';
+import {Card, Grid, Image} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
+import {Media} from './util/media';
 
 /** Link that loads a GEDCOM file from URL. */
 function GedcomLink(props: {url: string; text: string}) {
@@ -112,24 +113,24 @@ export function Intro() {
     <div id="content">
       <div className="backgroundImage" />
       <Card className="intro">
-        <Responsive as={Card.Content} minWidth={768}>
+        <Card.Content as={Media} at="large">
           <Card.Header>
             <FormattedMessage
               id="intro.title"
               defaultMessage="Topola Genealogy Viewer"
             />
           </Card.Header>
-        </Responsive>
+        </Card.Content>
         <Card.Content>
-          <Responsive as={Grid} minWidth={768}>
+          <Grid as={Media} at="large">
             <Grid.Row>
               <Grid.Column width={5}>
                 <Image src={logo} alt="Topola logo" />
               </Grid.Column>
               <Grid.Column width={11}>{contents}</Grid.Column>
             </Grid.Row>
-          </Responsive>
-          <Responsive maxWidth={767}>
+          </Grid>
+          <Media at="small">
             <Image
               src={logo}
               alt="Topola logo"
@@ -138,7 +139,7 @@ export function Intro() {
               className="blockImage"
             />
             {contents}
-          </Responsive>
+          </Media>
         </Card.Content>
       </Card>
     </div>

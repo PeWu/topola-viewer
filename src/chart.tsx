@@ -1,10 +1,11 @@
 import * as React from 'react';
-import {select, Selection} from 'd3-selection';
-import {interpolateNumber} from 'd3-interpolate';
 import {injectIntl, WrappedComponentProps} from 'react-intl';
+import {interpolateNumber} from 'd3-interpolate';
 import {max, min} from 'd3-array';
-import {Responsive} from 'semantic-ui-react';
+import {Media} from './util/media';
 import {saveAs} from 'file-saver';
+import {select, Selection} from 'd3-selection';
+import 'd3-transition';
 import {
   D3ZoomEvent,
   zoom,
@@ -12,7 +13,6 @@ import {
   ZoomedElementBaseType,
   zoomTransform,
 } from 'd3-zoom';
-import 'd3-transition';
 import {
   JsonGedcomData,
   ChartHandle,
@@ -309,7 +309,7 @@ export class ChartComponent extends React.PureComponent<
   render() {
     return (
       <div id="svgContainer">
-        <Responsive minWidth={768} className="zoom">
+        <Media at="large" className="zoom">
           <button className="zoom-in" onClick={() => this.zoom(ZOOM_FACTOR)}>
             +
           </button>
@@ -319,7 +319,7 @@ export class ChartComponent extends React.PureComponent<
           >
             −
           </button>
-        </Responsive>
+        </Media>
         <svg id="chartSvg">
           <g id="chart" />
         </svg>

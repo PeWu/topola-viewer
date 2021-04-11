@@ -1,15 +1,16 @@
 import * as queryString from 'query-string';
 import * as React from 'react';
+import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {IndiInfo, JsonGedcomData} from 'topola';
 import {Link} from 'react-router-dom';
+import {Media} from '../util/media';
 import {MenuType} from './menu_item';
 import {RouteComponentProps} from 'react-router-dom';
+import {SearchBar} from './search';
 import {UploadMenu} from './upload_menu';
 import {UrlMenu} from './url_menu';
 import {WikiTreeLoginMenu, WikiTreeMenu} from './wikitree_menu';
-import {Icon, Menu, Dropdown, Responsive} from 'semantic-ui-react';
-import {SearchBar} from './search';
 
 enum ScreenSize {
   LARGE,
@@ -344,26 +345,26 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
   render() {
     return (
       <>
-        <Responsive
-          as={Menu}
+        <Menu
+          as={Media}
+          at="large"
           attached="top"
           inverted
           color="blue"
           size="large"
-          minWidth={768}
         >
           {this.desktopMenus()}
-        </Responsive>
-        <Responsive
-          as={Menu}
+        </Menu>
+        <Menu
+          as={Media}
+          at="small"
           attached="top"
           inverted
           color="blue"
           size="large"
-          maxWidth={767}
         >
           {this.mobileMenus()}
-        </Responsive>
+        </Menu>
       </>
     );
   }

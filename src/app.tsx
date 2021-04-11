@@ -3,16 +3,18 @@ import * as queryString from 'query-string';
 import * as React from 'react';
 import {analyticsEvent} from './util/analytics';
 import {Chart, ChartComponent, ChartType} from './chart';
+import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {Details} from './details';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
 import {FormattedMessage, WrappedComponentProps} from 'react-intl';
-import {TopolaData} from './util/gedcom_util';
+import {getI18nMessage} from './util/error_i18n';
 import {IndiInfo} from 'topola';
 import {Intro} from './intro';
-import {Loader, Message, Portal, Responsive} from 'semantic-ui-react';
+import {Loader, Message, Portal} from 'semantic-ui-react';
+import {Media} from './util/media';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './menu/top_bar';
-import {DataSourceEnum, SourceSelection} from './datasource/data_source';
+import {TopolaData} from './util/gedcom_util';
 import {
   getSelection,
   UploadSourceSpec,
@@ -26,7 +28,6 @@ import {
   WikiTreeDataSource,
   WikiTreeSourceSpec,
 } from './datasource/wikitree';
-import {getI18nMessage} from './util/error_i18n';
 
 /** Shows an error message in the middle of the screen. */
 function ErrorMessage(props: {message?: string}) {
@@ -478,12 +479,12 @@ export class App extends React.Component<
               ref={(ref) => (this.chartRef = ref)}
             />
             {this.state.showSidePanel ? (
-              <Responsive minWidth={768} id="sidePanel">
+              <Media at="large" className="sidePanel">
                 <Details
                   gedcom={this.state.data!.gedcom}
                   indi={this.state.selection!.id}
                 />
-              </Responsive>
+              </Media>
             ) : null}
           </div>
         );

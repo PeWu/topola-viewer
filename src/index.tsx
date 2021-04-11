@@ -9,6 +9,7 @@ import {App} from './app';
 import {detect} from 'detect-browser';
 import {HashRouter as Router, Route} from 'react-router-dom';
 import {IntlProvider} from 'react-intl';
+import {MediaContextProvider, mediaStyles} from './util/media';
 import './index.css';
 import 'semantic-ui-css/semantic.min.css';
 import 'canvas-toBlob';
@@ -35,9 +36,12 @@ if (browser && browser.name === 'ie') {
 } else {
   ReactDOM.render(
     <IntlProvider locale={language} messages={messages[language]}>
-      <Router>
-        <Route component={App} />
-      </Router>
+      <MediaContextProvider>
+        <style>{mediaStyles}</style>
+        <Router>
+          <Route component={App} />
+        </Router>
+      </MediaContextProvider>
     </IntlProvider>,
     document.querySelector('#root'),
   );
