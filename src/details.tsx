@@ -16,7 +16,7 @@ interface Props {
   indi: string;
 }
 
-const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI', 'EVEN', 'CENS'];
+const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'EVEN', 'CENS', 'DEAT', 'BURI'];
 const EXCLUDED_TAGS = ['NAME', 'SEX', 'FAMC', 'FAMS', 'NOTE', 'SOUR'];
 const TAG_DESCRIPTIONS = new Map([
   ['ADOP', 'Adoption'],
@@ -33,6 +33,7 @@ const TAG_DESCRIPTIONS = new Map([
   ['EVEN', 'Event'],
   ['FACT', 'Fact'],
   ['IMMI', 'Immigration'],
+  ['MARR', 'Marriage'],
   ['MILT', 'Military services'],
   ['NATU', 'Naturalization'],
   ['OCCU', 'Occupation'],
