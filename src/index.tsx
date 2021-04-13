@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import messages_cs from './translations/cs.json';
 import messages_de from './translations/de.json';
 import messages_fr from './translations/fr.json';
 import messages_it from './translations/it.json';
@@ -15,6 +16,7 @@ import 'semantic-ui-css/semantic.min.css';
 import 'canvas-toBlob';
 
 const messages = {
+  cs: messages_cs,
   de: messages_de,
   fr: messages_fr,
   it: messages_it,
