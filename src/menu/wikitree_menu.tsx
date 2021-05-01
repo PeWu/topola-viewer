@@ -6,7 +6,7 @@ import {FormattedMessage, injectIntl, WrappedComponentProps} from 'react-intl';
 import {getLoggedInUserName} from '../datasource/wikitree';
 import {MenuItem, MenuType} from './menu_item';
 import {RouteComponentProps} from 'react-router-dom';
-import {Header, Button, Modal, Input, Form} from 'semantic-ui-react';
+import {Header, Button, Modal, Input, Form, Ref} from 'semantic-ui-react';
 
 enum WikiTreeLoginState {
   UNKNOWN,
@@ -32,11 +32,11 @@ export class WikiTreeMenu extends React.Component<
     dialogOpen: false,
   };
 
-  inputRef: React.RefObject<Input> = React.createRef();
+  inputRef: React.RefObject<HTMLElement> = React.createRef();
 
   private openDialog() {
     this.setState(Object.assign({}, this.state, {dialogOpen: true}), () =>
-      this.inputRef.current!.focus(),
+      (this.inputRef.current!.firstChild as HTMLInputElement).focus(),
     );
   }
 
@@ -83,11 +83,9 @@ export class WikiTreeMenu extends React.Component<
 
   private enterId(event: React.MouseEvent, id: string) {
     event.preventDefault(); // Do not follow link in href.
-    ((this.inputRef.current as unknown) as {
-      inputRef: HTMLInputElement;
-    }).inputRef.value = id;
+    (this.inputRef.current!.firstChild as HTMLInputElement).value = id;
     this.handleIdChange(id);
-    this.inputRef.current!.focus();
+    (this.inputRef.current!.firstChild as HTMLInputElement).focus();
   }
 
   private wikiTreeIdModal() {
@@ -145,11 +143,12 @@ export class WikiTreeMenu extends React.Component<
                 }}
               />
             </p>
-            <Input
-              fluid
-              onChange={(e, data) => this.handleIdChange(data.value)}
-              ref={this.inputRef}
-            />
+            <Ref innerRef={this.inputRef}>
+              <Input
+                fluid
+                onChange={(e, data) => this.handleIdChange(data.value)}
+              />
+            </Ref>
           </Form>
         </Modal.Content>
         <Modal.Actions>
