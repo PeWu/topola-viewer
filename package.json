@@ -41,6 +41,7 @@
     "@types/debounce": "^1.2.0",
     "@types/file-saver": "^2.0.1",
     "@types/history": "^4.7.8",
+    "@types/jest": "^26.0.23",
     "@types/js-cookie": "^2.2.4",
     "@types/lunr": "^2.3.3",
     "@types/md5": "^2.3.0",
