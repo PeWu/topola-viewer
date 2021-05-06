@@ -30,6 +30,7 @@ const TAG_DESCRIPTIONS = new Map([
   ['EDUC', 'Education'],
   ['EMAIL', 'E-mail'],
   ['EMIG', 'Emigration'],
+  ['ENGA', 'Engagement'],
   ['EVEN', 'Event'],
   ['FACT', 'Fact'],
   ['IMMI', 'Immigration'],
