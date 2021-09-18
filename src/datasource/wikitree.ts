@@ -55,7 +55,7 @@ interface Person {
   FirstName: string;
   LastNameAtBirth: string;
   RealName: string;
-  Spouses: {[key: number]: Person};
+  Spouses?: {[key: number]: Person};
   Children: {[key: number]: Person};
   Mother: number;
   Father: number;
@@ -250,7 +250,9 @@ export async function loadWikiTree(
     );
   }
 
-  const spouseKeys = Object.values(firstPerson[0].Spouses).map((s) => s.Name);
+  const spouseKeys = Object.values(firstPerson[0].Spouses || {}).map(
+    (s) => s.Name,
+  );
   const ancestors = await Promise.all(
     [key]
       .concat(spouseKeys)
@@ -317,7 +319,7 @@ export async function loadWikiTree(
     const people = await getRelatives(toFetch, handleCors);
     everyone.push(...people);
     const allSpouses = people.flatMap((person) =>
-      Object.values(person.Spouses),
+      Object.values(person.Spouses || {}),
     );
     everyone.push(...allSpouses);
     // Fetch all children.
