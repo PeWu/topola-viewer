@@ -6,7 +6,7 @@ import {Chart, ChartComponent, ChartType} from './chart';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {Details} from './details';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
-import {FormattedMessage, WrappedComponentProps} from 'react-intl';
+import {FormattedMessage, WrappedComponentProps, injectIntl} from 'react-intl';
 import {getI18nMessage} from './util/error_i18n';
 import {IndiInfo} from 'topola';
 import {Intro} from './intro';
@@ -187,7 +187,7 @@ interface State {
   freezeAnimation?: boolean;
 }
 
-export class App extends React.Component<
+class AppComponent extends React.Component<
   RouteComponentProps & WrappedComponentProps,
   {}
 > {
@@ -537,3 +537,5 @@ export class App extends React.Component<
     );
   }
 }
+
+export const App = injectIntl(AppComponent);
