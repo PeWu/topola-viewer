@@ -1,13 +1,13 @@
 import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
 import {TopolaError} from './error';
 import {
+  gedcomEntriesToJson,
   JsonFam,
   JsonGedcomData,
-  JsonIndi,
-  gedcomEntriesToJson,
   JsonImage,
-  JsonEvent,
+  JsonIndi,
 } from 'topola';
+import {compareDates} from './date_util';
 
 export interface GedcomData {
   /** The HEAD entry. */
@@ -72,33 +72,6 @@ function strcmp(a: string, b: string) {
   }
   if (a > b) {
     return 1;
-  }
-  return 0;
-}
-
-/** Compares dates of the given events. */
-function compareDates(
-  event1: JsonEvent | undefined,
-  event2: JsonEvent | undefined,
-): number {
-  const date1 =
-    event1 && (event1.date || (event1.dateRange && event1.dateRange.from));
-  const date2 =
-    event2 && (event2.date || (event2.dateRange && event2.dateRange.from));
-  if (!date1 || !date1.year || !date2 || !date2.year) {
-    return 0;
-  }
-  if (date1.year !== date2.year) {
-    return date1.year - date2.year;
-  }
-  if (!date1.month || !date2.month) {
-    return 0;
-  }
-  if (date1.month !== date2.month) {
-    return date1.month - date2.month;
-  }
-  if (date1.day && date2.day && date1.day !== date2.day) {
-    return date1.month - date2.month;
   }
   return 0;
 }
@@ -177,6 +150,41 @@ function sortSpouses(gedcom: JsonGedcomData): JsonGedcomData {
     sortIndiSpouses(indi, comparator),
   );
   return Object.assign({}, gedcom, {indis: newIndis});
+}
+
+/**
+ * If the entry is a reference to a top-level entry, the referenced entry is
+ * returned. Otherwise, returns the given entry unmodified.
+ */
+export function dereference(
+  entry: GedcomEntry,
+  gedcom: GedcomData,
+  getterFunction: (gedcom: GedcomData) => {[key: string]: GedcomEntry},
+) {
+  if (entry.data) {
+    const dereferenced = getterFunction(gedcom)[pointerToId(entry.data)];
+    if (dereferenced) {
+      return dereferenced;
+    }
+  }
+  return entry;
+}
+
+/**
+ * Returns the data for the given GEDCOM entry as an array of lines. Supports
+ * continuations with CONT and CONC.
+ */
+export function getData(entry: GedcomEntry) {
+  const result = [entry.data];
+  entry.tree.forEach((subentry) => {
+    if (subentry.tag === 'CONC' && subentry.data) {
+      const last = result.length - 1;
+      result[last] += subentry.data;
+    } else if (subentry.tag === 'CONT' && subentry.data) {
+      result.push(subentry.data);
+    }
+  });
+  return result;
 }
 
 /** Sorts children and spouses. */

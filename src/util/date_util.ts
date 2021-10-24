@@ -97,3 +97,34 @@ export function formatDateOrRange(
 export function translateDate(gedcomDate: string, intl: IntlShape): string {
   return formatDateOrRange(getDate(gedcomDate), intl);
 }
+
+/** Compares a dates given in GEDCOM format. */
+export function compareDates(
+  firstDateOrRange: DateOrRange | undefined,
+  secondDateOrRange: DateOrRange | undefined,
+): number {
+  const date1 =
+    firstDateOrRange &&
+    (firstDateOrRange.date ||
+      (firstDateOrRange.dateRange && firstDateOrRange.dateRange.from));
+  const date2 =
+    secondDateOrRange &&
+    (secondDateOrRange.date ||
+      (secondDateOrRange.dateRange && secondDateOrRange.dateRange.from));
+  if (!date1 || !date1.year || !date2 || !date2.year) {
+    return 0;
+  }
+  if (date1.year !== date2.year) {
+    return date1.year - date2.year;
+  }
+  if (!date1.month || !date2.month) {
+    return 0;
+  }
+  if (date1.month !== date2.month) {
+    return date1.month - date2.month;
+  }
+  if (date1.day && date2.day && date1.day !== date2.day) {
+    return date1.month - date2.month;
+  }
+  return 0;
+}

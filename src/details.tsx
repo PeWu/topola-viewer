@@ -1,114 +1,32 @@
 import * as React from 'react';
 import flatMap from 'array.prototype.flatmap';
-import Linkify from 'react-linkify';
-import {
-  FormattedMessage,
-  injectIntl,
-  IntlShape,
-  WrappedComponentProps,
-} from 'react-intl';
-import {GedcomData, pointerToId} from './util/gedcom_util';
+import {injectIntl, WrappedComponentProps} from 'react-intl';
+import {dereference, GedcomData, getData} from './util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
-import {translateDate} from './util/date_util';
+import {TranslatedTag} from './translated-tag';
+import {Events} from './events';
+import {MultilineText} from './multiline-text';
 
 interface Props {
   gedcom: GedcomData;
   indi: string;
 }
 
-const EVENT_TAGS = ['BIRT', 'BAPM', 'CHR', 'EVEN', 'CENS', 'DEAT', 'BURI'];
-const EXCLUDED_TAGS = ['NAME', 'SEX', 'FAMC', 'FAMS', 'NOTE', 'SOUR'];
-const TAG_DESCRIPTIONS = new Map([
-  ['ADOP', 'Adoption'],
-  ['BAPM', 'Baptism'],
-  ['BIRT', 'Birth'],
-  ['BURI', 'Burial'],
-  ['CENS', 'Census'],
-  ['CHR', 'Christening'],
-  ['CREM', 'Cremation'],
-  ['DEAT', 'Death'],
-  ['EDUC', 'Education'],
-  ['EMAIL', 'E-mail'],
-  ['EMIG', 'Emigration'],
-  ['EVEN', 'Event'],
-  ['FACT', 'Fact'],
-  ['IMMI', 'Immigration'],
-  ['MARR', 'Marriage'],
-  ['MILT', 'Military services'],
-  ['NATU', 'Naturalization'],
-  ['OCCU', 'Occupation'],
-  ['TITL', 'Title'],
-  ['WWW', 'WWW'],
-]);
-
-function translateTag(tag: string) {
-  const normalizedTag = tag.replace(/_/g, '');
-  return (
-    <FormattedMessage
-      id={`gedcom.${normalizedTag}`}
-      defaultMessage={TAG_DESCRIPTIONS.get(normalizedTag) || normalizedTag}
-    />
-  );
-}
-
-function joinLines(lines: (JSX.Element | string)[]) {
-  return (
-    <>
-      {lines.map((line, index) => (
-        <div key={index}>
-          <Linkify properties={{target: '_blank'}}>{line}</Linkify>
-          <br />
-        </div>
-      ))}
-    </>
-  );
-}
-
-/**
- * Returns the data for the given GEDCOM entry as an array of lines. Supports
- * continuations with CONT and CONC.
- */
-function getData(entry: GedcomEntry) {
-  const result = [entry.data];
-  entry.tree.forEach((subentry) => {
-    if (subentry.tag === 'CONC' && subentry.data) {
-      const last = result.length - 1;
-      result[last] += subentry.data;
-    } else if (subentry.tag === 'CONT' && subentry.data) {
-      result.push(subentry.data);
-    }
-  });
-  return result;
-}
-
-function eventDetails(entry: GedcomEntry, intl: IntlShape) {
-  const lines = [];
-  if (entry.data && entry.data.length > 1) {
-    lines.push(<i>{entry.data}</i>);
-  }
-  const date = entry.tree.find((subentry) => subentry.tag === 'DATE');
-  if (date && date.data) {
-    lines.push(translateDate(date.data, intl));
-  }
-  const place = entry.tree.find((subentry) => subentry.tag === 'PLAC');
-  if (place && place.data) {
-    lines.push(...getData(place));
-  }
-  entry.tree
-    .filter((subentry) => subentry.tag === 'NOTE')
-    .forEach((note) =>
-      getData(note).forEach((line) => lines.push(<i>{line}</i>)),
-    );
-  if (!lines.length) {
-    return null;
-  }
-  return (
-    <>
-      <div className="ui sub header">{translateTag(entry.tag)}</div>
-      <span>{joinLines(lines)}</span>
-    </>
-  );
-}
+const EXCLUDED_TAGS = [
+  'BIRT',
+  'BAPM',
+  'CHR',
+  'EVEN',
+  'CENS',
+  'DEAT',
+  'BURI',
+  'NAME',
+  'SEX',
+  'FAMC',
+  'FAMS',
+  'NOTE',
+  'SOUR',
+];
 
 function dataDetails(entry: GedcomEntry) {
   const lines = [];
@@ -125,15 +43,23 @@ function dataDetails(entry: GedcomEntry) {
   }
   return (
     <>
-      <div className="ui sub header">{translateTag(entry.tag)}</div>
-      <span>{joinLines(lines)}</span>
+      <div className="ui sub header">
+        <TranslatedTag tag={entry.tag} />
+      </div>
+      <span>
+        <MultilineText lines={lines} />
+      </span>
     </>
   );
 }
 
 function noteDetails(entry: GedcomEntry) {
-  return joinLines(
-    getData(entry).map((line, index) => <i key={index}>{line}</i>),
+  return (
+    <MultilineText
+      lines={getData(entry).map((line, index) => (
+        <i key={index}>{line}</i>
+      ))}
+    />
   );
 }
 
@@ -182,10 +108,7 @@ function hasData(entry: GedcomEntry) {
 
 function getOtherDetails(entries: GedcomEntry[]) {
   return entries
-    .filter(
-      (entry) =>
-        !EXCLUDED_TAGS.includes(entry.tag) && !EVENT_TAGS.includes(entry.tag),
-    )
+    .filter((entry) => !EXCLUDED_TAGS.includes(entry.tag))
     .filter(hasData)
     .map((entry) => dataDetails(entry))
     .filter((element) => element !== null)
@@ -196,20 +119,6 @@ function getOtherDetails(entries: GedcomEntry[]) {
     ));
 }
 
-/**
- * If the entry is a reference to a top-level entry, the referenced entry is
- * returned. Otherwise, returns the given entry unmodified.
- */
-function dereference(entry: GedcomEntry, gedcom: GedcomData) {
-  if (entry.data) {
-    const dereferenced = gedcom.other[pointerToId(entry.data)];
-    if (dereferenced) {
-      return dereferenced;
-    }
-  }
-  return entry;
-}
-
 class DetailsComponent extends React.Component<
   Props & WrappedComponentProps,
   {}
@@ -217,15 +126,19 @@ class DetailsComponent extends React.Component<
   render() {
     const entries = this.props.gedcom.indis[this.props.indi].tree;
     const entriesWithData = entries
-      .map((entry) => dereference(entry, this.props.gedcom))
+      .map((entry) =>
+        dereference(entry, this.props.gedcom, (gedcom) => gedcom.other),
+      )
       .filter(hasData);
 
     return (
       <div className="ui segments details">
         {getDetails(entries, ['NAME'], nameDetails)}
-        {getDetails(entries, EVENT_TAGS, (entry) =>
-          eventDetails(entry, this.props.intl),
-        )}
+        <Events
+          gedcom={this.props.gedcom}
+          entries={entries}
+          indi={this.props.indi}
+        />
         {getOtherDetails(entriesWithData)}
         {getDetails(entriesWithData, ['NOTE'], noteDetails)}
       </div>
