@@ -91,15 +91,17 @@ function eventPlace(entry: GedcomEntry) {
 }
 
 function eventNotes(entry: GedcomEntry, gedcom: GedcomData) {
-  const lines = entry.tree
+  const notes = entry.tree
     .filter((subentry) => ['NOTE', 'TYPE'].includes(subentry.tag))
     .map((note) => dereference(note, gedcom, (gedcom) => gedcom.other))
     .map((note) => noteDetails(note));
 
-  if (lines && lines.length) {
+  if (notes && notes.length) {
     return (
       <div className="description">
-        <MultilineText lines={lines} />
+        {notes.map((note, index) => (
+          <div key={index}>{note}</div>
+        ))}
       </div>
     );
   }
