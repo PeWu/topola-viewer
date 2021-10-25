@@ -1,7 +1,7 @@
 import * as React from 'react';
 import flatMap from 'array.prototype.flatmap';
 import {injectIntl, WrappedComponentProps} from 'react-intl';
-import {dereference, GedcomData, getData} from './util/gedcom_util';
+import {dereference, GedcomData, getData} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {TranslatedTag} from './translated-tag';
 import {Events} from './events';

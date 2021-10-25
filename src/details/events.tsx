@@ -1,8 +1,8 @@
 import * as React from 'react';
 import {injectIntl, IntlShape, WrappedComponentProps} from 'react-intl';
-import {dereference, GedcomData, getData} from './util/gedcom_util';
+import {dereference, GedcomData, getData} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
-import {compareDates, translateDate} from './util/date_util';
+import {compareDates, translateDate} from '../util/date_util';
 import {DateOrRange, getDate} from 'topola';
 import {TranslatedTag} from './translated-tag';
 import {MultilineText} from './multiline-text';

@@ -11,7 +11,7 @@ import {
   DEFALUT_CONFIG,
 } from './config';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
-import {Details} from './details';
+import {Details} from './details/details';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
 import {FormattedMessage, injectIntl, WrappedComponentProps} from 'react-intl';
 import {getI18nMessage} from './util/error_i18n';
