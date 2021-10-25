@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {ChartColors} from './config';
 import {injectIntl, WrappedComponentProps} from 'react-intl';
 import {interpolateNumber} from 'd3-interpolate';
 import {max, min} from 'd3-array';
@@ -23,6 +24,7 @@ import {
   RelativesChart,
   FancyChart,
   CircleRenderer,
+  ChartColors as TopolaChartColors,
 } from 'topola';
 
 /** How much to zoom when using the +/- buttons. */
@@ -140,12 +142,19 @@ export enum ChartType {
   Fancy,
 }
 
+const chartColors = new Map<ChartColors, TopolaChartColors>([
+  [ChartColors.NO_COLOR, TopolaChartColors.NO_COLOR],
+  [ChartColors.COLOR_BY_GENERATION, TopolaChartColors.COLOR_BY_GENERATION],
+  [ChartColors.COLOR_BY_SEX, TopolaChartColors.COLOR_BY_SEX],
+]);
+
 export interface ChartProps {
   data: JsonGedcomData;
   selection: IndiInfo;
   chartType: ChartType;
   onSelection: (indiInfo: IndiInfo) => void;
   freezeAnimation?: boolean;
+  colors?: ChartColors;
 }
 
 /** Component showing the genealogy chart and handling transition animations. */
@@ -195,7 +204,12 @@ export class ChartComponent extends React.PureComponent<
    * If indiInfo is not given, it means that it is the initial render and no
    * animation is performed.
    */
-  private renderChart(args: {initialRender: boolean} = {initialRender: false}) {
+  private renderChart(
+    args: {initialRender: boolean; resetPosition: boolean} = {
+      initialRender: false,
+      resetPosition: false,
+    },
+  ) {
     // Wait for animation to finish if animation is in progress.
     if (!args.initialRender && this.animating) {
       this.rerenderRequired = true;
@@ -215,6 +229,7 @@ export class ChartComponent extends React.PureComponent<
         renderer: this.getRendererType(),
         svgSelector: '#chart',
         indiCallback: (info) => this.props.onSelection(info),
+        colors: chartColors.get(this.props.colors!),
         animate: true,
         updateSvgSize: false,
         locale: this.props.intl.locale,
@@ -277,13 +292,15 @@ export class ChartComponent extends React.PureComponent<
       .attr('transform', `translate(${offsetX}, ${offsetY})`)
       .attr('width', chartInfo.size[0] * scale)
       .attr('height', chartInfo.size[1] * scale);
-    if (args.initialRender) {
-      parent.scrollLeft = -dx;
-      parent.scrollTop = -dy;
-    } else {
-      svgTransition
-        .tween('scrollLeft', scrollLeftTween(-dx))
-        .tween('scrollTop', scrollTopTween(-dy));
+    if (args.resetPosition) {
+      if (args.initialRender) {
+        parent.scrollLeft = -dx;
+        parent.scrollTop = -dy;
+      } else {
+        svgTransition
+          .tween('scrollLeft', scrollLeftTween(-dx))
+          .tween('scrollTop', scrollTopTween(-dy));
+      }
     }
 
     // After the animation is finished, rerender the chart if required.
@@ -292,18 +309,21 @@ export class ChartComponent extends React.PureComponent<
       this.animating = false;
       if (this.rerenderRequired) {
         this.rerenderRequired = false;
-        this.renderChart({initialRender: false});
+        this.renderChart({initialRender: false, resetPosition: false});
       }
     });
   }
 
   componentDidMount() {
-    this.renderChart({initialRender: true});
+    this.renderChart({initialRender: true, resetPosition: true});
   }
 
   componentDidUpdate(prevProps: ChartProps) {
-    const initialRender = this.props.chartType !== prevProps.chartType;
-    this.renderChart({initialRender});
+    const initialRender =
+      this.props.chartType !== prevProps.chartType ||
+      this.props.colors !== prevProps.colors;
+    const resetPosition = this.props.chartType !== prevProps.chartType;
+    this.renderChart({initialRender, resetPosition});
   }
 
   render() {

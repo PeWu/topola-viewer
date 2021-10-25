@@ -70,5 +70,11 @@
   "error.WIKITREE_ID_NOT_PROVIDED": "Identyfikator WikiTree nie został podany",
   "error.WIKITREE_PROFILE_NOT_ACCESSIBLE": "Profil WikiTree {id} nie jest dostępny",
   "error.WIKITREE_PROFILE_NOT_FOUND": "Profil WikiTree {id} nie istnieje",
-  "wikitree.private": "Prywatne"
+  "wikitree.private": "Prywatne",
+  "tab.info": "Info",
+  "tab.settings": "Ustawienia",
+  "config.colors": "Kolory",
+  "config.colors.NO_COLOR": "brak",
+  "config.colors.COLOR_BY_GENERATION": "według pokolenia",
+  "config.colors.COLOR_BY_SEX": "według płci"
 }

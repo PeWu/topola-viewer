@@ -1,16 +1,23 @@
 import * as H from 'history';
 import * as queryString from 'query-string';
-import * as React from 'react';
+import React from 'react';
 import {analyticsEvent} from './util/analytics';
 import {Chart, ChartComponent, ChartType} from './chart';
+import {
+  argsToConfig,
+  Config,
+  ConfigPanel,
+  configToArgs,
+  DEFALUT_CONFIG,
+} from './config';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {Details} from './details';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
-import {FormattedMessage, WrappedComponentProps, injectIntl} from 'react-intl';
+import {FormattedMessage, injectIntl, WrappedComponentProps} from 'react-intl';
 import {getI18nMessage} from './util/error_i18n';
 import {IndiInfo} from 'topola';
 import {Intro} from './intro';
-import {Loader, Message, Portal} from 'semantic-ui-react';
+import {Loader, Message, Portal, Tab} from 'semantic-ui-react';
 import {Media} from './util/media';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './menu/top_bar';
@@ -80,7 +87,10 @@ type DataSourceSpec =
   | WikiTreeSourceSpec
   | EmbeddedSourceSpec;
 
-/** Arguments passed to the application, primarily through URL parameters. */
+/**
+ * Arguments passed to the application, primarily through URL parameters.
+ * Non-optional arguments get populated with default values.
+ */
 interface Arguments {
   sourceSpec?: DataSourceSpec;
   selection?: IndiInfo;
@@ -88,6 +98,7 @@ interface Arguments {
   standalone: boolean;
   freezeAnimation?: boolean;
   showSidePanel: boolean;
+  config: Config;
 }
 
 /**
@@ -148,6 +159,7 @@ function getArguments(location: H.Location<any>): Arguments {
     showSidePanel: getParam('sidePanel') !== 'false', // True by default.
     standalone: getParam('standalone') !== 'false' && !embedded,
     freezeAnimation: getParam('freeze') === 'true', // False by default
+    config: argsToConfig(search),
   };
 }
 
@@ -185,6 +197,7 @@ interface State {
   sourceSpec?: DataSourceSpec;
   /** Freeze animations after initial chart render. */
   freezeAnimation?: boolean;
+  config: Config;
 }
 
 class AppComponent extends React.Component<
@@ -196,6 +209,7 @@ class AppComponent extends React.Component<
     standalone: true,
     chartType: ChartType.Hourglass,
     showErrorPopup: false,
+    config: DEFALUT_CONFIG,
   };
   chartRef: ChartComponent | null = null;
 
@@ -313,6 +327,7 @@ class AppComponent extends React.Component<
           selection: args.selection,
           standalone: args.standalone,
           chartType: args.chartType,
+          config: args.config,
         }),
       );
       try {
@@ -374,6 +389,16 @@ class AppComponent extends React.Component<
     }
   }
 
+  private updateUrl(args: queryString.ParsedQuery<any>) {
+    const location = this.props.location;
+    const search = queryString.parse(location.search);
+    for (const key in args) {
+      search[key] = args[key];
+    }
+    location.search = queryString.stringify(search);
+    this.props.history.push(location);
+  }
+
   /**
    * Called when the user clicks an individual box in the chart.
    * Updates the browser URL.
@@ -384,12 +409,10 @@ class AppComponent extends React.Component<
       return;
     }
     analyticsEvent('selection_changed');
-    const location = this.props.location;
-    const search = queryString.parse(location.search);
-    search.indi = selection.id;
-    search.gen = String(selection.generation);
-    location.search = queryString.stringify(search);
-    this.props.history.push(location);
+    this.updateUrl({
+      indi: selection.id,
+      gen: selection.generation,
+    });
   };
 
   private onPrint = () => {
@@ -460,6 +483,35 @@ class AppComponent extends React.Component<
     switch (this.state.state) {
       case AppState.SHOWING_CHART:
       case AppState.LOADING_MORE:
+        const sidePanelTabs = [
+          {
+            menuItem: this.props.intl.formatMessage({
+              id: 'tab.info',
+              defaultMessage: 'Info',
+            }),
+            render: () => (
+              <Details
+                gedcom={this.state.data!.gedcom}
+                indi={this.state.selection!.id}
+              />
+            ),
+          },
+          {
+            menuItem: this.props.intl.formatMessage({
+              id: 'tab.settings',
+              defaultMessage: 'Settings',
+            }),
+            render: () => (
+              <ConfigPanel
+                config={this.state.config}
+                onChange={(config) => {
+                  this.setState(Object.assign({}, this.state, {config}));
+                  this.updateUrl(configToArgs(config));
+                }}
+              />
+            ),
+          },
+        ];
         return (
           <div id="content">
             <ErrorPopup
@@ -476,14 +528,12 @@ class AppComponent extends React.Component<
               chartType={this.state.chartType}
               onSelection={this.onSelection}
               freezeAnimation={this.state.freezeAnimation}
+              colors={this.state.config.color}
               ref={(ref) => (this.chartRef = ref)}
             />
             {this.state.showSidePanel ? (
               <Media at="large" className="sidePanel">
-                <Details
-                  gedcom={this.state.data!.gedcom}
-                  indi={this.state.selection!.id}
-                />
+                <Tab panes={sidePanelTabs} />
               </Media>
             ) : null}
           </div>

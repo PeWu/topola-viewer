@@ -221,7 +221,7 @@ class DetailsComponent extends React.Component<
       .filter(hasData);
 
     return (
-      <div className="ui segments" id="details">
+      <div className="ui segments details">
         {getDetails(entries, ['NAME'], nameDetails)}
         {getDetails(entries, EVENT_TAGS, (entry) =>
           eventDetails(entry, this.props.intl),

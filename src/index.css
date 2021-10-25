@@ -141,3 +141,16 @@ div.zoom {
 .ui.top.attached.menu {
   margin-top: 0px;
 }
+
+.ui.segments.details {
+  margin: 0px !important;
+  border: 0px !important;
+}
+
+.ui.form .field.no-margin {
+  margin: 0;
+}
+
+.ui.tabular.menu a {
+  text-transform: uppercase;
+}
