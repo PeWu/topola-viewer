@@ -25,6 +25,8 @@ Website: https://pewu.github.io/topola-viewer
 * Permalinks when loading from URL
 * Cool transition animations
 
+[Changelog](CHANGELOG.md)
+
 ## Examples
 
 Here are some examples from the Web:
