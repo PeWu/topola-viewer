@@ -1,5 +1,9 @@
 # Changelog
 
+## 2021-10-27
+
+- Showing events in details panel for WikiTree profiles
+
 ## 2021-10-26
 
 - Added family events to details panel
