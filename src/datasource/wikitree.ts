@@ -1,7 +1,14 @@
 import Cookies from 'js-cookie';
 import {analyticsEvent} from '../util/analytics';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
-import {Date, DateOrRange, JsonFam, JsonIndi} from 'topola';
+import {
+  Date,
+  DateOrRange,
+  JsonEvent,
+  JsonFam,
+  JsonGedcomData,
+  JsonIndi,
+} from 'topola';
 import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {IntlShape} from 'react-intl';
@@ -206,7 +213,7 @@ export async function clientLogin(
 }
 
 /**
- * Returnes the logged in user name or undefined if not logged in.
+ * Returns the logged in user name or undefined if not logged in.
  *
  * This is not an authoritative answer. The result of this function relies on
  * the cookies set on the apps.wikitree.com domain under which this application
@@ -409,7 +416,7 @@ export async function loadWikiTree(
   });
 
   const chartData = normalizeGedcom({indis, fams});
-  const gedcom = buildGedcom(indis);
+  const gedcom = buildGedcom(chartData);
   return {chartData, gedcom};
 }
 
@@ -516,45 +523,201 @@ function parseDecade(decade: string): DateOrRange | undefined {
   return decade !== 'unknown' ? {date: {text: decade}} : undefined;
 }
 
+const MONTHS = new Map<number, string>([
+  [1, 'JAN'],
+  [2, 'FEB'],
+  [3, 'MAR'],
+  [4, 'APR'],
+  [5, 'MAY'],
+  [6, 'JUN'],
+  [7, 'JUL'],
+  [8, 'AUG'],
+  [9, 'SEP'],
+  [10, 'OCT'],
+  [11, 'NOV'],
+  [12, 'DEC'],
+]);
+
+function dateToGedcom(date: Date): string {
+  return [date.qualifier, date.day, MONTHS.get(date.month!), date.year]
+    .filter((x) => x !== undefined)
+    .join(' ');
+}
+
+function dateOrRangeToGedcom(dateOrRange: DateOrRange): string {
+  if (dateOrRange.date) {
+    return dateToGedcom(dateOrRange.date);
+  }
+  if (!dateOrRange.dateRange) {
+    return '';
+  }
+  if (dateOrRange.dateRange.from && dateOrRange.dateRange.to) {
+    return `BET ${dateToGedcom(dateOrRange.dateRange.from)} AND ${
+      dateOrRange.dateRange.to
+    }`;
+  }
+  if (dateOrRange.dateRange.from) {
+    return `AFT ${dateToGedcom(dateOrRange.dateRange.from)}`;
+  }
+  if (dateOrRange.dateRange.to) {
+    return `BEF ${dateToGedcom(dateOrRange.dateRange.to)}`;
+  }
+  return '';
+}
+
+function eventToGedcom(event: JsonEvent): GedcomEntry[] {
+  const result = [];
+  if (event.date) {
+    result.push({
+      level: 2,
+      pointer: '',
+      tag: 'DATE',
+      data: dateOrRangeToGedcom(event),
+      tree: [],
+    });
+  }
+  if (event.place) {
+    result.push({
+      level: 2,
+      pointer: '',
+      tag: 'PLAC',
+      data: event.place,
+      tree: [],
+    });
+  }
+  return result;
+}
+
+function indiToGedcom(indi: JsonIndi): GedcomEntry {
+  // WikiTree URLs replace spaces with underscores.
+  const escapedId = indi.id.replace(/ /g, '_');
+  const record: GedcomEntry = {
+    level: 0,
+    pointer: `@${indi.id}@`,
+    tag: 'INDI',
+    data: '',
+    tree: [
+      {
+        level: 1,
+        pointer: '',
+        tag: 'NAME',
+        data: `${indi.firstName || ''} /${indi.lastName || ''}/`,
+        tree: [],
+      },
+    ],
+  };
+  if (indi.birth) {
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'BIRT',
+      data: '',
+      tree: eventToGedcom(indi.birth),
+    });
+  }
+  if (indi.death) {
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'DEAT',
+      data: '',
+      tree: eventToGedcom(indi.death),
+    });
+  }
+  if (indi.famc) {
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'FAMC',
+      data: `@${indi.famc}@`,
+      tree: [],
+    });
+  }
+  (indi.fams || []).forEach((fams) =>
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'FAMS',
+      data: `@${fams}@`,
+      tree: [],
+    }),
+  );
+  if (!indi.id.startsWith('~')) {
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'WWW',
+      data: `https://www.wikitree.com/wiki/${escapedId}`,
+      tree: [],
+    });
+  }
+  return record;
+}
+
+function famToGedcom(fam: JsonFam): GedcomEntry {
+  const record: GedcomEntry = {
+    level: 0,
+    pointer: `@${fam.id}@`,
+    tag: 'FAM',
+    data: '',
+    tree: [],
+  };
+  if (fam.wife) {
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'WIFE',
+      data: `@${fam.wife}@`,
+      tree: [],
+    });
+  }
+  if (fam.husb) {
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'HUSB',
+      data: `@${fam.husb}@`,
+      tree: [],
+    });
+  }
+  (fam.children || []).forEach(child =>
+    record.tree.push({
+      level: 1,
+      pointer: child,
+      tag: 'CHILD',
+      data: '',
+      tree: [],
+    }));
+  if (fam.marriage) {
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'MARR',
+      data: '',
+      tree: eventToGedcom(fam.marriage),
+    });
+  }
+  return record;
+}
+
 /**
  * Creates a GEDCOM structure for the purpose of displaying the details
  * panel.
  */
-function buildGedcom(indis: JsonIndi[]): GedcomData {
+function buildGedcom(data: JsonGedcomData): GedcomData {
   const gedcomIndis: {[key: string]: GedcomEntry} = {};
-  indis.forEach((indi) => {
-    // WikiTree URLs replace spaces with underscores.
-    const escapedId = indi.id.replace(/ /g, '_');
-    gedcomIndis[indi.id] = {
-      level: 0,
-      pointer: `@${indi.id}@`,
-      tag: 'INDI',
-      data: '',
-      tree: [
-        {
-          level: 1,
-          pointer: '',
-          tag: 'NAME',
-          data: `${indi.firstName || ''} /${indi.lastName || ''}/`,
-          tree: [],
-        },
-      ],
-    };
-    if (!indi.id.startsWith('~')) {
-      gedcomIndis[indi.id].tree.push({
-        level: 1,
-        pointer: '',
-        tag: 'WWW',
-        data: `https://www.wikitree.com/wiki/${escapedId}`,
-        tree: [],
-      });
-    }
+  const gedcomFams: {[key: string]: GedcomEntry} = {};
+  data.indis.forEach((indi) => {
+    gedcomIndis[indi.id] = indiToGedcom(indi);
+  });
+  data.fams.forEach((fam) => {
+    gedcomFams[fam.id] = famToGedcom(fam);
   });
 
   return {
     head: {level: 0, pointer: '', tag: 'HEAD', data: '', tree: []},
     indis: gedcomIndis,
-    fams: {},
+    fams: gedcomFams,
     other: {},
   };
 }
