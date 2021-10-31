@@ -1,10 +1,11 @@
 import * as queryString from 'query-string';
-import * as React from 'react';
+import {useEffect, useState} from 'react';
 import logo from './topola.jpg';
 import {Card, Grid, Image} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {Media} from './util/media';
+import {getChangelog, updateSeenVersion} from './changelog';
 
 /** Link that loads a GEDCOM file from URL. */
 function GedcomLink(props: {url: string; text: string}) {
@@ -21,9 +22,16 @@ function formatBuildDate(dateString: string) {
   return dateString.slice(0, 16);
 }
 
-/** The intro page. */
-export function Intro() {
-  const contents = (
+function Contents() {
+  const [changelog, setChangelog] = useState('');
+  useEffect(() => {
+    (async () => {
+      setChangelog(await getChangelog(1));
+      updateSeenVersion();
+    })();
+  });
+
+  return (
     <>
       <p>
         <FormattedMessage
@@ -44,14 +52,10 @@ export function Intro() {
           }
         />
       </p>
-      <p>
-        <FormattedMessage
-          id="intro.examples"
-          defaultMessage={
-            'Here are some examples from the web that you can view:'
-          }
-        />
-      </p>
+
+      <h3>
+        <FormattedMessage id="intro.examples" defaultMessage="Examples" />
+      </h3>
       <ul>
         <li>
           <GedcomLink
@@ -76,27 +80,35 @@ export function Intro() {
           )
         </li>
       </ul>
-      <p>
-        <b>
-          <FormattedMessage id="intro.privacy" defaultMessage="Privacy" />
-        </b>
-        {': '}
+
+      <h3>
+        <FormattedMessage id="intro.whats_new" defaultMessage="What's new" />
+      </h3>
+      <span dangerouslySetInnerHTML={{__html: changelog}} />
+      <a href="https://github.com/PeWu/topola-viewer/blob/master/CHANGELOG.md">
         <FormattedMessage
-          id="intro.privacy_note"
-          defaultMessage={
-            'When using the "load from file" option, this site does not' +
-            ' send your data anywhere and files loaded from disk do not' +
-            ' leave your computer. When using "load from URL", data is' +
-            ' passed through the {link} service to deal with an issue with' +
-            ' cross-site file loading in the browser (CORS).'
-          }
-          values={{
-            link: (
-              <a href="https://topola-cors.herokuapp.com/">cors-anywhere</a>
-            ),
-          }}
+          id="intro.full_changelog"
+          defaultMessage="See full changelog"
         />
-      </p>
+      </a>
+
+      <h3>
+        <FormattedMessage id="intro.privacy" defaultMessage="Privacy" />
+      </h3>
+      <FormattedMessage
+        id="intro.privacy_note"
+        defaultMessage={
+          'When using the "load from file" option, this site does not' +
+          ' send your data anywhere and files loaded from disk do not' +
+          ' leave your computer. When using "load from URL", data is' +
+          ' passed through the {link} service to deal with an issue with' +
+          ' cross-site file loading in the browser (CORS).'
+        }
+        values={{
+          link: <a href="https://topola-cors.herokuapp.com/">cors-anywhere</a>,
+        }}
+      />
+
       <p className="ui right aligned version">
         version: {formatBuildDate(process.env.REACT_APP_GIT_TIME!)} (
         <a
@@ -108,7 +120,10 @@ export function Intro() {
       </p>
     </>
   );
+}
 
+/** The intro page. */
+export function Intro() {
   return (
     <div id="content">
       <div className="backgroundImage" />
@@ -127,7 +142,9 @@ export function Intro() {
               <Grid.Column width={5}>
                 <Image src={logo} alt="Topola logo" />
               </Grid.Column>
-              <Grid.Column width={11}>{contents}</Grid.Column>
+              <Grid.Column width={11}>
+                <Contents />
+              </Grid.Column>
             </Grid.Row>
           </Grid>
           <Media at="small">
@@ -138,7 +155,7 @@ export function Intro() {
               size="tiny"
               className="blockImage"
             />
-            {contents}
+            <Contents />
           </Media>
         </Card.Content>
       </Card>

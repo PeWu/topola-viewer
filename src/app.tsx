@@ -2,14 +2,8 @@ import * as H from 'history';
 import * as queryString from 'query-string';
 import React from 'react';
 import {analyticsEvent} from './util/analytics';
+import {Changelog} from './changelog';
 import {Chart, ChartComponent, ChartType} from './chart';
-import {
-  argsToConfig,
-  Config,
-  ConfigPanel,
-  configToArgs,
-  DEFALUT_CONFIG,
-} from './config';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {Details} from './details/details';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
@@ -22,6 +16,13 @@ import {Media} from './util/media';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './menu/top_bar';
 import {TopolaData} from './util/gedcom_util';
+import {
+  argsToConfig,
+  Config,
+  ConfigPanel,
+  configToArgs,
+  DEFALUT_CONFIG,
+} from './config';
 import {
   getSelection,
   UploadSourceSpec,
@@ -536,6 +537,7 @@ class AppComponent extends React.Component<
                 <Tab panes={sidePanelTabs} />
               </Media>
             ) : null}
+            <Changelog />
           </div>
         );
 

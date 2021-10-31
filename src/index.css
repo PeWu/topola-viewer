@@ -154,3 +154,8 @@ div.zoom {
 .ui.tabular.menu a {
   text-transform: uppercase;
 }
+
+.limit-height {
+  height: 300px;
+  overflow-y: scroll;
+}
