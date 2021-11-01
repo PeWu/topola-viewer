@@ -3,7 +3,6 @@ import * as queryString from 'query-string';
 import React from 'react';
 import {analyticsEvent} from './util/analytics';
 import {Changelog} from './changelog';
-import {Chart, ChartComponent, ChartType} from './chart';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {Details} from './details/details';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
@@ -16,6 +15,14 @@ import {Media} from './util/media';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './menu/top_bar';
 import {TopolaData} from './util/gedcom_util';
+import {
+  Chart,
+  ChartType,
+  downloadPdf,
+  downloadPng,
+  downloadSvg,
+  printChart,
+} from './chart';
 import {
   argsToConfig,
   Config,
@@ -212,7 +219,6 @@ class AppComponent extends React.Component<
     showErrorPopup: false,
     config: DEFALUT_CONFIG,
   };
-  chartRef: ChartComponent | null = null;
 
   /** Sets the state with a new individual selection and chart type. */
   private updateDisplay(
@@ -418,7 +424,7 @@ class AppComponent extends React.Component<
 
   private onPrint = () => {
     analyticsEvent('print');
-    this.chartRef && this.chartRef.print();
+    printChart();
   };
 
   private showErrorPopup(message: string, otherStateChanges?: Partial<State>) {
@@ -438,7 +444,7 @@ class AppComponent extends React.Component<
   private onDownloadPdf = async () => {
     analyticsEvent('download_pdf');
     try {
-      this.chartRef && (await this.chartRef.downloadPdf());
+      await downloadPdf();
     } catch (e) {
       this.showErrorPopup(
         this.props.intl.formatMessage({
@@ -454,7 +460,7 @@ class AppComponent extends React.Component<
   private onDownloadPng = async () => {
     analyticsEvent('download_png');
     try {
-      this.chartRef && (await this.chartRef.downloadPng());
+      await downloadPng();
     } catch (e) {
       this.showErrorPopup(
         this.props.intl.formatMessage({
@@ -469,7 +475,7 @@ class AppComponent extends React.Component<
 
   private onDownloadSvg = () => {
     analyticsEvent('download_svg');
-    this.chartRef && this.chartRef.downloadSvg();
+    downloadSvg();
   };
 
   private onDismissErrorPopup = () => {
@@ -530,7 +536,6 @@ class AppComponent extends React.Component<
               onSelection={this.onSelection}
               freezeAnimation={this.state.freezeAnimation}
               colors={this.state.config.color}
-              ref={(ref) => (this.chartRef = ref)}
             />
             {this.state.showSidePanel ? (
               <Media at="large" className="sidePanel">
