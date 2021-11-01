@@ -538,7 +538,7 @@ class AppComponent extends React.Component<
               colors={this.state.config.color}
             />
             {this.state.showSidePanel ? (
-              <Media at="large" className="sidePanel">
+              <Media greaterThanOrEqual="large" className="sidePanel">
                 <Tab panes={sidePanelTabs} />
               </Media>
             ) : null}

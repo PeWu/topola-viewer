@@ -347,7 +347,7 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
       <>
         <Menu
           as={Media}
-          at="large"
+          greaterThanOrEqual="large"
           attached="top"
           inverted
           color="blue"

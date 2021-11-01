@@ -429,7 +429,7 @@ function ChartComponent(props: ChartComponentProps) {
 
   return (
     <div id="svgContainer">
-      <Media at="large" className="zoom">
+      <Media greaterThanOrEqual="large" className="zoom">
         <button
           className="zoom-in"
           onClick={() => chartWrapper.current.zoom(ZOOM_FACTOR)}

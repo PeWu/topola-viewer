@@ -128,7 +128,7 @@ export function Intro() {
     <div id="content">
       <div className="backgroundImage" />
       <Card className="intro">
-        <Card.Content as={Media} at="large">
+        <Card.Content as={Media} greaterThanOrEqual="large">
           <Card.Header>
             <FormattedMessage
               id="intro.title"
@@ -137,7 +137,7 @@ export function Intro() {
           </Card.Header>
         </Card.Content>
         <Card.Content>
-          <Grid as={Media} at="large">
+          <Grid as={Media} greaterThanOrEqual="large">
             <Grid.Row>
               <Grid.Column width={5}>
                 <Image src={logo} alt="Topola logo" />
