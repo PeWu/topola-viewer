@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Menu,
   Dropdown,
@@ -15,21 +14,17 @@ interface Props {
   menuType?: MenuType;
 }
 
-export class MenuItem extends React.Component<
-  Props & MenuItemProps & DropdownItemProps
-> {
-  render() {
-    const newProps = {...this.props};
-    // Remove menuType from props to avoid error message in the console.
-    delete newProps.menuType;
-    return (
-      <>
-        {this.props.menuType === MenuType.Menu ? (
-          <Menu.Item {...newProps}>{this.props.children}</Menu.Item>
-        ) : (
-          <Dropdown.Item {...newProps}>{this.props.children}</Dropdown.Item>
-        )}
-      </>
-    );
-  }
+export function MenuItem(props: Props & MenuItemProps & DropdownItemProps) {
+  const newProps = {...props};
+  // Remove menuType from props to avoid error message in the console.
+  delete newProps.menuType;
+  return (
+    <>
+      {props.menuType === MenuType.Menu ? (
+        <Menu.Item {...newProps}>{props.children}</Menu.Item>
+      ) : (
+        <Dropdown.Item {...newProps}>{props.children}</Dropdown.Item>
+      )}
+    </>
+  );
 }
