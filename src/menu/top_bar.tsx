@@ -1,5 +1,4 @@
 import * as queryString from 'query-string';
-import * as React from 'react';
 import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {IndiInfo, JsonGedcomData} from 'topola';
@@ -38,32 +37,32 @@ interface Props {
   showWikiTreeMenus: boolean;
 }
 
-export class TopBar extends React.Component<RouteComponentProps & Props> {
-  private changeView(view: string) {
-    const location = this.props.location;
+export function TopBar(props: RouteComponentProps & Props) {
+  function changeView(view: string) {
+    const location = props.location;
     const search = queryString.parse(location.search);
     if (search.view !== view) {
       search.view = view;
       location.search = queryString.stringify(search);
-      this.props.history.push(location);
+      props.history.push(location);
     }
   }
 
-  private chartMenus(screenSize: ScreenSize) {
-    if (!this.props.showingChart) {
+  function chartMenus(screenSize: ScreenSize) {
+    if (!props.showingChart) {
       return null;
     }
     const chartTypeItems = (
       <>
-        <Dropdown.Item onClick={() => this.changeView('hourglass')}>
+        <Dropdown.Item onClick={() => changeView('hourglass')}>
           <Icon name="hourglass" />
           <FormattedMessage
             id="menu.hourglass"
             defaultMessage="Hourglass chart"
           />
         </Dropdown.Item>
-        {this.props.allowAllRelativesChart ? (
-          <Dropdown.Item onClick={() => this.changeView('relatives')}>
+        {props.allowAllRelativesChart ? (
+          <Dropdown.Item onClick={() => changeView('relatives')}>
             <Icon name="users" />
             <FormattedMessage
               id="menu.relatives"
@@ -71,7 +70,7 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
             />
           </Dropdown.Item>
         ) : null}
-        <Dropdown.Item onClick={() => this.changeView('fancy')}>
+        <Dropdown.Item onClick={() => changeView('fancy')}>
           <Icon name="users" />
           <FormattedMessage
             id="menu.fancy"
@@ -84,7 +83,7 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
       case ScreenSize.LARGE:
         return (
           <>
-            <Menu.Item onClick={() => this.props.eventHandlers.onPrint()}>
+            <Menu.Item onClick={props.eventHandlers.onPrint}>
               <Icon name="print" />
               <FormattedMessage id="menu.print" defaultMessage="Print" />
             </Menu.Item>
@@ -102,25 +101,19 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
               className="item"
             >
               <Dropdown.Menu>
-                <Dropdown.Item
-                  onClick={() => this.props.eventHandlers.onDownloadPdf()}
-                >
+                <Dropdown.Item onClick={props.eventHandlers.onDownloadPdf}>
                   <FormattedMessage
                     id="menu.pdf_file"
                     defaultMessage="PDF file"
                   />
                 </Dropdown.Item>
-                <Dropdown.Item
-                  onClick={() => this.props.eventHandlers.onDownloadPng()}
-                >
+                <Dropdown.Item onClick={props.eventHandlers.onDownloadPng}>
                   <FormattedMessage
                     id="menu.png_file"
                     defaultMessage="PNG file"
                   />
                 </Dropdown.Item>
-                <Dropdown.Item
-                  onClick={() => this.props.eventHandlers.onDownloadSvg()}
-                >
+                <Dropdown.Item onClick={props.eventHandlers.onDownloadSvg}>
                   <FormattedMessage
                     id="menu.svg_file"
                     defaultMessage="SVG file"
@@ -141,9 +134,9 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
               <Dropdown.Menu>{chartTypeItems}</Dropdown.Menu>
             </Dropdown>
             <SearchBar
-              data={this.props.data!}
-              onSelection={this.props.eventHandlers.onSelection}
-              {...this.props}
+              data={props.data!}
+              onSelection={props.eventHandlers.onSelection}
+              {...props}
             />
           </>
         );
@@ -151,34 +144,28 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
       case ScreenSize.SMALL:
         return (
           <>
-            <Dropdown.Item onClick={() => this.props.eventHandlers.onPrint()}>
+            <Dropdown.Item onClick={props.eventHandlers.onPrint}>
               <Icon name="print" />
               <FormattedMessage id="menu.print" defaultMessage="Print" />
             </Dropdown.Item>
 
             <Dropdown.Divider />
 
-            <Dropdown.Item
-              onClick={() => this.props.eventHandlers.onDownloadPdf()}
-            >
+            <Dropdown.Item onClick={props.eventHandlers.onDownloadPdf}>
               <Icon name="download" />
               <FormattedMessage
                 id="menu.download_pdf"
                 defaultMessage="Downlod PDF"
               />
             </Dropdown.Item>
-            <Dropdown.Item
-              onClick={() => this.props.eventHandlers.onDownloadPng()}
-            >
+            <Dropdown.Item onClick={props.eventHandlers.onDownloadPng}>
               <Icon name="download" />
               <FormattedMessage
                 id="menu.download_png"
                 defaultMessage="Download PNG"
               />
             </Dropdown.Item>
-            <Dropdown.Item
-              onClick={() => this.props.eventHandlers.onDownloadSvg()}
-            >
+            <Dropdown.Item onClick={props.eventHandlers.onDownloadSvg}>
               <Icon name="download" />
               <FormattedMessage
                 id="menu.download_svg"
@@ -194,7 +181,7 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
     }
   }
 
-  private title() {
+  function title() {
     return (
       <Menu.Item>
         <b>Topola Genealogy</b>
@@ -202,16 +189,16 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
     );
   }
 
-  private fileMenus(screenSize: ScreenSize) {
+  function fileMenus(screenSize: ScreenSize) {
     // In standalone WikiTree mode, show only the "Select WikiTree ID" menu.
-    if (!this.props.standalone && this.props.showWikiTreeMenus) {
+    if (!props.standalone && props.showWikiTreeMenus) {
       switch (screenSize) {
         case ScreenSize.LARGE:
-          return <WikiTreeMenu menuType={MenuType.Menu} {...this.props} />;
+          return <WikiTreeMenu menuType={MenuType.Menu} {...props} />;
         case ScreenSize.SMALL:
           return (
             <>
-              <WikiTreeMenu menuType={MenuType.Dropdown} {...this.props} />
+              <WikiTreeMenu menuType={MenuType.Dropdown} {...props} />
               <Dropdown.Divider />
             </>
           );
@@ -219,7 +206,7 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
     }
 
     // Don't show "open" menus in non-standalone mode.
-    if (!this.props.standalone) {
+    if (!props.standalone) {
       return null;
     }
 
@@ -227,7 +214,7 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
       case ScreenSize.LARGE:
         // Show dropdown if chart is shown, otherwise show individual menu
         // items.
-        const menus = this.props.showingChart ? (
+        const menus = props.showingChart ? (
           <Dropdown
             trigger={
               <div>
@@ -238,16 +225,16 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
             className="item"
           >
             <Dropdown.Menu>
-              <UploadMenu menuType={MenuType.Dropdown} {...this.props} />
-              <UrlMenu menuType={MenuType.Dropdown} {...this.props} />
-              <WikiTreeMenu menuType={MenuType.Dropdown} {...this.props} />
+              <UploadMenu menuType={MenuType.Dropdown} {...props} />
+              <UrlMenu menuType={MenuType.Dropdown} {...props} />
+              <WikiTreeMenu menuType={MenuType.Dropdown} {...props} />
             </Dropdown.Menu>
           </Dropdown>
         ) : (
           <>
-            <UploadMenu menuType={MenuType.Menu} {...this.props} />
-            <UrlMenu menuType={MenuType.Menu} {...this.props} />
-            <WikiTreeMenu menuType={MenuType.Menu} {...this.props} />
+            <UploadMenu menuType={MenuType.Menu} {...props} />
+            <UrlMenu menuType={MenuType.Menu} {...props} />
+            <WikiTreeMenu menuType={MenuType.Menu} {...props} />
           </>
         );
         return menus;
@@ -255,17 +242,17 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
       case ScreenSize.SMALL:
         return (
           <>
-            <UploadMenu menuType={MenuType.Dropdown} {...this.props} />
-            <UrlMenu menuType={MenuType.Dropdown} {...this.props} />
-            <WikiTreeMenu menuType={MenuType.Dropdown} {...this.props} />
+            <UploadMenu menuType={MenuType.Dropdown} {...props} />
+            <UrlMenu menuType={MenuType.Dropdown} {...props} />
+            <WikiTreeMenu menuType={MenuType.Dropdown} {...props} />
             <Dropdown.Divider />
           </>
         );
     }
   }
 
-  private wikiTreeLoginMenu(screenSize: ScreenSize) {
-    if (!this.props.showWikiTreeMenus) {
+  function wikiTreeLoginMenu(screenSize: ScreenSize) {
+    if (!props.showWikiTreeMenus) {
       return null;
     }
     return (
@@ -274,14 +261,14 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
           menuType={
             screenSize === ScreenSize.SMALL ? MenuType.Dropdown : MenuType.Menu
           }
-          {...this.props}
+          {...props}
         />
         {screenSize === ScreenSize.SMALL ? <Dropdown.Divider /> : null}
       </>
     );
   }
 
-  private mobileMenus() {
+  function mobileMenus() {
     return (
       <>
         <Dropdown
@@ -294,9 +281,9 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
           icon={null}
         >
           <Dropdown.Menu>
-            {this.fileMenus(ScreenSize.SMALL)}
-            {this.chartMenus(ScreenSize.SMALL)}
-            {this.wikiTreeLoginMenu(ScreenSize.SMALL)}
+            {fileMenus(ScreenSize.SMALL)}
+            {chartMenus(ScreenSize.SMALL)}
+            {wikiTreeLoginMenu(ScreenSize.SMALL)}
 
             <Dropdown.Item
               href="https://github.com/PeWu/topola-viewer"
@@ -310,23 +297,19 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
-        {this.props.standalone ? (
-          <Link to="/">{this.title()}</Link>
-        ) : (
-          this.title()
-        )}
+        {props.standalone ? <Link to="/">{title()}</Link> : title()}
       </>
     );
   }
 
-  private desktopMenus() {
+  function desktopMenus() {
     return (
       <>
-        {this.props.standalone ? <Link to="/">{this.title()}</Link> : null}
-        {this.fileMenus(ScreenSize.LARGE)}
-        {this.chartMenus(ScreenSize.LARGE)}
+        {props.standalone ? <Link to="/">{title()}</Link> : null}
+        {fileMenus(ScreenSize.LARGE)}
+        {chartMenus(ScreenSize.LARGE)}
         <Menu.Menu position="right">
-          {this.wikiTreeLoginMenu(ScreenSize.LARGE)}
+          {wikiTreeLoginMenu(ScreenSize.LARGE)}
           <Menu.Item
             href="https://github.com/PeWu/topola-viewer"
             target="_blank"
@@ -342,30 +325,28 @@ export class TopBar extends React.Component<RouteComponentProps & Props> {
     );
   }
 
-  render() {
-    return (
-      <>
-        <Menu
-          as={Media}
-          greaterThanOrEqual="large"
-          attached="top"
-          inverted
-          color="blue"
-          size="large"
-        >
-          {this.desktopMenus()}
-        </Menu>
-        <Menu
-          as={Media}
-          at="small"
-          attached="top"
-          inverted
-          color="blue"
-          size="large"
-        >
-          {this.mobileMenus()}
-        </Menu>
-      </>
-    );
-  }
+  return (
+    <>
+      <Menu
+        as={Media}
+        greaterThanOrEqual="large"
+        attached="top"
+        inverted
+        color="blue"
+        size="large"
+      >
+        {desktopMenus()}
+      </Menu>
+      <Menu
+        as={Media}
+        at="small"
+        attached="top"
+        inverted
+        color="blue"
+        size="large"
+      >
+        {mobileMenus()}
+      </Menu>
+    </>
+  );
 }
