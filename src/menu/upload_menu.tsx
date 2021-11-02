@@ -1,11 +1,11 @@
 import * as queryString from 'query-string';
-import * as React from 'react';
 import md5 from 'md5';
 import {analyticsEvent} from '../util/analytics';
 import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {MenuType} from './menu_item';
 import {RouteComponentProps} from 'react-router-dom';
+import {SyntheticEvent} from 'react';
 
 function loadFileAsText(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -27,8 +27,8 @@ interface Props {
 }
 
 /** Displays and handles the "Open file" menu. */
-export class UploadMenu extends React.Component<RouteComponentProps & Props> {
-  private async handleUpload(event: React.SyntheticEvent<HTMLInputElement>) {
+export function UploadMenu(props: RouteComponentProps & Props) {
+  async function handleUpload(event: SyntheticEvent<HTMLInputElement>) {
     const files = (event.target as HTMLInputElement).files;
     if (!files || !files.length) {
       return;
@@ -68,11 +68,9 @@ export class UploadMenu extends React.Component<RouteComponentProps & Props> {
 
     // Use history.replace() when reuploading the same file and history.push() when loading
     // a new file.
-    const search = queryString.parse(this.props.location.search);
+    const search = queryString.parse(props.location.search);
     const historyPush =
-      search.file === hash
-        ? this.props.history.replace
-        : this.props.history.push;
+      search.file === hash ? props.history.replace : props.history.push;
 
     historyPush({
       pathname: '/view',
@@ -81,33 +79,31 @@ export class UploadMenu extends React.Component<RouteComponentProps & Props> {
     });
   }
 
-  render() {
-    const content = (
-      <>
-        <Icon name="folder open" />
-        <FormattedMessage id="menu.open_file" defaultMessage="Open file" />
-      </>
-    );
-    return (
-      <>
-        {this.props.menuType === MenuType.Menu ? (
-          <label htmlFor="fileInput">
-            <Menu.Item as="a">{content}</Menu.Item>
-          </label>
-        ) : (
-          <Dropdown.Item as="label" htmlFor="fileInput">
-            {content}
-          </Dropdown.Item>
-        )}
-        <input
-          className="hidden"
-          type="file"
-          accept=".ged,image/*"
-          id="fileInput"
-          multiple
-          onChange={(e) => this.handleUpload(e)}
-        />
-      </>
-    );
-  }
+  const content = (
+    <>
+      <Icon name="folder open" />
+      <FormattedMessage id="menu.open_file" defaultMessage="Open file" />
+    </>
+  );
+  return (
+    <>
+      {props.menuType === MenuType.Menu ? (
+        <label htmlFor="fileInput">
+          <Menu.Item as="a">{content}</Menu.Item>
+        </label>
+      ) : (
+        <Dropdown.Item as="label" htmlFor="fileInput">
+          {content}
+        </Dropdown.Item>
+      )}
+      <input
+        className="hidden"
+        type="file"
+        accept=".ged,image/*"
+        id="fileInput"
+        multiple
+        onChange={handleUpload}
+      />
+    </>
+  );
 }
