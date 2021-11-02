@@ -1,4 +1,3 @@
-import * as React from 'react';
 import debounce from 'debounce';
 import {analyticsEvent} from '../util/analytics';
 import {buildSearchIndex, SearchIndex, SearchResult} from './search_index';
@@ -6,8 +5,8 @@ import {formatDateOrRange} from '../util/date_util';
 import {IndiInfo, JsonGedcomData} from 'topola';
 import {injectIntl, WrappedComponentProps} from 'react-intl';
 import {JsonIndi} from 'topola';
-import {RouteComponentProps} from 'react-router-dom';
-import {Search, SearchProps, SearchResultProps} from 'semantic-ui-react';
+import {Search, SearchResultProps} from 'semantic-ui-react';
+import {useEffect, useRef, useState} from 'react';
 
 function getNameLine(result: SearchResult) {
   const name = [result.indi.firstName, result.indi.lastName].join(' ').trim();
@@ -27,25 +26,15 @@ interface Props {
   onSelection: (indiInfo: IndiInfo) => void;
 }
 
-interface State {
-  searchResults: SearchResultProps[];
-}
-
 /** Displays and handles the search box in the top bar. */
-class SearchBarComponent extends React.Component<
-  RouteComponentProps & WrappedComponentProps & Props,
-  State
-> {
-  state: State = {
-    searchResults: [],
-  };
+function SearchBarComponent(props: WrappedComponentProps & Props) {
+  const [searchResults, setSearchResults] = useState<SearchResultProps[]>([]);
+  const [searchString, setSearchString] = useState('');
+  const searchIndex = useRef<SearchIndex>();
 
-  searchRef?: {setValue(value: string): void};
-  searchIndex?: SearchIndex;
-
-  private getDescriptionLine(indi: JsonIndi) {
-    const birthDate = formatDateOrRange(indi.birth, this.props.intl);
-    const deathDate = formatDateOrRange(indi.death, this.props.intl);
+  function getDescriptionLine(indi: JsonIndi) {
+    const birthDate = formatDateOrRange(indi.birth, props.intl);
+    const deathDate = formatDateOrRange(indi.death, props.intl);
     if (!deathDate) {
       return birthDate;
     }
@@ -53,74 +42,62 @@ class SearchBarComponent extends React.Component<
   }
 
   /** Produces an object that is displayed in the Semantic UI Search results. */
-  private displaySearchResult(result: SearchResult) {
+  function displaySearchResult(result: SearchResult): SearchResultProps {
     return {
       id: result.id,
       key: result.id,
       title: getNameLine(result),
-      description: this.getDescriptionLine(result.indi),
-    };
+      description: getDescriptionLine(result.indi),
+    } as SearchResultProps;
   }
 
   /** On search input change. */
-  private handleSearch(input: string | undefined) {
+  function handleSearch(input: string | undefined) {
     if (!input) {
       return;
     }
-    const results = this.searchIndex!.search(input).map((result) =>
-      this.displaySearchResult(result),
-    );
-    this.setState(Object.assign({}, this.state, {searchResults: results}));
+    const results = searchIndex
+      .current!.search(input)
+      .map((result) => displaySearchResult(result));
+    setSearchResults(results);
   }
+  const debouncedHandleSearch = useRef(debounce(handleSearch, 200));
 
   /** On search result selected. */
-  private handleResultSelect(id: string) {
+  function handleResultSelect(id: string) {
     analyticsEvent('search_result_selected');
-    this.props.onSelection({id, generation: 0});
-    this.searchRef!.setValue('');
+    props.onSelection({id, generation: 0});
+    setSearchString('');
   }
 
-  private initializeSearchIndex() {
-    this.searchIndex = buildSearchIndex(this.props.data);
+  /** On search string changed. */
+  function onChange(value: string) {
+    debouncedHandleSearch.current(value);
+    setSearchString(value);
   }
 
-  componentDidMount() {
-    this.initializeSearchIndex();
-  }
+  // Initialize the search index.
+  useEffect(() => {
+    searchIndex.current = buildSearchIndex(props.data);
+  }, [props.data]);
 
-  componentDidUpdate(prevProps: Props) {
-    if (prevProps.data !== this.props.data) {
-      this.initializeSearchIndex();
-    }
-  }
-
-  render() {
-    return (
-      <Search
-        onSearchChange={debounce(
-          (_: React.MouseEvent<HTMLElement>, data: SearchProps) =>
-            this.handleSearch(data.value),
-          200,
-        )}
-        onResultSelect={(_, data) => this.handleResultSelect(data.result.id)}
-        results={this.state.searchResults}
-        noResultsMessage={this.props.intl.formatMessage({
-          id: 'menu.search.no_results',
-          defaultMessage: 'No results found',
-        })}
-        placeholder={this.props.intl.formatMessage({
-          id: 'menu.search.placeholder',
-          defaultMessage: 'Search for people',
-        })}
-        selectFirstResult={true}
-        ref={(ref) =>
-          (this.searchRef = (ref as unknown) as {
-            setValue(value: string): void;
-          })
-        }
-        id="search"
-      />
-    );
-  }
+  return (
+    <Search
+      onSearchChange={(_, data) => onChange(data.value!)}
+      onResultSelect={(_, data) => handleResultSelect(data.result.id)}
+      results={searchResults}
+      noResultsMessage={props.intl.formatMessage({
+        id: 'menu.search.no_results',
+        defaultMessage: 'No results found',
+      })}
+      placeholder={props.intl.formatMessage({
+        id: 'menu.search.placeholder',
+        defaultMessage: 'Search for people',
+      })}
+      selectFirstResult={true}
+      value={searchString}
+      id="search"
+    />
+  );
 }
 export const SearchBar = injectIntl(SearchBarComponent);
