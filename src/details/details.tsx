@@ -1,16 +1,9 @@
-import * as React from 'react';
 import flatMap from 'array.prototype.flatmap';
-import {injectIntl, WrappedComponentProps} from 'react-intl';
 import {dereference, GedcomData, getData} from '../util/gedcom_util';
-import {GedcomEntry} from 'parse-gedcom';
-import {TranslatedTag} from './translated-tag';
 import {Events} from './events';
+import {GedcomEntry} from 'parse-gedcom';
 import {MultilineText} from './multiline-text';
-
-interface Props {
-  gedcom: GedcomData;
-  indi: string;
-}
+import {TranslatedTag} from './translated-tag';
 
 const EXCLUDED_TAGS = [
   'BIRT',
@@ -119,30 +112,23 @@ function getOtherDetails(entries: GedcomEntry[]) {
     ));
 }
 
-class DetailsComponent extends React.Component<
-  Props & WrappedComponentProps,
-  {}
-> {
-  render() {
-    const entries = this.props.gedcom.indis[this.props.indi].tree;
-    const entriesWithData = entries
-      .map((entry) =>
-        dereference(entry, this.props.gedcom, (gedcom) => gedcom.other),
-      )
-      .filter(hasData);
-
-    return (
-      <div className="ui segments details">
-        {getDetails(entries, ['NAME'], nameDetails)}
-        <Events
-          gedcom={this.props.gedcom}
-          entries={entries}
-          indi={this.props.indi}
-        />
-        {getOtherDetails(entriesWithData)}
-        {getDetails(entriesWithData, ['NOTE'], noteDetails)}
-      </div>
-    );
-  }
+interface Props {
+  gedcom: GedcomData;
+  indi: string;
 }
-export const Details = injectIntl(DetailsComponent);
+
+export function Details(props: Props) {
+  const entries = props.gedcom.indis[props.indi].tree;
+  const entriesWithData = entries
+    .map((entry) => dereference(entry, props.gedcom, (gedcom) => gedcom.other))
+    .filter(hasData);
+
+  return (
+    <div className="ui segments details">
+      {getDetails(entries, ['NAME'], nameDetails)}
+      <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
+      {getOtherDetails(entriesWithData)}
+      {getDetails(entriesWithData, ['NOTE'], noteDetails)}
+    </div>
+  );
+}
