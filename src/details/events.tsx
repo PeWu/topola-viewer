@@ -1,12 +1,11 @@
-import * as React from 'react';
-import {injectIntl, IntlShape, WrappedComponentProps} from 'react-intl';
-import {dereference, GedcomData, getData} from '../util/gedcom_util';
-import {GedcomEntry} from 'parse-gedcom';
+import flatMap from 'array.prototype.flatmap';
 import {compareDates, translateDate} from '../util/date_util';
 import {DateOrRange, getDate} from 'topola';
-import {TranslatedTag} from './translated-tag';
+import {dereference, GedcomData, getData} from '../util/gedcom_util';
+import {GedcomEntry} from 'parse-gedcom';
+import {injectIntl, IntlShape, WrappedComponentProps} from 'react-intl';
 import {MultilineText} from './multiline-text';
-import flatMap from 'array.prototype.flatmap';
+import {TranslatedTag} from './translated-tag';
 
 interface Props {
   gedcom: GedcomData;
@@ -52,7 +51,6 @@ function eventHeader(tag: string, date: GedcomEntry | null, intl: IntlShape) {
 }
 
 function eventFamilyDetails(
-  entry: GedcomEntry,
   indi: string,
   familyEntry: GedcomEntry,
   gedcom: GedcomData,
@@ -129,34 +127,6 @@ function eventDetails(event: Event) {
   );
 }
 
-function getEventDetails(
-  entries: GedcomEntry[],
-  gedcom: GedcomData,
-  indi: string,
-  intl: IntlShape,
-): JSX.Element | null {
-  const events = flatMap(EVENT_TAGS, (tag) =>
-    entries
-      .filter((entry) => entry.tag === tag)
-      .map((eventEntry) => toEvent(eventEntry, gedcom, indi, intl))
-      .flatMap((events) => events)
-      .sort((event1, event2) => compareDates(event1.date, event2.date))
-      .map((event) => eventDetails(event)),
-  );
-  if (events && events.length) {
-    return (
-      <div className="ui segment divided items">
-        {events.map((eventElement, index) => (
-          <div className="ui attached item" key={index}>
-            {eventElement}
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-}
-
 function toEvent(
   entry: GedcomEntry,
   gedcom: GedcomData,
@@ -207,29 +177,36 @@ function toFamilyEvents(
       date: date ? getDate(date.data) : undefined,
       type: familyMarriageEvent.tag,
       header: eventHeader(familyMarriageEvent.tag, date, intl),
-      subHeader: eventFamilyDetails(familyMarriageEvent, indi, family, gedcom),
+      subHeader: eventFamilyDetails(indi, family, gedcom),
       place: eventPlace(familyMarriageEvent),
       notes: eventNotes(familyMarriageEvent, gedcom),
     };
   });
 }
 
-class EventsComponent extends React.Component<
-  Props & WrappedComponentProps,
-  {}
-> {
-  render() {
+function EventsComponent(props: Props & WrappedComponentProps) {
+  const events = flatMap(EVENT_TAGS, (tag) =>
+    props.entries
+      .filter((entry) => entry.tag === tag)
+      .map((eventEntry) =>
+        toEvent(eventEntry, props.gedcom, props.indi, props.intl),
+      )
+      .flatMap((events) => events)
+      .sort((event1, event2) => compareDates(event1.date, event2.date))
+      .map((event) => eventDetails(event)),
+  );
+  if (events && events.length) {
     return (
-      <>
-        {getEventDetails(
-          this.props.entries,
-          this.props.gedcom,
-          this.props.indi,
-          this.props.intl,
-        )}
-      </>
+      <div className="ui segment divided items">
+        {events.map((eventElement, index) => (
+          <div className="ui attached item" key={index}>
+            {eventElement}
+          </div>
+        ))}
+      </div>
     );
   }
+  return null;
 }
 
 export const Events = injectIntl(EventsComponent);
