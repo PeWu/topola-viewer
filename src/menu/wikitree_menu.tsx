@@ -2,11 +2,11 @@ import * as queryString from 'query-string';
 import wikitreeLogo from './wikitree.png';
 import {analyticsEvent} from '../util/analytics';
 import {Button, Form, Header, Input, Modal} from 'semantic-ui-react';
-import {Component, createRef, useEffect, useRef, useState} from 'react';
 import {FormattedMessage, injectIntl, WrappedComponentProps} from 'react-intl';
 import {getLoggedInUserName} from '../datasource/wikitree';
 import {MenuItem, MenuType} from './menu_item';
 import {RouteComponentProps} from 'react-router-dom';
+import {useEffect, useRef, useState} from 'react';
 
 enum WikiTreeLoginState {
   UNKNOWN,
@@ -152,119 +152,63 @@ export function WikiTreeMenu(props: RouteComponentProps & Props) {
   );
 }
 
-interface LoginState {
-  wikiTreeLoginState: WikiTreeLoginState;
-  wikiTreeLoginUsername?: string;
-}
-
 /** Displays and handles the "Log in to WikiTree" menu. */
-class WikiTreeLoginMenuComponent extends Component<
-  RouteComponentProps & WrappedComponentProps & Props,
-  LoginState
-> {
-  state: LoginState = {
-    wikiTreeLoginState: WikiTreeLoginState.UNKNOWN,
-  };
-
-  wikiTreeLoginFormRef: React.RefObject<HTMLFormElement> = createRef();
-  wikiTreeReturnUrlRef: React.RefObject<HTMLInputElement> = createRef();
+function WikiTreeLoginMenuComponent(props: WrappedComponentProps & Props) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const returnUrlRef = useRef<HTMLInputElement>(null);
 
   /**
    * Redirect to the WikiTree Apps login page with a return URL pointing to
    * Topola Viewer hosted on apps.wikitree.com.
    */
-  private wikiTreeLogin() {
+  function login() {
     const wikiTreeTopolaUrl =
       'https://apps.wikitree.com/apps/wiech13/topola-viewer';
     // Append '&' because the login page appends '?authcode=...' to this URL.
     // TODO: remove ?authcode if it is in the current URL.
     const returnUrl = `${wikiTreeTopolaUrl}${window.location.hash}&`;
-    this.wikiTreeReturnUrlRef.current!.value = returnUrl;
-    this.wikiTreeLoginFormRef.current!.submit();
+    returnUrlRef.current!.value = returnUrl;
+    formRef.current!.submit();
   }
 
-  private checkWikiTreeLoginState() {
-    const wikiTreeLoginUsername = getLoggedInUserName();
-    const wikiTreeLoginState = wikiTreeLoginUsername
-      ? WikiTreeLoginState.LOGGED_IN
-      : WikiTreeLoginState.NOT_LOGGED_IN;
-    if (this.state.wikiTreeLoginState !== wikiTreeLoginState) {
-      this.setState(
-        Object.assign({}, this.state, {
-          wikiTreeLoginState,
-          wikiTreeLoginUsername,
-        }),
-      );
-    }
+  const username = getLoggedInUserName();
+  if (!username) {
+    return (
+      <>
+        <MenuItem menuType={props.menuType} onClick={login}>
+          <img src={wikitreeLogo} alt="WikiTree logo" className="menu-icon" />
+          <FormattedMessage
+            id="menu.wikitree_login"
+            defaultMessage="Log in to WikiTree"
+          />
+        </MenuItem>
+        <form
+          action="https://api.wikitree.com/api.php"
+          method="POST"
+          style={{display: 'hidden'}}
+          ref={formRef}
+        >
+          <input type="hidden" name="action" value="clientLogin" />
+          <input type="hidden" name="returnURL" ref={returnUrlRef} />
+        </form>
+      </>
+    );
   }
-
-  componentDidMount() {
-    this.checkWikiTreeLoginState();
-  }
-
-  componentDidUpdate() {
-    this.checkWikiTreeLoginState();
-  }
-
-  render() {
-    switch (this.state.wikiTreeLoginState) {
-      case WikiTreeLoginState.NOT_LOGGED_IN:
-        return (
-          <>
-            <MenuItem
-              menuType={this.props.menuType}
-              onClick={() => this.wikiTreeLogin()}
-            >
-              <img
-                src={wikitreeLogo}
-                alt="WikiTree logo"
-                className="menu-icon"
-              />
-              <FormattedMessage
-                id="menu.wikitree_login"
-                defaultMessage="Log in to WikiTree"
-              />
-            </MenuItem>
-            <form
-              action="https://api.wikitree.com/api.php"
-              method="POST"
-              style={{display: 'hidden'}}
-              ref={this.wikiTreeLoginFormRef}
-            >
-              <input type="hidden" name="action" value="clientLogin" />
-              <input
-                type="hidden"
-                name="returnURL"
-                ref={this.wikiTreeReturnUrlRef}
-              />
-            </form>
-          </>
-        );
-
-      case WikiTreeLoginState.LOGGED_IN:
-        const tooltip = this.state.wikiTreeLoginUsername
-          ? this.props.intl.formatMessage(
-              {
-                id: 'menu.wikitree_popup_username',
-                defaultMessage: 'Logged in to WikiTree as {username}',
-              },
-              {username: this.state.wikiTreeLoginUsername},
-            )
-          : this.props.intl.formatMessage({
-              id: 'menu.wikitree_popup',
-              defaultMessage: 'Logged in to WikiTree',
-            });
-        return (
-          <MenuItem menuType={this.props.menuType} title={tooltip}>
-            <img src={wikitreeLogo} alt="WikiTree logo" className="menu-icon" />
-            <FormattedMessage
-              id="menu.wikitree_logged_in"
-              defaultMessage="Logged in"
-            />
-          </MenuItem>
-        );
-    }
-    return null;
-  }
+  const tooltip = props.intl.formatMessage(
+    {
+      id: 'menu.wikitree_popup_username',
+      defaultMessage: 'Logged in to WikiTree as {username}',
+    },
+    {username},
+  );
+  return (
+    <MenuItem menuType={props.menuType} title={tooltip}>
+      <img src={wikitreeLogo} alt="WikiTree logo" className="menu-icon" />
+      <FormattedMessage
+        id="menu.wikitree_logged_in"
+        defaultMessage="Logged in"
+      />
+    </MenuItem>
+  );
 }
 export const WikiTreeLoginMenu = injectIntl(WikiTreeLoginMenuComponent);
