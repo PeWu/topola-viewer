@@ -1,75 +1,45 @@
 import * as queryString from 'query-string';
-import * as React from 'react';
 import {analyticsEvent} from '../util/analytics';
 import {Button, Form, Header, Icon, Input, Modal} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {MenuItem, MenuType} from './menu_item';
 import {RouteComponentProps} from 'react-router-dom';
+import {useEffect, useRef, useState} from 'react';
 
 interface Props {
   menuType: MenuType;
 }
 
-interface State {
-  dialogOpen: boolean;
-  url?: string;
-}
-
 /** Displays and handles the "Open URL" menu. */
-export class UrlMenu extends React.Component<
-  RouteComponentProps & Props,
-  State
-> {
-  state: State = {dialogOpen: false};
+export function UrlMenu(props: RouteComponentProps & Props) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [url, setUrl] = useState('');
+  const inputRef = useRef<Input>(null);
 
-  inputRef: React.RefObject<Input> = React.createRef();
-
-  /** Opens the "Load from URL" dialog. */
-  private openDialog() {
-    this.setState(Object.assign({}, this.state, {dialogOpen: true}), () =>
-      this.inputRef.current!.focus(),
-    );
-  }
-
-  /** Cancels any of the open dialogs. */
-  private handleClose() {
-    this.setState(
-      Object.assign({}, this.state, {
-        dialogOpen: false,
-      }),
-    );
-  }
+  useEffect(() => {
+    if (dialogOpen) {
+      setUrl('');
+      inputRef.current!.focus();
+    }
+  }, [dialogOpen]);
 
   /** Load button clicked in the "Load from URL" dialog. */
-  private handleLoad() {
-    this.setState(
-      Object.assign({}, this.state, {
-        dialogOpen: false,
-      }),
-    );
-    if (this.state.url) {
+  function handleLoad() {
+    setDialogOpen(false);
+    if (url) {
       analyticsEvent('url_selected');
-      this.props.history.push({
+      props.history.push({
         pathname: '/view',
-        search: queryString.stringify({url: this.state.url}),
+        search: queryString.stringify({url}),
       });
     }
   }
 
-  /** Called when the URL input is typed into. */
-  private handleUrlChange(value: string) {
-    this.setState(
-      Object.assign({}, this.state, {
-        url: value,
-      }),
-    );
-  }
-
-  private loadFromUrlModal() {
+  function loadFromUrlModal() {
     return (
       <Modal
-        open={this.state.dialogOpen}
-        onClose={() => this.handleClose()}
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
         centered={false}
       >
         <Header>
@@ -80,12 +50,13 @@ export class UrlMenu extends React.Component<
           />
         </Header>
         <Modal.Content>
-          <Form onSubmit={() => this.handleLoad()}>
+          <Form onSubmit={handleLoad}>
             <Input
               placeholder="https://"
               fluid
-              onChange={(e, data) => this.handleUrlChange(data.value)}
-              ref={this.inputRef}
+              value={url}
+              onChange={(_, data) => setUrl(data.value)}
+              ref={inputRef}
             />
             <p>
               <FormattedMessage
@@ -105,13 +76,13 @@ export class UrlMenu extends React.Component<
           </Form>
         </Modal.Content>
         <Modal.Actions>
-          <Button secondary onClick={() => this.handleClose()}>
+          <Button secondary onClick={() => setDialogOpen(false)}>
             <FormattedMessage
               id="load_from_url.cancel"
               defaultMessage="Cancel"
             />
           </Button>
-          <Button primary onClick={() => this.handleLoad()}>
+          <Button primary onClick={handleLoad}>
             <FormattedMessage id="load_from_url.load" defaultMessage="Load" />
           </Button>
         </Modal.Actions>
@@ -119,21 +90,16 @@ export class UrlMenu extends React.Component<
     );
   }
 
-  render() {
-    return (
-      <>
-        <MenuItem
-          onClick={() => this.openDialog()}
-          menuType={this.props.menuType}
-        >
-          <Icon name="cloud download" />
-          <FormattedMessage
-            id="menu.load_from_url"
-            defaultMessage="Load from URL"
-          />
-        </MenuItem>
-        {this.loadFromUrlModal()}
-      </>
-    );
-  }
+  return (
+    <>
+      <MenuItem onClick={() => setDialogOpen(true)} menuType={props.menuType}>
+        <Icon name="cloud download" />
+        <FormattedMessage
+          id="menu.load_from_url"
+          defaultMessage="Load from URL"
+        />
+      </MenuItem>
+      {loadFromUrlModal()}
+    </>
+  );
 }
