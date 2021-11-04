@@ -1,6 +1,5 @@
 import * as H from 'history';
 import * as queryString from 'query-string';
-import React from 'react';
 import {analyticsEvent} from './util/analytics';
 import {Changelog} from './changelog';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
@@ -15,6 +14,7 @@ import {Media} from './util/media';
 import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
 import {TopBar} from './menu/top_bar';
 import {TopolaData} from './util/gedcom_util';
+import {useEffect, useState} from 'react';
 import {
   Chart,
   ChartType,
@@ -184,270 +184,233 @@ function hasUpdatedValues<T>(state: T, changes: Partial<T> | undefined) {
   );
 }
 
-interface State {
+function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
   /** State of the application. */
-  state: AppState;
+  const [state, setState] = useState<AppState>(AppState.INITIAL);
   /** Loaded data. */
-  data?: TopolaData;
+  const [data, setData] = useState<TopolaData>();
   /** Selected individual. */
-  selection?: IndiInfo;
+  const [selection, setSelection] = useState<IndiInfo>();
   /** Error to display. */
-  error?: string;
+  const [error, setError] = useState<string>();
   /** Whether the side panel is shown. */
-  showSidePanel?: boolean;
+  const [showSidePanel, setShowSidePanel] = useState(false);
   /** Whether the app is in standalone mode, i.e. showing 'open file' menus. */
-  standalone: boolean;
+  const [standalone, setStandalone] = useState(true);
   /** Type of displayed chart. */
-  chartType: ChartType;
+  const [chartType, setChartType] = useState<ChartType>(ChartType.Hourglass);
   /** Whether to show the error popup. */
-  showErrorPopup: boolean;
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
   /** Specification of the source of the data. */
-  sourceSpec?: DataSourceSpec;
+  const [sourceSpec, setSourceSpec] = useState<DataSourceSpec>();
   /** Freeze animations after initial chart render. */
-  freezeAnimation?: boolean;
-  config: Config;
-}
-
-class AppComponent extends React.Component<
-  RouteComponentProps & WrappedComponentProps,
-  {}
-> {
-  state: State = {
-    state: AppState.INITIAL,
-    standalone: true,
-    chartType: ChartType.Hourglass,
-    showErrorPopup: false,
-    config: DEFALUT_CONFIG,
-  };
+  const [freezeAnimation, setFreezeAnimation] = useState(false);
+  const [config, setConfig] = useState(DEFALUT_CONFIG);
 
   /** Sets the state with a new individual selection and chart type. */
-  private updateDisplay(
-    selection: IndiInfo,
-    otherStateChanges?: Partial<State>,
-  ) {
+  function updateDisplay(newSelection: IndiInfo) {
     if (
-      !this.state.selection ||
-      this.state.selection.id !== selection.id ||
-      this.state.selection!.generation !== selection.generation ||
-      hasUpdatedValues(this.state, otherStateChanges)
+      !selection ||
+      selection.id !== newSelection.id ||
+      selection!.generation !== newSelection.generation
     ) {
-      this.setState(
-        Object.assign({}, this.state, {selection}, otherStateChanges),
-      );
+      setSelection(newSelection);
     }
   }
 
   /** Sets error message after data load failure. */
-  private setError(error: string) {
-    this.setState(
-      Object.assign({}, this.state, {
-        state: AppState.ERROR,
-        error,
-      }),
-    );
+  function setErrorMessage(message: string) {
+    setError(message);
+    setState(AppState.ERROR);
   }
 
-  componentDidMount() {
-    this.componentDidUpdate();
-  }
+  const uploadedDataSource = new UploadedDataSource();
+  const gedcomUrlDataSource = new GedcomUrlDataSource();
+  const wikiTreeDataSource = new WikiTreeDataSource(props.intl);
+  const embeddedDataSource = new EmbeddedDataSource();
 
-  private readonly uploadedDataSource = new UploadedDataSource();
-  private readonly gedcomUrlDataSource = new GedcomUrlDataSource();
-  private readonly wikiTreeDataSource = new WikiTreeDataSource(this.props.intl);
-  private readonly embeddedDataSource = new EmbeddedDataSource();
-
-  private isNewData(sourceSpec: DataSourceSpec, selection?: IndiInfo) {
-    if (
-      !this.state.sourceSpec ||
-      this.state.sourceSpec.source !== sourceSpec.source
-    ) {
+  function isNewData(newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) {
+    if (!sourceSpec || sourceSpec.source !== newSourceSpec.source) {
       // New data source means new data.
       return true;
     }
-    const newSource = {spec: sourceSpec, selection};
+    const newSource = {spec: newSourceSpec, selection: newSelection};
     const oldSouce = {
-      spec: this.state.sourceSpec,
-      selection: this.state.selection,
+      spec: sourceSpec,
+      selection: selection,
     };
     switch (newSource.spec.source) {
       case DataSourceEnum.UPLOADED:
-        return this.uploadedDataSource.isNewData(
+        return uploadedDataSource.isNewData(
           newSource as SourceSelection<UploadSourceSpec>,
           oldSouce as SourceSelection<UploadSourceSpec>,
-          this.state.data,
+          data,
         );
       case DataSourceEnum.GEDCOM_URL:
-        return this.gedcomUrlDataSource.isNewData(
+        return gedcomUrlDataSource.isNewData(
           newSource as SourceSelection<UrlSourceSpec>,
           oldSouce as SourceSelection<UrlSourceSpec>,
-          this.state.data,
+          data,
         );
       case DataSourceEnum.WIKITREE:
-        return this.wikiTreeDataSource.isNewData(
+        return wikiTreeDataSource.isNewData(
           newSource as SourceSelection<WikiTreeSourceSpec>,
           oldSouce as SourceSelection<WikiTreeSourceSpec>,
-          this.state.data,
+          data,
         );
       case DataSourceEnum.EMBEDDED:
-        return this.embeddedDataSource.isNewData(
+        return embeddedDataSource.isNewData(
           newSource as SourceSelection<EmbeddedSourceSpec>,
           oldSouce as SourceSelection<EmbeddedSourceSpec>,
-          this.state.data,
+          data,
         );
     }
   }
 
-  private loadData(sourceSpec: DataSourceSpec, selection?: IndiInfo) {
-    switch (sourceSpec.source) {
+  function loadData(newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) {
+    switch (newSourceSpec.source) {
       case DataSourceEnum.UPLOADED:
-        return this.uploadedDataSource.loadData({spec: sourceSpec, selection});
+        return uploadedDataSource.loadData({
+          spec: newSourceSpec,
+          selection: newSelection,
+        });
       case DataSourceEnum.GEDCOM_URL:
-        return this.gedcomUrlDataSource.loadData({spec: sourceSpec, selection});
+        return gedcomUrlDataSource.loadData({
+          spec: newSourceSpec,
+          selection: newSelection,
+        });
       case DataSourceEnum.WIKITREE:
-        return this.wikiTreeDataSource.loadData({spec: sourceSpec, selection});
+        return wikiTreeDataSource.loadData({
+          spec: newSourceSpec,
+          selection: newSelection,
+        });
       case DataSourceEnum.EMBEDDED:
-        return this.embeddedDataSource.loadData({spec: sourceSpec, selection});
+        return embeddedDataSource.loadData({
+          spec: newSourceSpec,
+          selection: newSelection,
+        });
     }
   }
 
-  async componentDidUpdate() {
-    if (this.props.location.pathname !== '/view') {
-      if (this.state.state !== AppState.INITIAL) {
-        this.setState(Object.assign({}, this.state, {state: AppState.INITIAL}));
+  useEffect(() => {
+    (async () => {
+      if (props.location.pathname !== '/view') {
+        if (state !== AppState.INITIAL) {
+          setState(AppState.INITIAL);
+        }
+        return;
       }
-      return;
-    }
 
-    const args = getArguments(this.props.location);
+      const args = getArguments(props.location);
 
-    if (!args.sourceSpec) {
-      this.props.history.replace({pathname: '/'});
-    } else if (
-      this.state.state === AppState.INITIAL ||
-      this.isNewData(args.sourceSpec, args.selection)
-    ) {
-      // Set loading state.
-      this.setState(
-        Object.assign({}, this.state, {
-          state: AppState.LOADING,
-          sourceSpec: args.sourceSpec,
-          selection: args.selection,
-          standalone: args.standalone,
-          chartType: args.chartType,
-          config: args.config,
-        }),
-      );
-      try {
-        const data = await this.loadData(args.sourceSpec, args.selection);
-        // Set state with data.
-        this.setState(
-          Object.assign({}, this.state, {
-            state: AppState.SHOWING_CHART,
-            data,
-            selection: getSelection(data.chartData, args.selection),
-            showSidePanel: args.showSidePanel,
-          }),
-        );
-      } catch (error) {
-        this.setError(getI18nMessage(error, this.props.intl));
+      if (!args.sourceSpec) {
+        props.history.replace({pathname: '/'});
+        return;
       }
-    } else if (
-      this.state.state === AppState.SHOWING_CHART ||
-      this.state.state === AppState.LOADING_MORE
-    ) {
-      // Update selection if it has changed in the URL.
-      const selection = getSelection(
-        this.state.data!.chartData,
-        args.selection,
-      );
-      const loadMoreFromWikitree =
-        args.sourceSpec.source === DataSourceEnum.WIKITREE &&
-        (!this.state.selection || this.state.selection.id !== selection.id);
-      this.updateDisplay(selection, {
-        chartType: args.chartType,
-        state: loadMoreFromWikitree
-          ? AppState.LOADING_MORE
-          : AppState.SHOWING_CHART,
-      });
-      if (loadMoreFromWikitree) {
+
+      if (
+        state === AppState.INITIAL ||
+        isNewData(args.sourceSpec, args.selection)
+      ) {
+        // Set loading state.
+        setState(AppState.LOADING);
+        // Set state from URL parameters.
+        setSourceSpec(args.sourceSpec);
+        setSelection(args.selection);
+        setStandalone(args.standalone);
+        setChartType(args.chartType);
+        setConfig(args.config);
         try {
-          const data = await loadWikiTree(args.selection!.id, this.props.intl);
-          const selection = getSelection(data.chartData, args.selection);
-          this.setState(
-            Object.assign({}, this.state, {
-              state: AppState.SHOWING_CHART,
-              data,
-              selection,
-            }),
-          );
-        } catch (error) {
-          this.showErrorPopup(
-            this.props.intl.formatMessage(
-              {
-                id: 'error.failed_wikitree_load_more',
-                defaultMessage: 'Failed to load data from WikiTree. {error}',
-              },
-              {error},
-            ),
-            {state: AppState.SHOWING_CHART},
-          );
+          const data = await loadData(args.sourceSpec, args.selection);
+          // Set state with data.
+          setData(data);
+          setSelection(getSelection(data.chartData, args.selection));
+          setShowSidePanel(args.showSidePanel);
+          setState(AppState.SHOWING_CHART);
+        } catch (error: any) {
+          setErrorMessage(getI18nMessage(error, props.intl));
+        }
+      } else if (
+        state === AppState.SHOWING_CHART ||
+        state === AppState.LOADING_MORE
+      ) {
+        // Update selection if it has changed in the URL.
+        const newSelection = getSelection(data!.chartData, args.selection);
+        const loadMoreFromWikitree =
+          args.sourceSpec.source === DataSourceEnum.WIKITREE &&
+          (!selection || selection.id !== newSelection.id);
+        setChartType(args.chartType);
+        setState(
+          loadMoreFromWikitree ? AppState.LOADING_MORE : AppState.SHOWING_CHART,
+        );
+        updateDisplay(newSelection);
+        if (loadMoreFromWikitree) {
+          try {
+            const data = await loadWikiTree(args.selection!.id, props.intl);
+            const newSelection = getSelection(data.chartData, args.selection);
+            setData(data);
+            setSelection(newSelection);
+            setState(AppState.SHOWING_CHART);
+          } catch (error: any) {
+            setState(AppState.SHOWING_CHART);
+            displayErrorPopup(
+              props.intl.formatMessage(
+                {
+                  id: 'error.failed_wikitree_load_more',
+                  defaultMessage: 'Failed to load data from WikiTree. {error}',
+                },
+                {error},
+              ),
+            );
+          }
         }
       }
-    }
-  }
+    })();
+  });
 
-  private updateUrl(args: queryString.ParsedQuery<any>) {
-    const location = this.props.location;
+  function updateUrl(args: queryString.ParsedQuery<any>) {
+    const location = props.location;
     const search = queryString.parse(location.search);
     for (const key in args) {
       search[key] = args[key];
     }
     location.search = queryString.stringify(search);
-    this.props.history.push(location);
+    props.history.push(location);
   }
 
   /**
    * Called when the user clicks an individual box in the chart.
    * Updates the browser URL.
    */
-  private onSelection = (selection: IndiInfo) => {
+  function onSelection(selection: IndiInfo) {
     // Don't allow selecting WikiTree private profiles.
     if (selection.id.startsWith(PRIVATE_ID_PREFIX)) {
       return;
     }
     analyticsEvent('selection_changed');
-    this.updateUrl({
+    updateUrl({
       indi: selection.id,
       gen: selection.generation,
     });
-  };
-
-  private onPrint = () => {
-    analyticsEvent('print');
-    printChart();
-  };
-
-  private showErrorPopup(message: string, otherStateChanges?: Partial<State>) {
-    this.setState(
-      Object.assign(
-        {},
-        this.state,
-        {
-          showErrorPopup: true,
-          error: message,
-        },
-        otherStateChanges,
-      ),
-    );
   }
 
-  private onDownloadPdf = async () => {
+  function onPrint() {
+    analyticsEvent('print');
+    printChart();
+  }
+
+  function displayErrorPopup(message: string) {
+    setShowErrorPopup(true);
+    setError(message);
+  }
+
+  async function onDownloadPdf() {
     analyticsEvent('download_pdf');
     try {
       await downloadPdf();
     } catch (e) {
-      this.showErrorPopup(
-        this.props.intl.formatMessage({
+      displayErrorPopup(
+        props.intl.formatMessage({
           id: 'error.failed_pdf',
           defaultMessage:
             'Failed to generate PDF file.' +
@@ -455,15 +418,15 @@ class AppComponent extends React.Component<
         }),
       );
     }
-  };
+  }
 
-  private onDownloadPng = async () => {
+  async function onDownloadPng() {
     analyticsEvent('download_png');
     try {
       await downloadPng();
     } catch (e) {
-      this.showErrorPopup(
-        this.props.intl.formatMessage({
+      displayErrorPopup(
+        props.intl.formatMessage({
           id: 'error.failed_png',
           defaultMessage:
             'Failed to generate PNG file.' +
@@ -471,49 +434,42 @@ class AppComponent extends React.Component<
         }),
       );
     }
-  };
+  }
 
-  private onDownloadSvg = () => {
+  function onDownloadSvg() {
     analyticsEvent('download_svg');
     downloadSvg();
-  };
+  }
 
-  private onDismissErrorPopup = () => {
-    this.setState(
-      Object.assign({}, this.state, {
-        showErrorPopup: false,
-      }),
-    );
-  };
+  function onDismissErrorPopup() {
+    setShowErrorPopup(false);
+  }
 
-  private renderMainArea = () => {
-    switch (this.state.state) {
+  function renderMainArea() {
+    switch (state) {
       case AppState.SHOWING_CHART:
       case AppState.LOADING_MORE:
         const sidePanelTabs = [
           {
-            menuItem: this.props.intl.formatMessage({
+            menuItem: props.intl.formatMessage({
               id: 'tab.info',
               defaultMessage: 'Info',
             }),
             render: () => (
-              <Details
-                gedcom={this.state.data!.gedcom}
-                indi={this.state.selection!.id}
-              />
+              <Details gedcom={data!.gedcom} indi={selection!.id} />
             ),
           },
           {
-            menuItem: this.props.intl.formatMessage({
+            menuItem: props.intl.formatMessage({
               id: 'tab.settings',
               defaultMessage: 'Settings',
             }),
             render: () => (
               <ConfigPanel
-                config={this.state.config}
+                config={config}
                 onChange={(config) => {
-                  this.setState(Object.assign({}, this.state, {config}));
-                  this.updateUrl(configToArgs(config));
+                  setConfig(config);
+                  updateUrl(configToArgs(config));
                 }}
               />
             ),
@@ -522,22 +478,22 @@ class AppComponent extends React.Component<
         return (
           <div id="content">
             <ErrorPopup
-              open={this.state.showErrorPopup}
-              message={this.state.error}
-              onDismiss={this.onDismissErrorPopup}
+              open={showErrorPopup}
+              message={error}
+              onDismiss={onDismissErrorPopup}
             />
-            {this.state.state === AppState.LOADING_MORE ? (
+            {state === AppState.LOADING_MORE ? (
               <Loader active size="small" className="loading-more" />
             ) : null}
             <Chart
-              data={this.state.data!.chartData}
-              selection={this.state.selection!}
-              chartType={this.state.chartType}
-              onSelection={this.onSelection}
-              freezeAnimation={this.state.freezeAnimation}
-              colors={this.state.config.color}
+              data={data!.chartData}
+              selection={selection!}
+              chartType={chartType}
+              onSelection={onSelection}
+              freezeAnimation={freezeAnimation}
+              colors={config.color}
             />
-            {this.state.showSidePanel ? (
+            {showSidePanel ? (
               <Media greaterThanOrEqual="large" className="sidePanel">
                 <Tab panes={sidePanelTabs} />
               </Media>
@@ -547,52 +503,48 @@ class AppComponent extends React.Component<
         );
 
       case AppState.ERROR:
-        return <ErrorMessage message={this.state.error!} />;
+        return <ErrorMessage message={error!} />;
 
       case AppState.INITIAL:
       case AppState.LOADING:
         return <Loader active size="large" />;
     }
-  };
-
-  render() {
-    return (
-      <>
-        <Route
-          render={(props: RouteComponentProps) => (
-            <TopBar
-              {...props}
-              data={this.state.data && this.state.data.chartData}
-              allowAllRelativesChart={
-                this.state.sourceSpec?.source !== DataSourceEnum.WIKITREE
-              }
-              showingChart={
-                this.props.history.location.pathname === '/view' &&
-                (this.state.state === AppState.SHOWING_CHART ||
-                  this.state.state === AppState.LOADING_MORE)
-              }
-              standalone={this.state.standalone}
-              eventHandlers={{
-                onSelection: this.onSelection,
-                onPrint: this.onPrint,
-                onDownloadPdf: this.onDownloadPdf,
-                onDownloadPng: this.onDownloadPng,
-                onDownloadSvg: this.onDownloadSvg,
-              }}
-              showWikiTreeMenus={
-                this.state.sourceSpec?.source === DataSourceEnum.WIKITREE
-              }
-            />
-          )}
-        />
-        <Switch>
-          <Route exact path="/" component={Intro} />
-          <Route exact path="/view" render={this.renderMainArea} />
-          <Redirect to={'/'} />
-        </Switch>
-      </>
-    );
   }
+
+  return (
+    <>
+      <Route
+        render={(props: RouteComponentProps) => (
+          <TopBar
+            {...props}
+            data={data?.chartData}
+            allowAllRelativesChart={
+              sourceSpec?.source !== DataSourceEnum.WIKITREE
+            }
+            showingChart={
+              props.history.location.pathname === '/view' &&
+              (state === AppState.SHOWING_CHART ||
+                state === AppState.LOADING_MORE)
+            }
+            standalone={standalone}
+            eventHandlers={{
+              onSelection,
+              onPrint,
+              onDownloadPdf,
+              onDownloadPng,
+              onDownloadSvg,
+            }}
+            showWikiTreeMenus={sourceSpec?.source === DataSourceEnum.WIKITREE}
+          />
+        )}
+      />
+      <Switch>
+        <Route exact path="/" component={Intro} />
+        <Route exact path="/view" render={renderMainArea} />
+        <Redirect to={'/'} />
+      </Switch>
+    </>
+  );
 }
 
 export const App = injectIntl(AppComponent);
