@@ -11,10 +11,11 @@ import {IndiInfo} from 'topola';
 import {Intro} from './intro';
 import {Loader, Message, Portal, Tab} from 'semantic-ui-react';
 import {Media} from './util/media';
-import {Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
+import {Redirect, Route, Switch} from 'react-router-dom';
 import {TopBar} from './menu/top_bar';
 import {TopolaData} from './util/gedcom_util';
 import {useEffect, useState} from 'react';
+import {useHistory, useLocation} from 'react-router';
 import {
   Chart,
   ChartType,
@@ -104,7 +105,7 @@ interface Arguments {
   selection?: IndiInfo;
   chartType: ChartType;
   standalone: boolean;
-  freezeAnimation?: boolean;
+  freezeAnimation: boolean;
   showSidePanel: boolean;
   config: Config;
 }
@@ -171,20 +172,7 @@ function getArguments(location: H.Location<any>): Arguments {
   };
 }
 
-/**
- * Returs true if the changes object has values that are different than those
- * in state.
- */
-function hasUpdatedValues<T>(state: T, changes: Partial<T> | undefined) {
-  if (!changes) {
-    return false;
-  }
-  return Object.entries(changes).some(
-    ([key, value]) => value !== undefined && state[key] !== value,
-  );
-}
-
-export function App(props: RouteComponentProps) {
+export function App() {
   /** State of the application. */
   const [state, setState] = useState<AppState>(AppState.INITIAL);
   /** Loaded data. */
@@ -208,6 +196,8 @@ export function App(props: RouteComponentProps) {
   const [config, setConfig] = useState(DEFALUT_CONFIG);
 
   const intl = useIntl();
+  const history = useHistory();
+  const location = useLocation();
 
   /** Sets the state with a new individual selection and chart type. */
   function updateDisplay(newSelection: IndiInfo) {
@@ -296,17 +286,17 @@ export function App(props: RouteComponentProps) {
 
   useEffect(() => {
     (async () => {
-      if (props.location.pathname !== '/view') {
+      if (location.pathname !== '/view') {
         if (state !== AppState.INITIAL) {
           setState(AppState.INITIAL);
         }
         return;
       }
 
-      const args = getArguments(props.location);
+      const args = getArguments(location);
 
       if (!args.sourceSpec) {
-        props.history.replace({pathname: '/'});
+        history.replace({pathname: '/'});
         return;
       }
 
@@ -321,6 +311,7 @@ export function App(props: RouteComponentProps) {
         setSelection(args.selection);
         setStandalone(args.standalone);
         setChartType(args.chartType);
+        setFreezeAnimation(args.freezeAnimation);
         setConfig(args.config);
         try {
           const data = await loadData(args.sourceSpec, args.selection);
@@ -371,13 +362,12 @@ export function App(props: RouteComponentProps) {
   });
 
   function updateUrl(args: queryString.ParsedQuery<any>) {
-    const location = props.location;
     const search = queryString.parse(location.search);
     for (const key in args) {
       search[key] = args[key];
     }
     location.search = queryString.stringify(search);
-    props.history.push(location);
+    history.push(location);
   }
 
   /**
@@ -516,15 +506,14 @@ export function App(props: RouteComponentProps) {
   return (
     <>
       <Route
-        render={(props: RouteComponentProps) => (
+        render={() => (
           <TopBar
-            {...props}
             data={data?.chartData}
             allowAllRelativesChart={
               sourceSpec?.source !== DataSourceEnum.WIKITREE
             }
             showingChart={
-              props.history.location.pathname === '/view' &&
+              history.location.pathname === '/view' &&
               (state === AppState.SHOWING_CHART ||
                 state === AppState.LOADING_MORE)
             }

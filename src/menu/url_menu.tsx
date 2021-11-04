@@ -3,18 +3,19 @@ import {analyticsEvent} from '../util/analytics';
 import {Button, Form, Header, Icon, Input, Modal} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {MenuItem, MenuType} from './menu_item';
-import {RouteComponentProps} from 'react-router-dom';
 import {useEffect, useRef, useState} from 'react';
+import {useHistory} from 'react-router';
 
 interface Props {
   menuType: MenuType;
 }
 
 /** Displays and handles the "Open URL" menu. */
-export function UrlMenu(props: RouteComponentProps & Props) {
+export function UrlMenu(props: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [url, setUrl] = useState('');
   const inputRef = useRef<Input>(null);
+  const history = useHistory();
 
   useEffect(() => {
     if (dialogOpen) {
@@ -28,7 +29,7 @@ export function UrlMenu(props: RouteComponentProps & Props) {
     setDialogOpen(false);
     if (url) {
       analyticsEvent('url_selected');
-      props.history.push({
+      history.push({
         pathname: '/view',
         search: queryString.stringify({url}),
       });

@@ -5,10 +5,10 @@ import {IndiInfo, JsonGedcomData} from 'topola';
 import {Link} from 'react-router-dom';
 import {Media} from '../util/media';
 import {MenuType} from './menu_item';
-import {RouteComponentProps} from 'react-router-dom';
 import {SearchBar} from './search';
 import {UploadMenu} from './upload_menu';
 import {UrlMenu} from './url_menu';
+import {useHistory, useLocation} from 'react-router';
 import {WikiTreeLoginMenu, WikiTreeMenu} from './wikitree_menu';
 
 enum ScreenSize {
@@ -37,14 +37,16 @@ interface Props {
   showWikiTreeMenus: boolean;
 }
 
-export function TopBar(props: RouteComponentProps & Props) {
+export function TopBar(props: Props) {
+  const history = useHistory();
+  const location = useLocation();
+
   function changeView(view: string) {
-    const location = props.location;
     const search = queryString.parse(location.search);
     if (search.view !== view) {
       search.view = view;
       location.search = queryString.stringify(search);
-      props.history.push(location);
+      history.push(location);
     }
   }
 

@@ -5,24 +5,20 @@ import {Button, Form, Header, Input, Modal} from 'semantic-ui-react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import {getLoggedInUserName} from '../datasource/wikitree';
 import {MenuItem, MenuType} from './menu_item';
-import {RouteComponentProps} from 'react-router-dom';
 import {useEffect, useRef, useState} from 'react';
-
-enum WikiTreeLoginState {
-  UNKNOWN,
-  NOT_LOGGED_IN,
-  LOGGED_IN,
-}
+import {useHistory, useLocation} from 'react-router';
 
 interface Props {
   menuType: MenuType;
 }
 
 /** Displays and handles the "Select WikiTree ID" menu. */
-export function WikiTreeMenu(props: RouteComponentProps & Props) {
+export function WikiTreeMenu(props: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [wikiTreeId, setWikiTreeId] = useState('');
   const inputRef = useRef<Input>(null);
+  const history = useHistory();
+  const location = useLocation();
 
   useEffect(() => {
     if (dialogOpen) {
@@ -38,10 +34,10 @@ export function WikiTreeMenu(props: RouteComponentProps & Props) {
       return;
     }
     analyticsEvent('wikitree_id_selected');
-    const search = queryString.parse(props.location.search);
+    const search = queryString.parse(location.search);
     const standalone =
       search.standalone !== undefined ? search.standalone : true;
-    props.history.push({
+    history.push({
       pathname: '/view',
       search: queryString.stringify({
         indi: wikiTreeId,

@@ -4,8 +4,8 @@ import {analyticsEvent} from '../util/analytics';
 import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {MenuType} from './menu_item';
-import {RouteComponentProps} from 'react-router-dom';
 import {SyntheticEvent} from 'react';
+import {useHistory, useLocation} from 'react-router';
 
 function loadFileAsText(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -27,7 +27,10 @@ interface Props {
 }
 
 /** Displays and handles the "Open file" menu. */
-export function UploadMenu(props: RouteComponentProps & Props) {
+export function UploadMenu(props: Props) {
+  const history = useHistory();
+  const location = useLocation();
+
   async function handleUpload(event: SyntheticEvent<HTMLInputElement>) {
     const files = (event.target as HTMLInputElement).files;
     if (!files || !files.length) {
@@ -68,9 +71,8 @@ export function UploadMenu(props: RouteComponentProps & Props) {
 
     // Use history.replace() when reuploading the same file and history.push() when loading
     // a new file.
-    const search = queryString.parse(props.location.search);
-    const historyPush =
-      search.file === hash ? props.history.replace : props.history.push;
+    const search = queryString.parse(location.search);
+    const historyPush = search.file === hash ? history.replace : history.push;
 
     historyPush({
       pathname: '/view',
