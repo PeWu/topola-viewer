@@ -3,7 +3,7 @@ import {compareDates, translateDate} from '../util/date_util';
 import {DateOrRange, getDate} from 'topola';
 import {dereference, GedcomData, getData} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
-import {injectIntl, IntlShape, WrappedComponentProps} from 'react-intl';
+import {IntlShape, useIntl} from 'react-intl';
 import {MultilineText} from './multiline-text';
 import {TranslatedTag} from './translated-tag';
 
@@ -184,13 +184,13 @@ function toFamilyEvents(
   });
 }
 
-function EventsComponent(props: Props & WrappedComponentProps) {
+export function Events(props: Props) {
+  const intl = useIntl();
+
   const events = flatMap(EVENT_TAGS, (tag) =>
     props.entries
       .filter((entry) => entry.tag === tag)
-      .map((eventEntry) =>
-        toEvent(eventEntry, props.gedcom, props.indi, props.intl),
-      )
+      .map((eventEntry) => toEvent(eventEntry, props.gedcom, props.indi, intl))
       .flatMap((events) => events)
       .sort((event1, event2) => compareDates(event1.date, event2.date))
       .map((event) => eventDetails(event)),
@@ -208,5 +208,3 @@ function EventsComponent(props: Props & WrappedComponentProps) {
   }
   return null;
 }
-
-export const Events = injectIntl(EventsComponent);

@@ -5,7 +5,7 @@ import {Changelog} from './changelog';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {Details} from './details/details';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
-import {FormattedMessage, injectIntl, WrappedComponentProps} from 'react-intl';
+import {FormattedMessage, useIntl} from 'react-intl';
 import {getI18nMessage} from './util/error_i18n';
 import {IndiInfo} from 'topola';
 import {Intro} from './intro';
@@ -184,7 +184,7 @@ function hasUpdatedValues<T>(state: T, changes: Partial<T> | undefined) {
   );
 }
 
-function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
+export function App(props: RouteComponentProps) {
   /** State of the application. */
   const [state, setState] = useState<AppState>(AppState.INITIAL);
   /** Loaded data. */
@@ -207,6 +207,8 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
   const [freezeAnimation, setFreezeAnimation] = useState(false);
   const [config, setConfig] = useState(DEFALUT_CONFIG);
 
+  const intl = useIntl();
+
   /** Sets the state with a new individual selection and chart type. */
   function updateDisplay(newSelection: IndiInfo) {
     if (
@@ -226,7 +228,7 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
 
   const uploadedDataSource = new UploadedDataSource();
   const gedcomUrlDataSource = new GedcomUrlDataSource();
-  const wikiTreeDataSource = new WikiTreeDataSource(props.intl);
+  const wikiTreeDataSource = new WikiTreeDataSource(intl);
   const embeddedDataSource = new EmbeddedDataSource();
 
   function isNewData(newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) {
@@ -328,7 +330,7 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
           setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
         } catch (error: any) {
-          setErrorMessage(getI18nMessage(error, props.intl));
+          setErrorMessage(getI18nMessage(error, intl));
         }
       } else if (
         state === AppState.SHOWING_CHART ||
@@ -346,7 +348,7 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
         updateDisplay(newSelection);
         if (loadMoreFromWikitree) {
           try {
-            const data = await loadWikiTree(args.selection!.id, props.intl);
+            const data = await loadWikiTree(args.selection!.id, intl);
             const newSelection = getSelection(data.chartData, args.selection);
             setData(data);
             setSelection(newSelection);
@@ -354,7 +356,7 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
           } catch (error: any) {
             setState(AppState.SHOWING_CHART);
             displayErrorPopup(
-              props.intl.formatMessage(
+              intl.formatMessage(
                 {
                   id: 'error.failed_wikitree_load_more',
                   defaultMessage: 'Failed to load data from WikiTree. {error}',
@@ -410,7 +412,7 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
       await downloadPdf();
     } catch (e) {
       displayErrorPopup(
-        props.intl.formatMessage({
+        intl.formatMessage({
           id: 'error.failed_pdf',
           defaultMessage:
             'Failed to generate PDF file.' +
@@ -426,7 +428,7 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
       await downloadPng();
     } catch (e) {
       displayErrorPopup(
-        props.intl.formatMessage({
+        intl.formatMessage({
           id: 'error.failed_png',
           defaultMessage:
             'Failed to generate PNG file.' +
@@ -451,7 +453,7 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
       case AppState.LOADING_MORE:
         const sidePanelTabs = [
           {
-            menuItem: props.intl.formatMessage({
+            menuItem: intl.formatMessage({
               id: 'tab.info',
               defaultMessage: 'Info',
             }),
@@ -460,7 +462,7 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
             ),
           },
           {
-            menuItem: props.intl.formatMessage({
+            menuItem: intl.formatMessage({
               id: 'tab.settings',
               defaultMessage: 'Settings',
             }),
@@ -546,5 +548,3 @@ function AppComponent(props: RouteComponentProps & WrappedComponentProps) {
     </>
   );
 }
-
-export const App = injectIntl(AppComponent);

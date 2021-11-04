@@ -1,6 +1,6 @@
 import {ChartColors} from './config';
-import {injectIntl, WrappedComponentProps} from 'react-intl';
 import {interpolateNumber} from 'd3-interpolate';
+import {IntlShape, useIntl} from 'react-intl';
 import {max, min} from 'd3-array';
 import {Media} from './util/media';
 import {saveAs} from 'file-saver';
@@ -259,8 +259,6 @@ export interface ChartProps {
   colors?: ChartColors;
 }
 
-type ChartComponentProps = ChartProps & WrappedComponentProps;
-
 class ChartWrapper {
   private chart?: ChartHandle;
   /** Animation is in progress. */
@@ -270,7 +268,7 @@ class ChartWrapper {
   /** The d3 zoom behavior object. */
   private zoomBehavior?: ZoomBehavior<Element, any>;
   /** Props that will be used for rerendering. */
-  private rerenderProps?: ChartComponentProps;
+  private rerenderProps?: ChartProps;
 
   zoom(factor: number) {
     const parent = select('#svgContainer') as Selection<Element, any, any, any>;
@@ -283,7 +281,8 @@ class ChartWrapper {
    * animation is performed.
    */
   renderChart(
-    props: ChartComponentProps,
+    props: ChartProps,
+    intl: IntlShape,
     args: {initialRender: boolean; resetPosition: boolean} = {
       initialRender: false,
       resetPosition: false,
@@ -312,7 +311,7 @@ class ChartWrapper {
         colors: chartColors.get(props.colors!),
         animate: true,
         updateSvgSize: false,
-        locale: props.intl.locale,
+        locale: intl.locale,
       });
     } else {
       this.chart!.setData(props.data);
@@ -391,7 +390,7 @@ class ChartWrapper {
         this.rerenderRequired = false;
         // Use `this.rerenderProps` instead of the props in scope because
         // the props may have been updated in the meantime.
-        this.renderChart(this.rerenderProps!, {
+        this.renderChart(this.rerenderProps!, intl, {
           initialRender: false,
           resetPosition: false,
         });
@@ -408,9 +407,10 @@ function usePrevious<T>(value: T): T | undefined {
   return ref.current;
 }
 
-function ChartComponent(props: ChartComponentProps) {
+export function Chart(props: ChartProps) {
   const chartWrapper = useRef(new ChartWrapper());
   const prevProps = usePrevious(props);
+  const intl = useIntl();
 
   useEffect(() => {
     if (prevProps) {
@@ -418,9 +418,12 @@ function ChartComponent(props: ChartComponentProps) {
         props.chartType !== prevProps?.chartType ||
         props.colors !== prevProps?.colors;
       const resetPosition = props.chartType !== prevProps?.chartType;
-      chartWrapper.current.renderChart(props, {initialRender, resetPosition});
+      chartWrapper.current.renderChart(props, intl, {
+        initialRender,
+        resetPosition,
+      });
     } else {
-      chartWrapper.current.renderChart(props, {
+      chartWrapper.current.renderChart(props, intl, {
         initialRender: true,
         resetPosition: true,
       });
@@ -449,5 +452,3 @@ function ChartComponent(props: ChartComponentProps) {
     </div>
   );
 }
-
-export const Chart = injectIntl(ChartComponent);

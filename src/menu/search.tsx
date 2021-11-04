@@ -3,10 +3,10 @@ import {analyticsEvent} from '../util/analytics';
 import {buildSearchIndex, SearchIndex, SearchResult} from './search_index';
 import {formatDateOrRange} from '../util/date_util';
 import {IndiInfo, JsonGedcomData} from 'topola';
-import {injectIntl, WrappedComponentProps} from 'react-intl';
 import {JsonIndi} from 'topola';
 import {Search, SearchResultProps} from 'semantic-ui-react';
 import {useEffect, useRef, useState} from 'react';
+import {useIntl} from 'react-intl';
 
 function getNameLine(result: SearchResult) {
   const name = [result.indi.firstName, result.indi.lastName].join(' ').trim();
@@ -27,14 +27,15 @@ interface Props {
 }
 
 /** Displays and handles the search box in the top bar. */
-function SearchBarComponent(props: WrappedComponentProps & Props) {
+export function SearchBar(props: Props) {
   const [searchResults, setSearchResults] = useState<SearchResultProps[]>([]);
   const [searchString, setSearchString] = useState('');
   const searchIndex = useRef<SearchIndex>();
+  const intl = useIntl();
 
   function getDescriptionLine(indi: JsonIndi) {
-    const birthDate = formatDateOrRange(indi.birth, props.intl);
-    const deathDate = formatDateOrRange(indi.death, props.intl);
+    const birthDate = formatDateOrRange(indi.birth, intl);
+    const deathDate = formatDateOrRange(indi.death, intl);
     if (!deathDate) {
       return birthDate;
     }
@@ -86,11 +87,11 @@ function SearchBarComponent(props: WrappedComponentProps & Props) {
       onSearchChange={(_, data) => onChange(data.value!)}
       onResultSelect={(_, data) => handleResultSelect(data.result.id)}
       results={searchResults}
-      noResultsMessage={props.intl.formatMessage({
+      noResultsMessage={intl.formatMessage({
         id: 'menu.search.no_results',
         defaultMessage: 'No results found',
       })}
-      placeholder={props.intl.formatMessage({
+      placeholder={intl.formatMessage({
         id: 'menu.search.placeholder',
         defaultMessage: 'Search for people',
       })}
@@ -100,4 +101,3 @@ function SearchBarComponent(props: WrappedComponentProps & Props) {
     />
   );
 }
-export const SearchBar = injectIntl(SearchBarComponent);

@@ -2,7 +2,7 @@ import * as queryString from 'query-string';
 import wikitreeLogo from './wikitree.png';
 import {analyticsEvent} from '../util/analytics';
 import {Button, Form, Header, Input, Modal} from 'semantic-ui-react';
-import {FormattedMessage, injectIntl, WrappedComponentProps} from 'react-intl';
+import {FormattedMessage, useIntl} from 'react-intl';
 import {getLoggedInUserName} from '../datasource/wikitree';
 import {MenuItem, MenuType} from './menu_item';
 import {RouteComponentProps} from 'react-router-dom';
@@ -153,9 +153,10 @@ export function WikiTreeMenu(props: RouteComponentProps & Props) {
 }
 
 /** Displays and handles the "Log in to WikiTree" menu. */
-function WikiTreeLoginMenuComponent(props: WrappedComponentProps & Props) {
+export function WikiTreeLoginMenu(props: Props) {
   const formRef = useRef<HTMLFormElement>(null);
   const returnUrlRef = useRef<HTMLInputElement>(null);
+  const intl = useIntl();
 
   /**
    * Redirect to the WikiTree Apps login page with a return URL pointing to
@@ -194,7 +195,7 @@ function WikiTreeLoginMenuComponent(props: WrappedComponentProps & Props) {
       </>
     );
   }
-  const tooltip = props.intl.formatMessage(
+  const tooltip = intl.formatMessage(
     {
       id: 'menu.wikitree_popup_username',
       defaultMessage: 'Logged in to WikiTree as {username}',
@@ -211,4 +212,3 @@ function WikiTreeLoginMenuComponent(props: WrappedComponentProps & Props) {
     </MenuItem>
   );
 }
-export const WikiTreeLoginMenu = injectIntl(WikiTreeLoginMenuComponent);
