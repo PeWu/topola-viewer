@@ -18,3 +18,5 @@ jobs:
     - run: npm test
     - run: npm run cy:start-and-run
     - run: npm run deploy
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
