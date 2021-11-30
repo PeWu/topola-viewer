@@ -17,6 +17,8 @@ jobs:
     - run: npm run build
     - run: npm test
     - run: npm run cy:start-and-run
+    - name: Install lftp
+      run: sudo apt-get install -y lftp
     - run: npm run deploy-wikitree
       env:
         LFTP_PASSWORD: ${{ secrets.WIKITREE_PASSWORD }}
