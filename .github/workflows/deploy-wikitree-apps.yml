@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to WikiTree Apps
 
 on: workflow_dispatch
 
@@ -17,9 +17,6 @@ jobs:
     - run: npm run build
     - run: npm test
     - run: npm run cy:start-and-run
-    - name: Deploy
-      run: |
-        git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-        npm run deploy -- -u "github-actions-bot <support+actions@github.com>"
+    - run: npm run deploy-wikitree
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        LFTP_PASSWORD: ${{ secrets.WIKITREE_PASSWORD }}
