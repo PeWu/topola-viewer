@@ -20,7 +20,9 @@ jobs:
     - name: Install lftp
       run: sudo apt-get install -y lftp
     - name: Set up ssh
-      run: echo 'apps.wikitree.com,18.233.253.116 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCKTIpheJq3YwWPqfKIMP+y4/ctpZwBcsEE0OoE4LYDbDckV57kGICKxuQi76t5sJIOTO9zhbZy5wbXNDIB1REM=' >> ~/.ssh/known_hosts
+      run: |
+        mkdir ~/.ssh
+        echo 'apps.wikitree.com,18.233.253.116 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCKTIpheJq3YwWPqfKIMP+y4/ctpZwBcsEE0OoE4LYDbDckV57kGICKxuQi76t5sJIOTO9zhbZy5wbXNDIB1REM=' >> ~/.ssh/known_hosts
     - run: npm run deploy-wikitree
       env:
         LFTP_PASSWORD: ${{ secrets.WIKITREE_PASSWORD }}
