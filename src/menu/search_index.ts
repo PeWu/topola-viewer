@@ -96,7 +96,7 @@ class LunrSearchIndex implements SearchIndex {
     const query = input
       .split(' ')
       .filter((s) => !!s)
-      .map((s) => `+${s}*`)
+      .map((s) => `${s} ${s}*`)
       .join(' ');
     const results = this.index!.search(query);
     return results
