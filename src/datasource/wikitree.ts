@@ -680,14 +680,15 @@ function famToGedcom(fam: JsonFam): GedcomEntry {
       tree: [],
     });
   }
-  (fam.children || []).forEach(child =>
+  (fam.children || []).forEach((child) =>
     record.tree.push({
       level: 1,
       pointer: child,
       tag: 'CHILD',
       data: '',
       tree: [],
-    }));
+    }),
+  );
   if (fam.marriage) {
     record.tree.push({
       level: 1,

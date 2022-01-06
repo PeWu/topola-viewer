@@ -19,16 +19,16 @@ export async function getChangelog(maxVersions: number, seenVersion?: string) {
     ? Date.parse(seenVersion.slice(0, 10))
     : 0;
 
-  const changes = process.env
-    .REACT_APP_CHANGELOG!.split('##')
-    .slice(1, maxVersions + 1)
-    .map((notes) => {
-      const date = Date.parse(notes.split('\n')[0].trim());
-      return {date, notes: '####' + notes};
-    })
-    .filter((release) => release.date > seenVersionDate)
-    .map((release) => release.notes)
-    .join('\n');
+  const changes =
+    process.env.REACT_APP_CHANGELOG?.split('##')
+      .slice(1, maxVersions + 1)
+      .map((notes) => {
+        const date = Date.parse(notes.split('\n')[0].trim());
+        return {date, notes: '####' + notes};
+      })
+      .filter((release) => release.date > seenVersionDate)
+      .map((release) => release.notes)
+      .join('\n') || '';
 
   const parsedChanges = await unified()
     .use(remarkParse)
