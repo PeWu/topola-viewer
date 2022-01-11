@@ -14,19 +14,8 @@ function formatDate(date: TopolaDate, intl: IntlShape) {
   if (!hasDay && !hasMonth && !hasYear) {
     return date.text || '';
   }
-  const dateObject = new Date(
-    hasYear ? date.year! : 0,
-    hasMonth ? date.month! - 1 : 0,
-    hasDay ? date.day! : 1,
-  );
-
-  const qualifier = date.qualifier && date.qualifier.toLowerCase();
-  const translatedQualifier =
-    qualifier &&
-    intl.formatMessage({
-      id: `date.${qualifier}`,
-      defaultMessage: DATE_QUALIFIERS.get(qualifier) || qualifier,
-    });
+  const dateObject = toDateObject(date);
+  const translatedQualifier = formatDateQualifier(date.qualifier, intl);
 
   const formatOptions: Intl.DateTimeFormatOptions = {
     day: hasDay ? 'numeric' : undefined,
@@ -76,6 +65,22 @@ function formatDateRage(dateRange: DateRange, intl: IntlShape) {
   return '';
 }
 
+export function formatDateQualifier(
+  qualifier: string | undefined,
+  intl: IntlShape,
+): string {
+  const lowerCaseQualifier = qualifier && qualifier.toLowerCase();
+  return (
+    (lowerCaseQualifier &&
+      intl.formatMessage({
+        id: `date.${lowerCaseQualifier}`,
+        defaultMessage:
+          DATE_QUALIFIERS.get(lowerCaseQualifier) || lowerCaseQualifier,
+      })) ||
+    ''
+  );
+}
+
 /** Formats a DateOrRange object. */
 export function formatDateOrRange(
   dateOrRange: DateOrRange | undefined,
@@ -98,19 +103,10 @@ export function translateDate(gedcomDate: string, intl: IntlShape): string {
   return formatDateOrRange(getDate(gedcomDate), intl);
 }
 
-/** Compares a dates given in GEDCOM format. */
-export function compareDates(
-  firstDateOrRange: DateOrRange | undefined,
-  secondDateOrRange: DateOrRange | undefined,
+export function compareTopolaDates(
+  date1: TopolaDate | undefined,
+  date2: TopolaDate | undefined,
 ): number {
-  const date1 =
-    firstDateOrRange &&
-    (firstDateOrRange.date ||
-      (firstDateOrRange.dateRange && firstDateOrRange.dateRange.from));
-  const date2 =
-    secondDateOrRange &&
-    (secondDateOrRange.date ||
-      (secondDateOrRange.dateRange && secondDateOrRange.dateRange.from));
   if (!date1 || !date1.year || !date2 || !date2.year) {
     return 0;
   }
@@ -127,4 +123,64 @@ export function compareDates(
     return date1.month - date2.month;
   }
   return 0;
+}
+
+/** Compares a dates given in GEDCOM format. */
+export function compareDates(
+  firstDateOrRange: DateOrRange | undefined,
+  secondDateOrRange: DateOrRange | undefined,
+): number {
+  const date1 =
+    firstDateOrRange &&
+    (firstDateOrRange.date ||
+      (firstDateOrRange.dateRange &&
+        (firstDateOrRange.dateRange.from || firstDateOrRange.dateRange.to)));
+  const date2 =
+    secondDateOrRange &&
+    (secondDateOrRange.date ||
+      (secondDateOrRange.dateRange &&
+        (secondDateOrRange.dateRange.from || secondDateOrRange.dateRange.to)));
+  return compareTopolaDates(date1, date2);
+}
+
+export function areDateRangesOverlapped(
+  range1: DateRange,
+  range2: DateRange,
+): boolean {
+  return (
+    compareTopolaDates(range1.from, range2.to) <= 0 &&
+    compareTopolaDates(range1.to, range2.from) >= 0
+  );
+}
+
+export function isValidDateOrRange(
+  dateOrRange: DateOrRange | undefined,
+): boolean {
+  // invalid when range is closed and start is before end
+  if (isDateRangeClosed(dateOrRange?.dateRange)) {
+    return (
+      compareTopolaDates(
+        dateOrRange?.dateRange?.from,
+        dateOrRange?.dateRange?.to,
+      ) <= 0
+    );
+  }
+  //valid when there is exact date or date range has start or end defined
+  return !!(
+    dateOrRange?.date ||
+    dateOrRange?.dateRange?.from ||
+    dateOrRange?.dateRange?.to
+  );
+}
+
+export function isDateRangeClosed(range: DateRange | undefined): boolean {
+  return !!(range?.from && range?.to);
+}
+
+export function toDateObject(date: TopolaDate): Date {
+  return new Date(
+    date.year !== undefined ? date.year! : 0,
+    date.month !== undefined ? date.month! - 1 : 0,
+    date.day !== undefined ? date.day! : 1,
+  );
 }
