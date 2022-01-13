@@ -19,7 +19,7 @@ function GedcomLink(props: {url: string; text: string}) {
 }
 
 function formatBuildDate(dateString: string) {
-  return dateString.slice(0, 16);
+  return dateString?.slice(0, 16) || '';
 }
 
 function Contents() {
