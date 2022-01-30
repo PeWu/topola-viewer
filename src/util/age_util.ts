@@ -115,10 +115,21 @@ function calcDateDifferenceInYears(
   const firstDateObject = toDateObject(firstDate);
   const secondDateObject = toDateObject(secondDate);
 
-  const dateDiff = new Date(
-    secondDateObject.valueOf() - firstDateObject.valueOf(),
-  );
-  return Math.abs(dateDiff.getUTCFullYear() - 1970);
+  const startYear = firstDateObject.getUTCFullYear();
+
+  let yearDiff = secondDateObject.getUTCFullYear() - startYear;
+  let monthDiff = secondDateObject.getUTCMonth() - firstDateObject.getUTCMonth();
+  if (monthDiff < 0) {
+    yearDiff--;
+    monthDiff += 12;
+  }
+  const dayDiff = secondDateObject.getUTCDate() - firstDateObject.getUTCDate();
+  if (dayDiff < 0) {
+    if (monthDiff <= 0) {
+      yearDiff--;
+    }
+  }
+  return Math.abs(yearDiff);
 }
 
 export function calcAge(
