@@ -433,7 +433,7 @@ export function Chart(props: ChartProps) {
         resetPosition: true,
       });
     }
-  }, [props.data, props.selection, props.chartType, props.colors]);
+  });
 
   return (
     <div id="svgContainer">
