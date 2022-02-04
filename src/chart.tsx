@@ -269,6 +269,7 @@ class ChartWrapper {
   private zoomBehavior?: ZoomBehavior<Element, any>;
   /** Props that will be used for rerendering. */
   private rerenderProps?: ChartProps;
+  private rerenderResetPosition?: boolean;
 
   zoom(factor: number) {
     const parent = select('#svgContainer') as Selection<Element, any, any, any>;
@@ -292,6 +293,7 @@ class ChartWrapper {
     if (!args.initialRender && this.animating) {
       this.rerenderRequired = true;
       this.rerenderProps = props;
+      this.rerenderResetPosition = args.resetPosition;
       return;
     }
 
@@ -392,7 +394,7 @@ class ChartWrapper {
         // the props may have been updated in the meantime.
         this.renderChart(this.rerenderProps!, intl, {
           initialRender: false,
-          resetPosition: false,
+          resetPosition: !!this.rerenderResetPosition,
         });
       }
     });
@@ -417,7 +419,10 @@ export function Chart(props: ChartProps) {
       const initialRender =
         props.chartType !== prevProps?.chartType ||
         props.colors !== prevProps?.colors;
-      const resetPosition = props.chartType !== prevProps?.chartType;
+      const resetPosition =
+        props.chartType !== prevProps?.chartType ||
+        props.data !== prevProps.data ||
+        props.selection !== prevProps.selection;
       chartWrapper.current.renderChart(props, intl, {
         initialRender,
         resetPosition,
@@ -428,7 +433,7 @@ export function Chart(props: ChartProps) {
         resetPosition: true,
       });
     }
-  });
+  }, [props.data, props.selection, props.chartType, props.colors]);
 
   return (
     <div id="svgContainer">
