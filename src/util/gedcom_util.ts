@@ -270,3 +270,15 @@ export function getSoftware(head: GedcomEntry): string | null {
     sour && sour.tree && sour.tree.find((entry) => entry.tag === 'NAME');
   return (name && name.data) || null;
 }
+
+export function getName(person: GedcomEntry): string | undefined {
+  const names = person.tree.filter((subEntry) => subEntry.tag === 'NAME');
+  const notMarriedName = names.find(
+    (subEntry) =>
+      subEntry.tree.filter(
+        (nameEntry) => nameEntry.tag === 'TYPE' && nameEntry.data === 'married',
+      ).length === 0,
+  );
+  const name = notMarriedName || names[0];
+  return name?.data.replace(/\//g, '');
+}

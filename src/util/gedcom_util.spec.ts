@@ -1,4 +1,4 @@
-import {normalizeGedcom} from './gedcom_util';
+import {getName, normalizeGedcom} from './gedcom_util';
 
 describe('normalizeGedcom()', () => {
   it('sorts children', () => {
@@ -66,5 +66,75 @@ describe('normalizeGedcom()', () => {
       'F2',
       'F1',
     ]);
+  });
+});
+
+describe('getName()', () => {
+  it('returns undefined with no name available', () => {
+    const person = {
+      level: 1,
+      pointer: '',
+      tag: 'INDI',
+      data: '',
+      tree: [],
+    };
+    expect(getName(person)).toBe(undefined);
+  });
+
+  it('returns first name available', () => {
+    const person = {
+      level: 1,
+      pointer: '',
+      tag: 'INDI',
+      data: '',
+      tree: [
+        {level: 2, pointer: '', tag: 'NAME', data: 'First /Name/', tree: []},
+        {level: 2, pointer: '', tag: 'NAME', data: 'Second /Name/', tree: []},
+      ],
+    };
+    expect(getName(person)).toBe('First Name');
+  });
+
+  it('prefers a name without TYPE=married', () => {
+    const person = {
+      level: 1,
+      pointer: '',
+      tag: 'INDI',
+      data: '',
+      tree: [
+        {
+          level: 2,
+          pointer: '',
+          tag: 'NAME',
+          data: 'First /Name/',
+          tree: [
+            {level: 3, pointer: '', tag: 'TYPE', data: 'married', tree: []},
+          ],
+        },
+        {level: 2, pointer: '', tag: 'NAME', data: 'Second /Name/', tree: []},
+      ],
+    };
+    expect(getName(person)).toBe('Second Name');
+  });
+
+  it('picks a TYPE=married name if no other is available', () => {
+    const person = {
+      level: 1,
+      pointer: '',
+      tag: 'INDI',
+      data: '',
+      tree: [
+        {
+          level: 2,
+          pointer: '',
+          tag: 'NAME',
+          data: 'Only /Name/',
+          tree: [
+            {level: 3, pointer: '', tag: 'TYPE', data: 'married', tree: []},
+          ],
+        },
+      ],
+    };
+    expect(getName(person)).toBe('Only Name');
   });
 });
