@@ -1,7 +1,7 @@
 import * as queryString from 'query-string';
 import flatMap from 'array.prototype.flatmap';
 import {calcAge} from '../util/age_util';
-import {compareDates, translateDate} from '../util/date_util';
+import {compareDates, formatDateOrRange} from '../util/date_util';
 import {DateOrRange, getDate} from 'topola';
 import {dereference, GedcomData, getData, getName} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
@@ -37,13 +37,13 @@ interface Props {
   entries: GedcomEntry[];
 }
 
-interface Event {
+interface EventData {
   type: string;
-  date: DateOrRange | undefined;
-  header: JSX.Element;
-  subHeader: JSX.Element | null;
-  place: JSX.Element | null;
-  notes: JSX.Element | null;
+  date?: DateOrRange;
+  age?: string;
+  personLink?: GedcomEntry;
+  place?: string[];
+  notes: string[][];
 }
 
 const EVENT_TAGS = [
@@ -59,111 +59,65 @@ const EVENT_TAGS = [
 
 const FAMILY_EVENT_TAGS = ['MARR', 'DIV'];
 
-function eventHeader(tag: string, date: GedcomEntry | null, intl: IntlShape) {
+function EventHeader(props: {event: EventData}) {
+  const intl = useIntl();
   return (
     <div>
       <span style={{textTransform: 'uppercase'}} className="ui small header">
-        <TranslatedTag tag={tag} />
+        <TranslatedTag tag={props.event.type} />
       </span>
-      {date && date.data ? (
+      {props.event.date ? (
         <span className="ui sub header right floated">
-          {translateDate(date.data, intl)}
+          {formatDateOrRange(props.event.date, intl)}
         </span>
       ) : null}
     </div>
   );
 }
 
-function eventFamilyDetails(
-  indi: string,
-  familyEntry: GedcomEntry,
-  gedcom: GedcomData,
-) {
+function getSpouse(indi: string, familyEntry: GedcomEntry, gedcom: GedcomData) {
   const spouseReference = familyEntry.tree
     .filter((familySubEntry) => ['WIFE', 'HUSB'].includes(familySubEntry.tag))
     .find((familySubEntry) => !familySubEntry.data.includes(indi));
 
-  if (spouseReference) {
-    const spouse = dereference(
-      spouseReference,
-      gedcom,
-      (gedcom) => gedcom.indis,
-    );
-    return <PersonLink person={spouse} />;
+  if (!spouseReference) {
+    return undefined;
   }
-  return null;
+  return dereference(spouseReference, gedcom, (gedcom) => gedcom.indis);
 }
 
-function eventAdditionalDetails(
+function getAge(
   eventEntry: GedcomEntry,
   indi: string,
   gedcom: GedcomData,
   intl: IntlShape,
-) {
-  if (eventEntry.tag === 'DEAT') {
-    const deathDate = resolveDate(eventEntry);
-
-    const birthDate = gedcom.indis[indi].tree
-      .filter((indiSubEntry) => indiSubEntry.tag === 'BIRT')
-      .map((birthEvent) => resolveDate(birthEvent))
-      .find((topolaDate) => topolaDate);
-
-    if (birthDate && deathDate) {
-      return (
-        <div className="meta">
-          {calcAge(birthDate?.data, deathDate?.data, intl)}
-        </div>
-      );
-    }
+): string | undefined {
+  if (eventEntry.tag !== 'DEAT') {
+    return undefined;
   }
-  return null;
+  const deathDate = resolveDate(eventEntry);
+
+  const birthDate = gedcom.indis[indi].tree
+    .filter((indiSubEntry) => indiSubEntry.tag === 'BIRT')
+    .map((birthEvent) => resolveDate(birthEvent))
+    .find((topolaDate) => topolaDate);
+
+  if (!birthDate || !deathDate) {
+    return undefined;
+  }
+  return calcAge(birthDate?.data, deathDate?.data, intl);
 }
 
 function eventPlace(entry: GedcomEntry) {
   const place = entry.tree.find((subEntry) => subEntry.tag === 'PLAC');
-  if (place && place.data) {
-    return <div className="description">{getData(place)}</div>;
-  }
-  return null;
+  return place?.data ? getData(place) : undefined;
 }
 
-function eventNotes(entry: GedcomEntry, gedcom: GedcomData) {
-  const notes = entry.tree
+function eventNotes(entry: GedcomEntry, gedcom: GedcomData): string[][] {
+  return entry.tree
     .filter((subentry) => ['NOTE', 'TYPE'].includes(subentry.tag))
     .map((note) => dereference(note, gedcom, (gedcom) => gedcom.other))
-    .map((note) => noteDetails(note));
-
-  if (notes && notes.length) {
-    return (
-      <div className="description">
-        {notes.map((note, index) => (
-          <div key={index}>{note}</div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-}
-
-function noteDetails(entry: GedcomEntry) {
-  return (
-    <MultilineText
-      lines={getData(entry).map((line, index) => (
-        <i key={index}>{line}</i>
-      ))}
-    />
-  );
-}
-
-function eventDetails(event: Event) {
-  return (
-    <div className="content">
-      {event.header}
-      {event.subHeader}
-      {event.place}
-      {event.notes}
-    </div>
-  );
+    .map((note) => getData(note));
 }
 
 function toEvent(
@@ -171,9 +125,9 @@ function toEvent(
   gedcom: GedcomData,
   indi: string,
   intl: IntlShape,
-): Event[] {
+): EventData[] {
   if (entry.tag === 'FAMS') {
-    return toFamilyEvents(entry, gedcom, indi, intl);
+    return toFamilyEvents(entry, gedcom, indi);
   }
   return toIndiEvent(entry, gedcom, indi, intl);
 }
@@ -183,14 +137,13 @@ function toIndiEvent(
   gedcom: GedcomData,
   indi: string,
   intl: IntlShape,
-): Event[] {
+): EventData[] {
   const date = resolveDate(entry) || null;
   return [
     {
       date: date ? getDate(date.data) : undefined,
       type: entry.tag,
-      header: eventHeader(entry.tag, date, intl),
-      subHeader: eventAdditionalDetails(entry, indi, gedcom, intl),
+      age: getAge(entry, indi, gedcom, intl),
       place: eventPlace(entry),
       notes: eventNotes(entry, gedcom),
     },
@@ -205,8 +158,7 @@ function toFamilyEvents(
   entry: GedcomEntry,
   gedcom: GedcomData,
   indi: string,
-  intl: IntlShape,
-): Event[] {
+): EventData[] {
   const family = dereference(entry, gedcom, (gedcom) => gedcom.fams);
   return flatMap(FAMILY_EVENT_TAGS, (tag) =>
     family.tree.filter((entry) => entry.tag === tag),
@@ -215,12 +167,41 @@ function toFamilyEvents(
     return {
       date: date ? getDate(date.data) : undefined,
       type: familyMarriageEvent.tag,
-      header: eventHeader(familyMarriageEvent.tag, date, intl),
-      subHeader: eventFamilyDetails(indi, family, gedcom),
+      personLink: getSpouse(indi, family, gedcom),
       place: eventPlace(familyMarriageEvent),
       notes: eventNotes(familyMarriageEvent, gedcom),
     };
   });
+}
+
+function Event(props: {event: EventData}) {
+  return (
+    <div className="ui attached item">
+      <div className="content">
+        <EventHeader event={props.event} />
+        {!!props.event.age && <div className="meta">{props.event.age}</div>}
+        {!!props.event.personLink && (
+          <PersonLink person={props.event.personLink} />
+        )}
+        {!!props.event.place && (
+          <div className="description">{props.event.place}</div>
+        )}
+        {!!props.event.notes.length && (
+          <div className="description">
+            {props.event.notes.map((note, index) => (
+              <div key={index}>
+                <MultilineText
+                  lines={note.map((line, index) => (
+                    <i key={index}>{line}</i>
+                  ))}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function Events(props: Props) {
@@ -231,16 +212,13 @@ export function Events(props: Props) {
       .filter((entry) => entry.tag === tag)
       .map((eventEntry) => toEvent(eventEntry, props.gedcom, props.indi, intl))
       .flatMap((events) => events)
-      .sort((event1, event2) => compareDates(event1.date, event2.date))
-      .map((event) => eventDetails(event)),
+      .sort((event1, event2) => compareDates(event1.date, event2.date)),
   );
-  if (events && events.length) {
+  if (events.length) {
     return (
       <div className="ui segment divided items">
-        {events.map((eventElement, index) => (
-          <div className="ui attached item" key={index}>
-            {eventElement}
-          </div>
+        {events.map((event, index) => (
+          <Event event={event} key={index} />
         ))}
       </div>
     );
