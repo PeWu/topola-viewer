@@ -1,5 +1,9 @@
 # Changelog
 
+## 2022-04-06
+
+- Fixed logging in to WikiTree
+
 ## 2021-10-31
 
 - Show changelog in intro page and when an upgraded version is loaded
