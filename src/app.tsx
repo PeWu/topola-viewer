@@ -134,7 +134,7 @@ function getArguments(location: H.Location<any>): Arguments {
   if (getParam('source') === 'wikitree') {
     sourceSpec = {
       source: DataSourceEnum.WIKITREE,
-      authcode: getParam('?authcode'),
+      authcode: getParam('authcode'),
     };
   } else if (hash) {
     sourceSpec = {

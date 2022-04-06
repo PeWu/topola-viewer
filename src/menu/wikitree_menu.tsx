@@ -161,9 +161,8 @@ export function WikiTreeLoginMenu(props: Props) {
   function login() {
     const wikiTreeTopolaUrl =
       'https://apps.wikitree.com/apps/wiech13/topola-viewer';
-    // Append '&' because the login page appends '?authcode=...' to this URL.
-    // TODO: remove ?authcode if it is in the current URL.
-    const returnUrl = `${wikiTreeTopolaUrl}${window.location.hash}&`;
+    // TODO: remove authcode if it is in the current URL.
+    const returnUrl = `${wikiTreeTopolaUrl}${window.location.hash}`;
     returnUrlRef.current!.value = returnUrl;
     formRef.current!.submit();
   }
