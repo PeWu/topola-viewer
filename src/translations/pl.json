@@ -58,6 +58,11 @@
   "gedcom._UPD": "Ostatnia aktualizacja",
   "gedcom.MARR": "Małżeństwo",
   "gedcom.DIV": "Rozwód",
+  "gedcom.birth": "Nazwisko rodowe",
+  "gedcom.married": "Nazwisko po małżeństwie",
+  "gedcom.maiden": "Nazwisko panieńskie",
+  "gedcom.immigrant": "Nazwisko po imigracji",
+  "gedcom.aka": "Alias",
   "date.abt": "około",
   "date.cal": "wyliczone",
   "date.est": "oszacowane",
@@ -85,5 +90,6 @@
   "config.colors": "Kolory",
   "config.colors.NO_COLOR": "brak",
   "config.colors.COLOR_BY_GENERATION": "według pokolenia",
-  "config.colors.COLOR_BY_SEX": "według płci"
+  "config.colors.COLOR_BY_SEX": "według płci",
+  "name.unknown_name": "N.N."
 }
