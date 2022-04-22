@@ -13,6 +13,7 @@ import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {IntlShape} from 'react-intl';
 import {TopolaError} from '../util/error';
+import {isValidDateOrRange} from '../util/date_util';
 
 /** Prefix for IDs of private individuals. */
 export const PRIVATE_ID_PREFIX = '~Private';
@@ -567,7 +568,7 @@ function dateOrRangeToGedcom(dateOrRange: DateOrRange): string {
 
 function eventToGedcom(event: JsonEvent): GedcomEntry[] {
   const result = [];
-  if (event.date) {
+  if (isValidDateOrRange(event)) {
     result.push({
       level: 2,
       pointer: '',
