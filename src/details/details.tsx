@@ -1,10 +1,17 @@
 import flatMap from 'array.prototype.flatmap';
-import {dereference, GedcomData, getData} from '../util/gedcom_util';
+import {
+  dereference,
+  GedcomData,
+  getData,
+  getFileName,
+  isImageFile,
+} from '../util/gedcom_util';
 import {Events} from './events';
 import {GedcomEntry} from 'parse-gedcom';
 import {MultilineText} from './multiline-text';
 import {TranslatedTag} from './translated-tag';
 import {Header, Item} from 'semantic-ui-react';
+import {WrappedImage} from './wrapped-image';
 
 const EXCLUDED_TAGS = [
   'BIRT',
@@ -45,6 +52,22 @@ function dataDetails(entry: GedcomEntry) {
       </span>
     </>
   );
+}
+
+function fileDetails(objectEntry: GedcomEntry) {
+  const imageFileEntry = objectEntry.tree.find(
+    (entry) =>
+      entry.tag === 'FILE' &&
+      entry.data.startsWith('http') &&
+      isImageFile(entry.data),
+  );
+
+  return imageFileEntry ? (
+    <WrappedImage
+      url={imageFileEntry.data}
+      filename={getFileName(imageFileEntry) || ''}
+    />
+  ) : null;
 }
 
 function noteDetails(entry: GedcomEntry) {
@@ -128,6 +151,7 @@ export function Details(props: Props) {
     <div className="details">
       <Item.Group divided>
         {getDetails(entries, ['NAME'], nameDetails)}
+        {getDetails(entriesWithData, ['OBJE'], fileDetails)}
         <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
         {getOtherDetails(entriesWithData)}
         {getDetails(entriesWithData, ['NOTE'], noteDetails)}

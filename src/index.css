@@ -146,6 +146,7 @@ div.zoom {
 .details {
   padding: 15px 0px;
   border-bottom: 1px solid rgba(34,36,38,.15);
+  overflow-x: hidden;
 }
 
 .details .ui.items .item .content {
@@ -164,6 +165,12 @@ div.zoom {
   min-width: 40%;
 }
 
+.details .person-image {
+  max-width: 282px;
+  width: 320px; /*fixed width to avoid image rescaling when scrollbar appears*/
+}
+
+
 .ui.form .field.no-margin {
   margin: 0;
 }
@@ -175,4 +182,22 @@ div.zoom {
 .limit-height {
   height: 300px;
   overflow-y: scroll;
+}
+
+.loaded-image-thumbnail {
+  cursor: zoom-in;
+}
+
+.hidden-image {
+ display: none !important;
+}
+
+.modal-image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.image-placeholder {
+  height: 100%;
 }
