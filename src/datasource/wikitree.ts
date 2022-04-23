@@ -7,6 +7,7 @@ import {
   JsonEvent,
   JsonFam,
   JsonGedcomData,
+  JsonImage,
   JsonIndi,
 } from 'topola';
 import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
@@ -80,6 +81,7 @@ interface Person {
     BirthDate: string;
     DeathDate: string;
   };
+  Photo: string;
   PhotoData?: {
     path: string;
     url: string;
@@ -481,7 +483,13 @@ function convertPerson(person: Person, intl: IntlShape): JsonIndi {
     indi.death = Object.assign({}, date, {place: person.DeathLocation});
   }
   if (person.PhotoData) {
-    indi.images = [{url: `https://www.wikitree.com${person.PhotoData.url}`}];
+    indi.images = [
+      {
+        url: `https://www.wikitree.com${person.PhotoData.url}`,
+        title: person.Photo,
+        fullSizeUrl: `https://www.wikitree.com${person.PhotoData.path}`,
+      },
+    ];
   }
   return indi;
 }
@@ -589,6 +597,33 @@ function eventToGedcom(event: JsonEvent): GedcomEntry[] {
   return result;
 }
 
+function imageToGedcom(image: JsonImage): GedcomEntry[] {
+  return [
+    {
+      level: 2,
+      pointer: '',
+      tag: 'FILE',
+      data: image.fullSizeUrl || image.url,
+      tree: [
+        {
+          level: 3,
+          pointer: '',
+          tag: 'FORM',
+          data: image.title?.split('.').pop() || '',
+          tree: [],
+        },
+        {
+          level: 3,
+          pointer: '',
+          tag: 'TITL',
+          data: image.title?.split('.')[0] || '',
+          tree: [],
+        },
+      ],
+    },
+  ];
+}
+
 function indiToGedcom(indi: JsonIndi): GedcomEntry {
   // WikiTree URLs replace spaces with underscores.
   const escapedId = indi.id.replace(/ /g, '_');
@@ -652,6 +687,15 @@ function indiToGedcom(indi: JsonIndi): GedcomEntry {
       tree: [],
     });
   }
+  (indi.images || []).forEach((image) => {
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'OBJE',
+      data: '',
+      tree: imageToGedcom(image),
+    });
+  });
   return record;
 }
 
