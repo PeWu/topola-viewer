@@ -63,10 +63,12 @@ function fileDetails(objectEntry: GedcomEntry) {
   );
 
   return imageFileEntry ? (
-    <WrappedImage
-      url={imageFileEntry.data}
-      filename={getFileName(imageFileEntry) || ''}
-    />
+    <div className="person-image">
+      <WrappedImage
+        url={imageFileEntry.data}
+        filename={getFileName(imageFileEntry) || ''}
+      />
+    </div>
   ) : null;
 }
 

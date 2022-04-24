@@ -78,6 +78,7 @@
   "error.WIKITREE_ID_NOT_PROVIDED": "Identyfikator WikiTree nie został podany",
   "error.WIKITREE_PROFILE_NOT_ACCESSIBLE": "Profil WikiTree {id} nie jest dostępny",
   "error.WIKITREE_PROFILE_NOT_FOUND": "Profil WikiTree {id} nie istnieje",
+  "error.failed_to_load_image": "Błąd podczas pobierania pliku ze zdjęciem",
   "wikitree.private": "Prywatne",
   "tab.info": "Info",
   "tab.settings": "Ustawienia",
