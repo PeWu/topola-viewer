@@ -1,4 +1,4 @@
-import {Checkbox, Form} from 'semantic-ui-react';
+import {Item, Checkbox, Form, Header} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {ParsedQuery} from 'query-string';
 
@@ -44,64 +44,68 @@ export function ConfigPanel(props: {
   onChange: (config: Config) => void;
 }) {
   return (
-    <>
-      <Form className="ui segments details">
-        <div className="ui segment">
-          <div className="ui sub header">
-            <FormattedMessage id="config.colors" defaultMessage="Colors" />
-          </div>
-          <Form.Field className="no-margin">
-            <Checkbox
-              radio
-              label={
-                <FormattedMessage
-                  tagName="label"
-                  id="config.colors.NO_COLOR"
-                  defaultMessage="none"
-                />
-              }
-              name="checkboxRadioGroup"
-              value="none"
-              checked={props.config.color === ChartColors.NO_COLOR}
-              onClick={() => props.onChange({color: ChartColors.NO_COLOR})}
-            />
-          </Form.Field>
-          <Form.Field className="no-margin">
-            <Checkbox
-              radio
-              label={
-                <FormattedMessage
-                  tagName="label"
-                  id="config.colors.COLOR_BY_GENERATION"
-                  defaultMessage="by generation"
-                />
-              }
-              name="checkboxRadioGroup"
-              value="generation"
-              checked={props.config.color === ChartColors.COLOR_BY_GENERATION}
-              onClick={() =>
-                props.onChange({color: ChartColors.COLOR_BY_GENERATION})
-              }
-            />
-          </Form.Field>
-          <Form.Field className="no-margin">
-            <Checkbox
-              radio
-              label={
-                <FormattedMessage
-                  tagName="label"
-                  id="config.colors.COLOR_BY_SEX"
-                  defaultMessage="by sex"
-                />
-              }
-              name="checkboxRadioGroup"
-              value="gender"
-              checked={props.config.color === ChartColors.COLOR_BY_SEX}
-              onClick={() => props.onChange({color: ChartColors.COLOR_BY_SEX})}
-            />
-          </Form.Field>
-        </div>
-      </Form>
-    </>
+    <Form className="details">
+      <Item.Group>
+        <Item>
+          <Item.Content>
+            <Header sub>
+              <FormattedMessage id="config.colors" defaultMessage="Colors" />
+            </Header>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.colors.NO_COLOR"
+                    defaultMessage="none"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="none"
+                checked={props.config.color === ChartColors.NO_COLOR}
+                onClick={() => props.onChange({color: ChartColors.NO_COLOR})}
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.colors.COLOR_BY_GENERATION"
+                    defaultMessage="by generation"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="generation"
+                checked={props.config.color === ChartColors.COLOR_BY_GENERATION}
+                onClick={() =>
+                  props.onChange({color: ChartColors.COLOR_BY_GENERATION})
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.colors.COLOR_BY_SEX"
+                    defaultMessage="by sex"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="gender"
+                checked={props.config.color === ChartColors.COLOR_BY_SEX}
+                onClick={() =>
+                  props.onChange({color: ChartColors.COLOR_BY_SEX})
+                }
+              />
+            </Form.Field>
+          </Item.Content>
+        </Item>
+      </Item.Group>
+    </Form>
   );
 }

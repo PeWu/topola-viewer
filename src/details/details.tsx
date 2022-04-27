@@ -4,6 +4,7 @@ import {Events} from './events';
 import {GedcomEntry} from 'parse-gedcom';
 import {MultilineText} from './multiline-text';
 import {TranslatedTag} from './translated-tag';
+import {Header, Item} from 'semantic-ui-react';
 
 const EXCLUDED_TAGS = [
   'BIRT',
@@ -36,9 +37,9 @@ function dataDetails(entry: GedcomEntry) {
   }
   return (
     <>
-      <div className="ui sub header">
+      <Header sub>
         <TranslatedTag tag={entry.tag} />
-      </div>
+      </Header>
       <span>
         <MultilineText lines={lines} />
       </span>
@@ -58,7 +59,7 @@ function noteDetails(entry: GedcomEntry) {
 
 function nameDetails(entry: GedcomEntry) {
   return (
-    <h2 className="ui header">
+    <Header size="large">
       {entry.data
         .split('/')
         .filter((name) => !!name)
@@ -68,7 +69,7 @@ function nameDetails(entry: GedcomEntry) {
             <br />
           </div>
         ))}
-    </h2>
+    </Header>
   );
 }
 
@@ -84,9 +85,9 @@ function getDetails(
   )
     .filter((element) => element !== null)
     .map((element, index) => (
-      <div className="ui segment" key={index}>
-        {element}
-      </div>
+      <Item key={index}>
+        <Item.Content>{element}</Item.Content>
+      </Item>
     ));
 }
 
@@ -106,9 +107,9 @@ function getOtherDetails(entries: GedcomEntry[]) {
     .map((entry) => dataDetails(entry))
     .filter((element) => element !== null)
     .map((element, index) => (
-      <div className="ui segment" key={index}>
-        {element}
-      </div>
+      <Item key={index}>
+        <Item.Content>{element}</Item.Content>
+      </Item>
     ));
 }
 
@@ -124,11 +125,13 @@ export function Details(props: Props) {
     .filter(hasData);
 
   return (
-    <div className="ui segments details">
-      {getDetails(entries, ['NAME'], nameDetails)}
-      <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
-      {getOtherDetails(entriesWithData)}
-      {getDetails(entriesWithData, ['NOTE'], noteDetails)}
+    <div className="details">
+      <Item.Group divided>
+        {getDetails(entries, ['NAME'], nameDetails)}
+        <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
+        {getOtherDetails(entriesWithData)}
+        {getDetails(entriesWithData, ['NOTE'], noteDetails)}
+      </Item.Group>
     </div>
   );
 }

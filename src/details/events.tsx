@@ -10,6 +10,7 @@ import {Link, useLocation} from 'react-router-dom';
 import {MultilineText} from './multiline-text';
 import {pointerToId} from '../util/gedcom_util';
 import {TranslatedTag} from './translated-tag';
+import {Header, Item} from 'semantic-ui-react';
 
 function PersonLink(props: {person: GedcomEntry}) {
   const location = useLocation();
@@ -23,11 +24,11 @@ function PersonLink(props: {person: GedcomEntry}) {
   search['indi'] = pointerToId(props.person.pointer);
 
   return (
-    <div className="meta">
+    <Item.Meta>
       <Link to={{pathname: '/view', search: queryString.stringify(search)}}>
         {name}
       </Link>
-    </div>
+    </Item.Meta>
   );
 }
 
@@ -62,14 +63,14 @@ const FAMILY_EVENT_TAGS = ['MARR', 'DIV'];
 function EventHeader(props: {event: EventData}) {
   const intl = useIntl();
   return (
-    <div>
-      <span style={{textTransform: 'uppercase'}} className="ui small header">
+    <div className="event-header">
+      <Header as="span" size="small">
         <TranslatedTag tag={props.event.type} />
-      </span>
+      </Header>
       {props.event.date ? (
-        <span className="ui sub header right floated">
+        <Header as="span" textAlign="right" sub>
           {formatDateOrRange(props.event.date, intl)}
-        </span>
+        </Header>
       ) : null}
     </div>
   );
@@ -176,18 +177,18 @@ function toFamilyEvents(
 
 function Event(props: {event: EventData}) {
   return (
-    <div className="ui attached item">
-      <div className="content">
+    <Item>
+      <Item.Content>
         <EventHeader event={props.event} />
-        {!!props.event.age && <div className="meta">{props.event.age}</div>}
+        {!!props.event.age && <Item.Meta>{props.event.age}</Item.Meta>}
         {!!props.event.personLink && (
           <PersonLink person={props.event.personLink} />
         )}
         {!!props.event.place && (
-          <div className="description">{props.event.place}</div>
+          <Item.Description>{props.event.place}</Item.Description>
         )}
         {!!props.event.notes.length && (
-          <div className="description">
+          <Item.Description>
             {props.event.notes.map((note, index) => (
               <div key={index}>
                 <MultilineText
@@ -197,10 +198,10 @@ function Event(props: {event: EventData}) {
                 />
               </div>
             ))}
-          </div>
+          </Item.Description>
         )}
-      </div>
-    </div>
+      </Item.Content>
+    </Item>
   );
 }
 
@@ -216,11 +217,11 @@ export function Events(props: Props) {
   );
   if (events.length) {
     return (
-      <div className="ui segment divided items">
+      <>
         {events.map((event, index) => (
           <Event event={event} key={index} />
         ))}
-      </div>
+      </>
     );
   }
   return null;
