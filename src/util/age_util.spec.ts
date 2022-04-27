@@ -32,6 +32,18 @@ describe('calcAge()', () => {
     const age = calcAge('2 Sep 1990', '1 Sep 2021', intl);
     expect(age).toEqual('30 years');
   });
+  it('age respecting missing leap year divisible by 100 and not divisible by 400', () => {
+    const age = calcAge('1890', '1921', intl);
+    expect(age).toEqual('31 years');
+  });
+  it('age respecting missing leap year divisible by 100 and not divisible by 400 for full dates', () => {
+    const age = calcAge('1 Sep 1890', '1 Sep 1921', intl);
+    expect(age).toEqual('31 years');
+  });
+  it('age with round down respecting missing leap year divisible by 100 and not divisible by 400', () => {
+    const age = calcAge('2 Sep 1890', '1 Sep 1921', intl);
+    expect(age).toEqual('30 years');
+  });
 
   it('age with exact and range between', () => {
     const age = calcAge('1990', 'BET 2020 AND 2021', intl);
