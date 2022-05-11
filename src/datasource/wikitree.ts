@@ -350,6 +350,8 @@ export async function loadWikiTree(
   >();
   // Map from numerical id to human-readable id.
   const idToName = new Map<number, string>();
+  // Map from human-readable person id to fullSizeUrl of person photo.
+  const fullSizePhotoUrls: Map<string, string> = new Map();
 
   everyone.forEach((person) => {
     idToName.set(person.Id, person.Name);
@@ -366,6 +368,7 @@ export async function loadWikiTree(
   });
 
   const indis: JsonIndi[] = [];
+
   const converted = new Set<number>();
   everyone.forEach((person) => {
     if (converted.has(person.Id)) {
@@ -373,6 +376,12 @@ export async function loadWikiTree(
     }
     converted.add(person.Id);
     const indi = convertPerson(person, intl);
+    if (person.PhotoData?.path) {
+      fullSizePhotoUrls.set(
+        person.Name,
+        `https://www.wikitree.com${person.PhotoData.path}`,
+      );
+    }
     if (person.Spouses) {
       Object.values(person.Spouses).forEach((spouse) => {
         const famId = getFamilyId(person.Id, spouse.Id);
@@ -419,7 +428,7 @@ export async function loadWikiTree(
   });
 
   const chartData = normalizeGedcom({indis, fams});
-  const gedcom = buildGedcom(chartData);
+  const gedcom = buildGedcom(chartData, fullSizePhotoUrls);
   return {chartData, gedcom};
 }
 
@@ -487,7 +496,6 @@ function convertPerson(person: Person, intl: IntlShape): JsonIndi {
       {
         url: `https://www.wikitree.com${person.PhotoData.url}`,
         title: person.Photo,
-        fullSizeUrl: `https://www.wikitree.com${person.PhotoData.path}`,
       },
     ];
   }
@@ -597,13 +605,16 @@ function eventToGedcom(event: JsonEvent): GedcomEntry[] {
   return result;
 }
 
-function imageToGedcom(image: JsonImage): GedcomEntry[] {
+function imageToGedcom(
+  image: JsonImage,
+  fullSizePhotoUrl: string | undefined,
+): GedcomEntry[] {
   return [
     {
       level: 2,
       pointer: '',
       tag: 'FILE',
-      data: image.fullSizeUrl || image.url,
+      data: fullSizePhotoUrl || image.url,
       tree: [
         {
           level: 3,
@@ -624,7 +635,10 @@ function imageToGedcom(image: JsonImage): GedcomEntry[] {
   ];
 }
 
-function indiToGedcom(indi: JsonIndi): GedcomEntry {
+function indiToGedcom(
+  indi: JsonIndi,
+  fullSizePhotoUrl: Map<string, string>,
+): GedcomEntry {
   // WikiTree URLs replace spaces with underscores.
   const escapedId = indi.id.replace(/ /g, '_');
   const record: GedcomEntry = {
@@ -693,7 +707,7 @@ function indiToGedcom(indi: JsonIndi): GedcomEntry {
       pointer: '',
       tag: 'OBJE',
       data: '',
-      tree: imageToGedcom(image),
+      tree: imageToGedcom(image, fullSizePhotoUrl.get(indi.id)),
     });
   });
   return record;
@@ -750,11 +764,14 @@ function famToGedcom(fam: JsonFam): GedcomEntry {
  * Creates a GEDCOM structure for the purpose of displaying the details
  * panel.
  */
-function buildGedcom(data: JsonGedcomData): GedcomData {
+function buildGedcom(
+  data: JsonGedcomData,
+  fullSizePhotoUrls: Map<string, string>,
+): GedcomData {
   const gedcomIndis: {[key: string]: GedcomEntry} = {};
   const gedcomFams: {[key: string]: GedcomEntry} = {};
   data.indis.forEach((indi) => {
-    gedcomIndis[indi.id] = indiToGedcom(indi);
+    gedcomIndis[indi.id] = indiToGedcom(indi, fullSizePhotoUrls);
   });
   data.fams.forEach((fam) => {
     gedcomFams[fam.id] = famToGedcom(fam);

@@ -118,7 +118,8 @@ function calcDateDifferenceInYears(
   const startYear = firstDateObject.getUTCFullYear();
 
   let yearDiff = secondDateObject.getUTCFullYear() - startYear;
-  let monthDiff = secondDateObject.getUTCMonth() - firstDateObject.getUTCMonth();
+  let monthDiff =
+    secondDateObject.getUTCMonth() - firstDateObject.getUTCMonth();
   if (monthDiff < 0) {
     yearDiff--;
     monthDiff += 12;
