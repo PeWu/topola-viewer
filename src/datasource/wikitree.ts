@@ -7,6 +7,7 @@ import {
   JsonEvent,
   JsonFam,
   JsonGedcomData,
+  JsonImage,
   JsonIndi,
 } from 'topola';
 import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
@@ -80,6 +81,7 @@ interface Person {
     BirthDate: string;
     DeathDate: string;
   };
+  Photo: string;
   PhotoData?: {
     path: string;
     url: string;
@@ -348,6 +350,8 @@ export async function loadWikiTree(
   >();
   // Map from numerical id to human-readable id.
   const idToName = new Map<number, string>();
+  // Map from human-readable person id to fullSizeUrl of person photo.
+  const fullSizePhotoUrls: Map<string, string> = new Map();
 
   everyone.forEach((person) => {
     idToName.set(person.Id, person.Name);
@@ -364,6 +368,7 @@ export async function loadWikiTree(
   });
 
   const indis: JsonIndi[] = [];
+
   const converted = new Set<number>();
   everyone.forEach((person) => {
     if (converted.has(person.Id)) {
@@ -371,6 +376,12 @@ export async function loadWikiTree(
     }
     converted.add(person.Id);
     const indi = convertPerson(person, intl);
+    if (person.PhotoData?.path) {
+      fullSizePhotoUrls.set(
+        person.Name,
+        `https://www.wikitree.com${person.PhotoData.path}`,
+      );
+    }
     if (person.Spouses) {
       Object.values(person.Spouses).forEach((spouse) => {
         const famId = getFamilyId(person.Id, spouse.Id);
@@ -417,7 +428,7 @@ export async function loadWikiTree(
   });
 
   const chartData = normalizeGedcom({indis, fams});
-  const gedcom = buildGedcom(chartData);
+  const gedcom = buildGedcom(chartData, fullSizePhotoUrls);
   return {chartData, gedcom};
 }
 
@@ -481,7 +492,12 @@ function convertPerson(person: Person, intl: IntlShape): JsonIndi {
     indi.death = Object.assign({}, date, {place: person.DeathLocation});
   }
   if (person.PhotoData) {
-    indi.images = [{url: `https://www.wikitree.com${person.PhotoData.url}`}];
+    indi.images = [
+      {
+        url: `https://www.wikitree.com${person.PhotoData.url}`,
+        title: person.Photo,
+      },
+    ];
   }
   return indi;
 }
@@ -589,7 +605,40 @@ function eventToGedcom(event: JsonEvent): GedcomEntry[] {
   return result;
 }
 
-function indiToGedcom(indi: JsonIndi): GedcomEntry {
+function imageToGedcom(
+  image: JsonImage,
+  fullSizePhotoUrl: string | undefined,
+): GedcomEntry[] {
+  return [
+    {
+      level: 2,
+      pointer: '',
+      tag: 'FILE',
+      data: fullSizePhotoUrl || image.url,
+      tree: [
+        {
+          level: 3,
+          pointer: '',
+          tag: 'FORM',
+          data: image.title?.split('.').pop() || '',
+          tree: [],
+        },
+        {
+          level: 3,
+          pointer: '',
+          tag: 'TITL',
+          data: image.title?.split('.')[0] || '',
+          tree: [],
+        },
+      ],
+    },
+  ];
+}
+
+function indiToGedcom(
+  indi: JsonIndi,
+  fullSizePhotoUrl: Map<string, string>,
+): GedcomEntry {
   // WikiTree URLs replace spaces with underscores.
   const escapedId = indi.id.replace(/ /g, '_');
   const record: GedcomEntry = {
@@ -652,6 +701,15 @@ function indiToGedcom(indi: JsonIndi): GedcomEntry {
       tree: [],
     });
   }
+  (indi.images || []).forEach((image) => {
+    record.tree.push({
+      level: 1,
+      pointer: '',
+      tag: 'OBJE',
+      data: '',
+      tree: imageToGedcom(image, fullSizePhotoUrl.get(indi.id)),
+    });
+  });
   return record;
 }
 
@@ -706,11 +764,14 @@ function famToGedcom(fam: JsonFam): GedcomEntry {
  * Creates a GEDCOM structure for the purpose of displaying the details
  * panel.
  */
-function buildGedcom(data: JsonGedcomData): GedcomData {
+function buildGedcom(
+  data: JsonGedcomData,
+  fullSizePhotoUrls: Map<string, string>,
+): GedcomData {
   const gedcomIndis: {[key: string]: GedcomEntry} = {};
   const gedcomFams: {[key: string]: GedcomEntry} = {};
   data.indis.forEach((indi) => {
-    gedcomIndis[indi.id] = indiToGedcom(indi);
+    gedcomIndis[indi.id] = indiToGedcom(indi, fullSizePhotoUrls);
   });
   data.fams.forEach((fam) => {
     gedcomFams[fam.id] = famToGedcom(fam);

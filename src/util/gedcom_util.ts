@@ -192,10 +192,10 @@ export function normalizeGedcom(gedcom: JsonGedcomData): JsonGedcomData {
   return sortSpouses(sortChildren(gedcom));
 }
 
-const IMAGE_EXTENSIONS = ['.jpg', '.png', '.gif'];
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif'];
 
 /** Returns true if the given file name has a known image extension. */
-function isImageFile(fileName: string): boolean {
+export function isImageFile(fileName: string): boolean {
   const lowerName = fileName.toLowerCase();
   return IMAGE_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
 }
@@ -281,4 +281,13 @@ export function getName(person: GedcomEntry): string | undefined {
   );
   const name = notMarriedName || names[0];
   return name?.data.replace(/\//g, '');
+}
+
+export function getFileName(fileEntry: GedcomEntry): string | undefined {
+  const fileTitle = fileEntry?.tree.find((entry) => entry.tag === 'TITL')?.data;
+
+  const fileExtension = fileEntry?.tree.find((entry) => entry.tag === 'FORM')
+    ?.data;
+
+  return fileTitle && fileExtension && fileTitle + '.' + fileExtension;
 }
