@@ -1,5 +1,9 @@
 # Changelog
 
+## 2022-05-13
+
+- Added displaying images in the details panel
+
 ## 2022-04-06
 
 - Fixed logging in to WikiTree
