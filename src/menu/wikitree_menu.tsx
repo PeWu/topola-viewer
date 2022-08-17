@@ -3,10 +3,13 @@ import wikitreeLogo from './wikitree.png';
 import {analyticsEvent} from '../util/analytics';
 import {Button, Form, Header, Input, Modal} from 'semantic-ui-react';
 import {FormattedMessage, useIntl} from 'react-intl';
-import {getLoggedInUserName} from '../datasource/wikitree';
 import {MenuItem, MenuType} from './menu_item';
 import {useEffect, useRef, useState} from 'react';
 import {useHistory, useLocation} from 'react-router';
+import {
+  getLoggedInUserName,
+  navigateToLoginPage,
+} from 'wikitree-js';
 
 interface Props {
   menuType: MenuType;
@@ -150,8 +153,6 @@ export function WikiTreeMenu(props: Props) {
 
 /** Displays and handles the "Log in to WikiTree" menu. */
 export function WikiTreeLoginMenu(props: Props) {
-  const formRef = useRef<HTMLFormElement>(null);
-  const returnUrlRef = useRef<HTMLInputElement>(null);
   const intl = useIntl();
 
   /**
@@ -163,8 +164,7 @@ export function WikiTreeLoginMenu(props: Props) {
       'https://apps.wikitree.com/apps/wiech13/topola-viewer';
     // TODO: remove authcode if it is in the current URL.
     const returnUrl = `${wikiTreeTopolaUrl}${window.location.hash}`;
-    returnUrlRef.current!.value = returnUrl;
-    formRef.current!.submit();
+    navigateToLoginPage(returnUrl);
   }
 
   const username = getLoggedInUserName();
@@ -178,15 +178,6 @@ export function WikiTreeLoginMenu(props: Props) {
             defaultMessage="Log in to WikiTree"
           />
         </MenuItem>
-        <form
-          action="https://api.wikitree.com/api.php"
-          method="POST"
-          style={{display: 'hidden'}}
-          ref={formRef}
-        >
-          <input type="hidden" name="action" value="clientLogin" />
-          <input type="hidden" name="returnURL" ref={returnUrlRef} />
-        </form>
       </>
     );
   }

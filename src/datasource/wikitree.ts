@@ -1,4 +1,3 @@
-import Cookies from 'js-cookie';
 import {analyticsEvent} from '../util/analytics';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 import {
@@ -15,78 +14,16 @@ import {GedcomEntry} from 'parse-gedcom';
 import {IntlShape} from 'react-intl';
 import {TopolaError} from '../util/error';
 import {isValidDateOrRange} from '../util/date_util';
+import {
+  getAncestors as getAncestorsApi,
+  getRelatives as getRelativesApi,
+  clientLogin,
+  getLoggedInUserName,
+  Person
+} from 'wikitree-js';
 
 /** Prefix for IDs of private individuals. */
 export const PRIVATE_ID_PREFIX = '~Private';
-
-/**
- * Cookie where the logged in user name is stored. This cookie is shared
- * between apps hosted on apps.wikitree.com.
- */
-const USER_NAME_COOKIE = 'wikidb_wtb_UserName';
-
-/** WikiTree API getAncestors request. */
-interface GetAncestorsRequest {
-  action: 'getAncestors';
-  key: string;
-  fields: string;
-}
-
-/** WikiTree API getRelatives request. */
-interface GetRelativesRequest {
-  action: 'getRelatives';
-  keys: string;
-  getChildren?: true;
-  getSpouses?: true;
-}
-
-/** WikiTree API clientLogin request. */
-interface ClientLoginRequest {
-  action: 'clientLogin';
-  authcode: string;
-}
-
-/** WikiTree API clientLogin response. */
-interface ClientLoginResponse {
-  result: string;
-  username: string;
-}
-
-type WikiTreeRequest =
-  | GetAncestorsRequest
-  | GetRelativesRequest
-  | ClientLoginRequest;
-
-/** Person structure returned from WikiTree API. */
-interface Person {
-  Id: number;
-  Name: string;
-  FirstName: string;
-  LastNameAtBirth: string;
-  RealName: string;
-  Spouses?: {[key: number]: Person};
-  Children: {[key: number]: Person};
-  Mother: number;
-  Father: number;
-  Gender: string;
-  BirthDate: string;
-  DeathDate: string;
-  BirthLocation: string;
-  DeathLocation: string;
-  BirthDateDecade: string;
-  DeathDateDecade: string;
-  marriage_location: string;
-  marriage_date: string;
-  DataStatus?: {
-    BirthDate: string;
-    DeathDate: string;
-  };
-  Photo: string;
-  PhotoData?: {
-    path: string;
-    url: string;
-  };
-}
 
 /** Gets item from session storage. Logs exception if one is thrown. */
 function getSessionStorageItem(key: string): string | null {
@@ -107,23 +44,13 @@ function setSessionStorageItem(key: string, value: string) {
   }
 }
 
-/** Sends a request to the WikiTree API. Returns the parsed response JSON. */
-async function wikiTreeGet(request: WikiTreeRequest, handleCors: boolean) {
-  const requestData = new FormData();
-  requestData.append('format', 'json');
-  for (const key in request) {
-    requestData.append(key, request[key]);
-  }
-  const apiUrl = handleCors
-    ? 'https://topola-cors.herokuapp.com/https://api.wikitree.com/api.php'
-    : 'https://api.wikitree.com/api.php';
-  const response = await window.fetch(apiUrl, {
-    method: 'POST',
-    body: requestData,
-    credentials: handleCors ? undefined : 'include',
-  });
-  const responseBody = await response.text();
-  return JSON.parse(responseBody);
+function getApiOptions(handleCors: boolean) {
+  return handleCors
+    ? {
+        apiUrl:
+          'https://topola-cors.herokuapp.com/https://api.wikitree.com/api.php',
+      }
+    : {};
 }
 
 /**
@@ -139,15 +66,7 @@ async function getAncestors(
   if (cachedData) {
     return JSON.parse(cachedData);
   }
-  const response = await wikiTreeGet(
-    {
-      action: 'getAncestors',
-      key: key,
-      fields: '*',
-    },
-    handleCors,
-  );
-  const result = response[0].ancestors as Person[];
+  const result = getAncestorsApi(key, {}, getApiOptions(handleCors));
   setSessionStorageItem(cacheKey, JSON.stringify(result));
   return result;
 }
@@ -173,16 +92,12 @@ async function getRelatives(
   if (keysToFetch.length === 0) {
     return result;
   }
-  const response = await wikiTreeGet(
-    {
-      action: 'getRelatives',
-      keys: keysToFetch.join(','),
-      getChildren: true,
-      getSpouses: true,
-    },
-    handleCors,
+  const response = await getRelativesApi(
+    keysToFetch,
+    {getChildren: true, getSpouses: true},
+    getApiOptions(handleCors),
   );
-  if (response[0].items === null) {
+  if (response === []) {
     const id = keysToFetch[0];
     throw new TopolaError(
       'WIKITREE_PROFILE_NOT_FOUND',
@@ -190,41 +105,13 @@ async function getRelatives(
       {id},
     );
   }
-  const fetchedResults = response[0].items.map(
-    (x: {person: Person}) => x.person,
-  ) as Person[];
-  fetchedResults.forEach((person) => {
+  response.forEach((person) => {
     setSessionStorageItem(
       `wikitree:relatives:${person.Name}`,
       JSON.stringify(person),
     );
   });
-  return result.concat(fetchedResults);
-}
-
-export async function clientLogin(
-  authcode: string,
-): Promise<ClientLoginResponse> {
-  const response = await wikiTreeGet(
-    {
-      action: 'clientLogin',
-      authcode,
-    },
-    false,
-  );
-  return response.clientLogin;
-}
-
-/**
- * Returns the logged in user name or undefined if not logged in.
- *
- * This is not an authoritative answer. The result of this function relies on
- * the cookies set on the apps.wikitree.com domain under which this application
- * is hosted. The authoritative source of login information is in cookies set on
- * the api.wikitree.com domain.
- */
-export function getLoggedInUserName(): string | undefined {
-  return Cookies.get(USER_NAME_COOKIE);
+  return result.concat(response);
 }
 
 /**
@@ -243,7 +130,6 @@ export async function loadWikiTree(
     const loginResult = await clientLogin(authcode);
     if (loginResult.result === 'Success') {
       sessionStorage.clear();
-      Cookies.set(USER_NAME_COOKIE, loginResult.username);
     }
   }
 
@@ -334,7 +220,7 @@ export async function loadWikiTree(
     everyone.push(...allSpouses);
     // Fetch all children.
     toFetch = people.flatMap((person) =>
-      Object.values(person.Children).map((c) => c.Name),
+      Object.values(person.Children || {}).map((c) => c.Name),
     );
     generation++;
   }
@@ -474,7 +360,7 @@ function convertPerson(person: Person, intl: IntlShape): JsonIndi {
   ) {
     const parsedDate = parseDate(
       person.BirthDate,
-      person.DataStatus && person.DataStatus.BirthDate,
+      (person.DataStatus && person.DataStatus.BirthDate) || undefined,
     );
     const date = parsedDate || parseDecade(person.BirthDateDecade);
     indi.birth = Object.assign({}, date, {place: person.BirthLocation});
@@ -486,7 +372,7 @@ function convertPerson(person: Person, intl: IntlShape): JsonIndi {
   ) {
     const parsedDate = parseDate(
       person.DeathDate,
-      person.DataStatus && person.DataStatus.DeathDate,
+      (person.DataStatus && person.DataStatus.DeathDate) || undefined,
     );
     const date = parsedDate || parseDecade(person.DeathDateDecade);
     indi.death = Object.assign({}, date, {place: person.DeathLocation});
