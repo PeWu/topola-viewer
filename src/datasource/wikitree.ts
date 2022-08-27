@@ -14,12 +14,13 @@ import {GedcomEntry} from 'parse-gedcom';
 import {IntlShape} from 'react-intl';
 import {TopolaError} from '../util/error';
 import {isValidDateOrRange} from '../util/date_util';
+import {StringUtils} from 'turbocommons-ts';
 import {
   getAncestors as getAncestorsApi,
   getRelatives as getRelativesApi,
   clientLogin,
   getLoggedInUserName,
-  Person
+  Person,
 } from 'wikitree-js';
 
 /** Prefix for IDs of private individuals. */
@@ -225,6 +226,12 @@ export async function loadWikiTree(
     generation++;
   }
 
+  //Map from human-readable person id to person names
+  const personNames = new Map<
+    string,
+    {birth?: string; married?: string; aka?: string}
+  >();
+
   // Map from person id to the set of families where they are a spouse.
   const families = new Map<number, Set<string>>();
   // Map from family id to the set of children.
@@ -268,6 +275,9 @@ export async function loadWikiTree(
         `https://www.wikitree.com${person.PhotoData.path}`,
       );
     }
+
+    personNames.set(person.Name, convertPersonNames(person));
+
     if (person.Spouses) {
       Object.values(person.Spouses).forEach((spouse) => {
         const famId = getFamilyId(person.Id, spouse.Id);
@@ -314,7 +324,7 @@ export async function loadWikiTree(
   });
 
   const chartData = normalizeGedcom({indis, fams});
-  const gedcom = buildGedcom(chartData, fullSizePhotoUrls);
+  const gedcom = buildGedcom(chartData, fullSizePhotoUrls, personNames);
   return {chartData, gedcom};
 }
 
@@ -386,6 +396,50 @@ function convertPerson(person: Person, intl: IntlShape): JsonIndi {
     ];
   }
   return indi;
+}
+/**
+ Resolve birth name, married name and aka name with following logic:
+ - birth name is always prioritized and is set if exists and is not unknown
+ - married name is based on LastNameCurrent and is set if it's different than birth name
+   and one of the spouses has it as their birth name
+ - aka name is based on LastNameOther and is set if it's different than others
+ */
+function convertPersonNames(person: Person) {
+  return {
+    birth:
+      person.LastNameAtBirth !== 'Unknown' ? person.LastNameAtBirth : undefined,
+    married:
+      person.Spouses &&
+      person.LastNameCurrent !== 'Unknown' &&
+      person.LastNameCurrent !== person.LastNameAtBirth &&
+      Object.entries(person.Spouses)
+        .flatMap(([, spousePerson]) =>
+          spousePerson.LastNameAtBirth.split(/[- ,]/),
+        )
+        .filter(
+          (spousePersonNamePart) =>
+            /* In some languages the same names can differ a bit between genders,
+            so regular equals comparison cannot be used.
+            To verify if spouse has the same name, person name is split to include people with double names,
+            then there is a check if any name part is at least 75% similar to spouse name.
+            */
+            person.LastNameCurrent.split(/[- ,]/).filter(
+              (personNamePart) =>
+                StringUtils.compareSimilarityPercent(
+                  spousePersonNamePart,
+                  personNamePart,
+                ) >= 75,
+            ).length,
+        ).length
+        ? person.LastNameCurrent
+        : undefined,
+    aka:
+      person.LastNameOther !== 'Unknown' &&
+      person.LastNameAtBirth !== person.LastNameOther &&
+      person.LastNameCurrent !== person.LastNameOther
+        ? person.LastNameOther
+        : undefined,
+  };
 }
 
 /**
@@ -468,6 +522,24 @@ function dateOrRangeToGedcom(dateOrRange: DateOrRange): string {
   return '';
 }
 
+function nameToGedcom(type: string, firstName?: string, lastName?: string) {
+  return {
+    level: 1,
+    pointer: '',
+    tag: 'NAME',
+    data: `${firstName || ''} /${lastName || ''}/`,
+    tree: [
+      {
+        level: 2,
+        pointer: '',
+        tag: 'TYPE',
+        data: type,
+        tree: [],
+      },
+    ],
+  };
+}
+
 function eventToGedcom(event: JsonEvent): GedcomEntry[] {
   const result = [];
   if (isValidDateOrRange(event)) {
@@ -524,6 +596,7 @@ function imageToGedcom(
 function indiToGedcom(
   indi: JsonIndi,
   fullSizePhotoUrl: Map<string, string>,
+  personNames: {birth?: string; married?: string; aka?: string},
 ): GedcomEntry {
   // WikiTree URLs replace spaces with underscores.
   const escapedId = indi.id.replace(/ /g, '_');
@@ -532,16 +605,21 @@ function indiToGedcom(
     pointer: `@${indi.id}@`,
     tag: 'INDI',
     data: '',
-    tree: [
-      {
-        level: 1,
-        pointer: '',
-        tag: 'NAME',
-        data: `${indi.firstName || ''} /${indi.lastName || ''}/`,
-        tree: [],
-      },
-    ],
+    tree: [],
   };
+
+  if (personNames.birth) {
+    record.tree.push(nameToGedcom('birth', indi.firstName, personNames.birth));
+  }
+  if (personNames.married) {
+    record.tree.push(
+      nameToGedcom('married', indi.firstName, personNames.married),
+    );
+  }
+  if (personNames.aka) {
+    record.tree.push(nameToGedcom('aka', indi.firstName, personNames.aka));
+  }
+
   if (indi.birth) {
     record.tree.push({
       level: 1,
@@ -653,11 +731,16 @@ function famToGedcom(fam: JsonFam): GedcomEntry {
 function buildGedcom(
   data: JsonGedcomData,
   fullSizePhotoUrls: Map<string, string>,
+  personNames: Map<string, {birth?: string; married?: string; aka?: string}>,
 ): GedcomData {
   const gedcomIndis: {[key: string]: GedcomEntry} = {};
   const gedcomFams: {[key: string]: GedcomEntry} = {};
   data.indis.forEach((indi) => {
-    gedcomIndis[indi.id] = indiToGedcom(indi, fullSizePhotoUrls);
+    gedcomIndis[indi.id] = indiToGedcom(
+      indi,
+      fullSizePhotoUrls,
+      personNames.get(indi.id) || {},
+    );
   });
   data.fams.forEach((fam) => {
     gedcomFams[fam.id] = famToGedcom(fam);

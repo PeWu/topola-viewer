@@ -6,10 +6,7 @@ import {FormattedMessage, useIntl} from 'react-intl';
 import {MenuItem, MenuType} from './menu_item';
 import {useEffect, useRef, useState} from 'react';
 import {useHistory, useLocation} from 'react-router';
-import {
-  getLoggedInUserName,
-  navigateToLoginPage,
-} from 'wikitree-js';
+import {getLoggedInUserName, navigateToLoginPage} from 'wikitree-js';
 
 interface Props {
   menuType: MenuType;
