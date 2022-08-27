@@ -66,7 +66,7 @@ async function getAncestors(
   if (cachedData) {
     return JSON.parse(cachedData);
   }
-  const result = getAncestorsApi(key, {}, getApiOptions(handleCors));
+  const result = await getAncestorsApi(key, {}, getApiOptions(handleCors));
   setSessionStorageItem(cacheKey, JSON.stringify(result));
   return result;
 }
