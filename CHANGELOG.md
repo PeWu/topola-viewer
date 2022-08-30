@@ -1,5 +1,9 @@
 # Changelog
 
+## 2022-08-30
+
+- Added displaying name types in details panel
+
 ## 2022-05-13
 
 - Added displaying images in the details panel
