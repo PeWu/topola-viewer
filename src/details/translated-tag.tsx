@@ -22,6 +22,11 @@ const TAG_DESCRIPTIONS = new Map([
   ['OCCU', 'Occupation'],
   ['TITL', 'Title'],
   ['WWW', 'WWW'],
+  ['birth', 'Birth name'],
+  ['married', 'Married name'],
+  ['maiden', 'Maiden name'],
+  ['immigrant', 'Immigrant name'],
+  ['aka', 'Also known as'],
 ]);
 
 interface Props {

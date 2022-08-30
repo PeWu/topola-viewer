@@ -5,7 +5,7 @@ import {compareDates, formatDateOrRange} from '../util/date_util';
 import {DateOrRange, getDate} from 'topola';
 import {dereference, GedcomData, getData, getName} from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
-import {IntlShape, useIntl} from 'react-intl';
+import {FormattedMessage, IntlShape, useIntl} from 'react-intl';
 import {Link, useLocation} from 'react-router-dom';
 import {MultilineText} from './multiline-text';
 import {pointerToId} from '../util/gedcom_util';
@@ -16,9 +16,6 @@ function PersonLink(props: {person: GedcomEntry}) {
   const location = useLocation();
 
   const name = getName(props.person);
-  if (!name) {
-    return <></>;
-  }
 
   const search = queryString.parse(location.search);
   search['indi'] = pointerToId(props.person.pointer);
@@ -26,7 +23,11 @@ function PersonLink(props: {person: GedcomEntry}) {
   return (
     <Item.Meta>
       <Link to={{pathname: '/view', search: queryString.stringify(search)}}>
-        {name}
+        {name ? (
+          name
+        ) : (
+          <FormattedMessage id="name.unknown_name" defaultMessage="N.N." />
+        )}
       </Link>
     </Item.Meta>
   );

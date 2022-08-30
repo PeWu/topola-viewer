@@ -11,6 +11,7 @@ import {GedcomEntry} from 'parse-gedcom';
 import {MultilineText} from './multiline-text';
 import {TranslatedTag} from './translated-tag';
 import {Header, Item} from 'semantic-ui-react';
+import {FormattedMessage} from 'react-intl';
 import {WrappedImage} from './wrapped-image';
 
 const EXCLUDED_TAGS = [
@@ -83,18 +84,27 @@ function noteDetails(entry: GedcomEntry) {
 }
 
 function nameDetails(entry: GedcomEntry) {
+  const fullName = entry.data.replaceAll('/', '');
+
+  const nameType = entry.tree.find(
+    (entry) => entry.tag === 'TYPE' && entry.data !== 'Unknown',
+  )?.data;
+
   return (
-    <Header size="large">
-      {entry.data
-        .split('/')
-        .filter((name) => !!name)
-        .map((name, index) => (
-          <div key={index}>
-            {name}
-            <br />
-          </div>
-        ))}
-    </Header>
+    <>
+      <Header as="span" size="large">
+        {fullName ? (
+          fullName
+        ) : (
+          <FormattedMessage id="name.unknown_name" defaultMessage="N.N." />
+        )}
+      </Header>
+      {fullName && nameType && (
+        <Item.Meta>
+          <TranslatedTag tag={nameType} />
+        </Item.Meta>
+      )}
+    </>
   );
 }
 
