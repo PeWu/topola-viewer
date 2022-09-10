@@ -397,49 +397,53 @@ function convertPerson(person: Person, intl: IntlShape): JsonIndi {
   }
   return indi;
 }
+
+function isSimilarName(name1: string, name2: string) {
+  return StringUtils.compareSimilarityPercent(name1, name2) >= 75;
+}
+
+function getMarriedName(person: Person) {
+  if (
+    !person.Spouses ||
+    person.LastNameCurrent === 'Unknown' ||
+    person.LastNameCurrent === person.LastNameAtBirth
+  ) {
+    return undefined;
+  }
+  const nameParts = person.LastNameCurrent.split(/[- ,]/);
+  // In some languages the same names can differ a bit between genders,
+  // so regular equals comparison cannot be used.
+  // To verify if spouse has the same name, person name is split to include
+  // people with double names, then there is a check if any name part is
+  // at least 75% similar to spouse name.
+  const matchingNames = Object.entries(person.Spouses)
+    .flatMap(([, spousePerson]) => spousePerson.LastNameAtBirth.split(/[- ,]/))
+    .some((spousePersonNamePart) =>
+      nameParts.some((personNamePart) =>
+        isSimilarName(spousePersonNamePart, personNamePart),
+      ),
+    );
+  return matchingNames ? person.LastNameCurrent : undefined;
+}
+
 /**
- Resolve birth name, married name and aka name with following logic:
- - birth name is always prioritized and is set if exists and is not unknown
- - married name is based on LastNameCurrent and is set if it's different than birth name
-   and one of the spouses has it as their birth name
- - aka name is based on LastNameOther and is set if it's different than others
+ * Resolve birth name, married name and aka name with following logic:
+ * - birth name is always prioritized and is set if exists and is not unknown
+ * - married name is based on LastNameCurrent and is set if it's different than
+ *   birth name and one of the spouses has it as their birth name
+ * - aka name is based on LastNameOther and is set if it's different than others
  */
 function convertPersonNames(person: Person) {
-  return {
-    birth:
-      person.LastNameAtBirth !== 'Unknown' ? person.LastNameAtBirth : undefined,
-    married:
-      person.Spouses &&
-      person.LastNameCurrent !== 'Unknown' &&
-      person.LastNameCurrent !== person.LastNameAtBirth &&
-      Object.entries(person.Spouses)
-        .flatMap(([, spousePerson]) =>
-          spousePerson.LastNameAtBirth.split(/[- ,]/),
-        )
-        .filter(
-          (spousePersonNamePart) =>
-            /* In some languages the same names can differ a bit between genders,
-            so regular equals comparison cannot be used.
-            To verify if spouse has the same name, person name is split to include people with double names,
-            then there is a check if any name part is at least 75% similar to spouse name.
-            */
-            person.LastNameCurrent.split(/[- ,]/).filter(
-              (personNamePart) =>
-                StringUtils.compareSimilarityPercent(
-                  spousePersonNamePart,
-                  personNamePart,
-                ) >= 75,
-            ).length,
-        ).length
-        ? person.LastNameCurrent
-        : undefined,
-    aka:
-      person.LastNameOther !== 'Unknown' &&
-      person.LastNameAtBirth !== person.LastNameOther &&
-      person.LastNameCurrent !== person.LastNameOther
-        ? person.LastNameOther
-        : undefined,
-  };
+  const birth =
+    person.LastNameAtBirth !== 'Unknown' ? person.LastNameAtBirth : undefined;
+  const married = getMarriedName(person);
+  const aka =
+    person.LastNameOther !== 'Unknown' &&
+    person.LastNameAtBirth !== person.LastNameOther &&
+    person.LastNameCurrent !== person.LastNameOther
+      ? person.LastNameOther
+      : undefined;
+  return {birth, married, aka};
 }
 
 /**
