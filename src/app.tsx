@@ -105,6 +105,7 @@ interface Arguments {
   selection?: IndiInfo;
   chartType: ChartType;
   standalone: boolean;
+  showWikiTreeMenus: boolean;
   freezeAnimation: boolean;
   showSidePanel: boolean;
   config: Config;
@@ -167,6 +168,7 @@ function getArguments(location: H.Location<any>): Arguments {
 
     showSidePanel: getParam('sidePanel') !== 'false', // True by default.
     standalone: getParam('standalone') !== 'false' && !embedded,
+    showWikiTreeMenus: getParam('showWikiTreeMenus') !== 'false', // True by default.
     freezeAnimation: getParam('freeze') === 'true', // False by default
     config: argsToConfig(search),
   };
@@ -185,6 +187,11 @@ export function App() {
   const [showSidePanel, setShowSidePanel] = useState(false);
   /** Whether the app is in standalone mode, i.e. showing 'open file' menus. */
   const [standalone, setStandalone] = useState(true);
+  /**
+   * Whether the app should display WikiTree-specific menus when showing data
+   * from WikiTree.
+   */
+  const [showWikiTreeMenus, setShowWikiTreeMenus] = useState(true);
   /** Type of displayed chart. */
   const [chartType, setChartType] = useState<ChartType>(ChartType.Hourglass);
   /** Whether to show the error popup. */
@@ -310,6 +317,7 @@ export function App() {
         setSourceSpec(args.sourceSpec);
         setSelection(args.selection);
         setStandalone(args.standalone);
+        setShowWikiTreeMenus(args.showWikiTreeMenus);
         setChartType(args.chartType);
         setFreezeAnimation(args.freezeAnimation);
         setConfig(args.config);
@@ -524,7 +532,10 @@ export function App() {
               onDownloadPng,
               onDownloadSvg,
             }}
-            showWikiTreeMenus={sourceSpec?.source === DataSourceEnum.WIKITREE}
+            showWikiTreeMenus={
+              sourceSpec?.source === DataSourceEnum.WIKITREE &&
+              showWikiTreeMenus
+            }
           />
         )}
       />
