@@ -98,7 +98,7 @@ async function getRelatives(
     {getChildren: true, getSpouses: true},
     getApiOptions(handleCors),
   );
-  if (response === []) {
+  if (!response) {
     const id = keysToFetch[0];
     throw new TopolaError(
       'WIKITREE_PROFILE_NOT_FOUND',

@@ -317,7 +317,6 @@ export function App() {
           const data = await loadData(args.sourceSpec, args.selection);
           // Set state with data.
           setData(data);
-          setSelection(getSelection(data.chartData, args.selection));
           setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
         } catch (error: any) {
@@ -328,15 +327,14 @@ export function App() {
         state === AppState.LOADING_MORE
       ) {
         // Update selection if it has changed in the URL.
-        const newSelection = getSelection(data!.chartData, args.selection);
         const loadMoreFromWikitree =
           args.sourceSpec.source === DataSourceEnum.WIKITREE &&
-          (!selection || selection.id !== newSelection.id);
+          (!selection || selection.id !== args.selection?.id);
         setChartType(args.chartType);
         setState(
           loadMoreFromWikitree ? AppState.LOADING_MORE : AppState.SHOWING_CHART,
         );
-        updateDisplay(newSelection);
+        updateDisplay(args.selection!);
         if (loadMoreFromWikitree) {
           try {
             const data = await loadWikiTree(args.selection!.id, intl);
@@ -441,6 +439,7 @@ export function App() {
     switch (state) {
       case AppState.SHOWING_CHART:
       case AppState.LOADING_MORE:
+        const updatedSelection = getSelection(data!.chartData, selection);
         const sidePanelTabs = [
           {
             menuItem: intl.formatMessage({
@@ -448,7 +447,7 @@ export function App() {
               defaultMessage: 'Info',
             }),
             render: () => (
-              <Details gedcom={data!.gedcom} indi={selection!.id} />
+              <Details gedcom={data!.gedcom} indi={updatedSelection.id} />
             ),
           },
           {
@@ -479,7 +478,7 @@ export function App() {
             ) : null}
             <Chart
               data={data!.chartData}
-              selection={selection!}
+              selection={updatedSelection}
               chartType={chartType}
               onSelection={onSelection}
               freezeAnimation={freezeAnimation}
