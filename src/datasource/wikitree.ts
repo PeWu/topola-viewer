@@ -138,7 +138,7 @@ export async function loadWikiTree(
 
   // Fetch the ancestors of the input person and ancestors of his/her spouses.
   const firstPerson = await getRelatives([key], handleCors);
-  if (!firstPerson[0].Name) {
+  if (!firstPerson[0]?.Name) {
     const id = key;
     throw new TopolaError(
       'WIKITREE_PROFILE_NOT_ACCESSIBLE',
