@@ -67,8 +67,8 @@ export function UrlMenu(props: Props) {
                 }
                 values={{
                   link: (
-                    <a href="https://topola-cors.herokuapp.com/">
-                      topola-cors.herokuapp.com
+                    <a href="https://topola-cors-server.up.railway.app/">
+                      topola-cors-server.up.railway.app
                     </a>
                   ),
                 }}

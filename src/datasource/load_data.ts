@@ -64,7 +64,7 @@ export async function loadFromUrl(
   }
 
   const urlToFetch = handleCors
-    ? 'https://topola-cors.herokuapp.com/' + url
+    ? 'https://topola-cors-server.up.railway.app/' + url
     : url;
 
   const response = await window.fetch(urlToFetch);

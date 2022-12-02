@@ -49,7 +49,7 @@ function getApiOptions(handleCors: boolean) {
   return handleCors
     ? {
         apiUrl:
-          'https://topola-cors.herokuapp.com/https://api.wikitree.com/api.php',
+          'https://topola-cors-server.up.railway.app/https://api.wikitree.com/api.php',
       }
     : {};
 }
@@ -826,3 +826,4 @@ export class WikiTreeDataSource implements DataSource<WikiTreeSourceSpec> {
     }
   }
 }
+
