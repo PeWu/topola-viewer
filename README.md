@@ -53,8 +53,7 @@ Source code: https://github.com/gramps-project/addons-source/tree/master/Topola
 ### Webtrees
 
 Embed Topola Genealogy Viewer in your [Webtrees](https://www.webtrees.net/) installation with the
-[Topola interactive tree addon](https://www.webtrees.net/index.php/en/add-ons/download/3-modules/247-topola-interactive-tree).
-Webtrees 2.0 is not supported yet.
+[Topola interactive tree addon](https://webtrees.net/download/modules#simple-auto-login---by-fanningert---20---website).
 
 Source code: https://github.com/PeWu/topola-webtrees
 
