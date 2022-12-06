@@ -157,7 +157,7 @@ export function TopBar(props: Props) {
               <Icon name="download" />
               <FormattedMessage
                 id="menu.download_pdf"
-                defaultMessage="Downlod PDF"
+                defaultMessage="Download PDF"
               />
             </Dropdown.Item>
             <Dropdown.Item onClick={props.eventHandlers.onDownloadPng}>
