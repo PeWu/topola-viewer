@@ -1,5 +1,9 @@
 # Changelog
 
+## 2022-12-08
+
+- French translation updated by Olivier Berten
+
 ## 2022-08-30
 
 - Added displaying name types in details panel
