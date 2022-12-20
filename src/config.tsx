@@ -8,12 +8,19 @@ export enum ChartColors {
   COLOR_BY_GENERATION,
 }
 
+export enum Ids {
+  HIDE,
+  SHOW,
+}
+
 export interface Config {
   color: ChartColors;
+  id: Ids;
 }
 
 export const DEFALUT_CONFIG: Config = {
   color: ChartColors.COLOR_BY_GENERATION,
+  id: Ids.SHOW,
 };
 
 const COLOR_ARG = new Map<string, ChartColors>([
@@ -24,6 +31,13 @@ const COLOR_ARG = new Map<string, ChartColors>([
 const COLOR_ARG_INVERSE = new Map<ChartColors, string>();
 COLOR_ARG.forEach((v, k) => COLOR_ARG_INVERSE.set(v, k));
 
+const ID_ARG = new Map<string, Ids>([
+  ['h', Ids.HIDE],
+  ['s', Ids.SHOW],
+]);
+const ID_ARG_INVERSE = new Map<Ids, string>();
+ID_ARG.forEach((v, k) => ID_ARG_INVERSE.set(v, k));
+
 export function argsToConfig(args: ParsedQuery<any>): Config {
   const getParam = (name: string) => {
     const value = args[name];
@@ -32,11 +46,15 @@ export function argsToConfig(args: ParsedQuery<any>): Config {
 
   return {
     color: COLOR_ARG.get(getParam('c') ?? '') ?? DEFALUT_CONFIG.color,
+    id: ID_ARG.get(getParam('i') ?? '') ?? DEFALUT_CONFIG.id,
   };
 }
 
 export function configToArgs(config: Config): ParsedQuery<any> {
-  return {c: COLOR_ARG_INVERSE.get(config.color)};
+  return {
+    c: COLOR_ARG_INVERSE.get(config.color),
+    i: ID_ARG_INVERSE.get(config.id),
+  };
 }
 
 export function ConfigPanel(props: {
@@ -64,7 +82,9 @@ export function ConfigPanel(props: {
                 name="checkboxRadioGroup"
                 value="none"
                 checked={props.config.color === ChartColors.NO_COLOR}
-                onClick={() => props.onChange({color: ChartColors.NO_COLOR})}
+                onClick={() =>
+                  props.onChange({...props.config, color: ChartColors.NO_COLOR})
+                }
               />
             </Form.Field>
             <Form.Field className="no-margin">
@@ -81,7 +101,7 @@ export function ConfigPanel(props: {
                 value="generation"
                 checked={props.config.color === ChartColors.COLOR_BY_GENERATION}
                 onClick={() =>
-                  props.onChange({color: ChartColors.COLOR_BY_GENERATION})
+                  props.onChange({...props.config, color: ChartColors.COLOR_BY_GENERATION})
                 }
               />
             </Form.Field>
@@ -99,7 +119,50 @@ export function ConfigPanel(props: {
                 value="gender"
                 checked={props.config.color === ChartColors.COLOR_BY_SEX}
                 onClick={() =>
-                  props.onChange({color: ChartColors.COLOR_BY_SEX})
+                  props.onChange({...props.config, color: ChartColors.COLOR_BY_SEX})
+                }
+              />
+            </Form.Field>
+          </Item.Content>
+        </Item>
+        <Item>
+        <Item.Content>
+            <Header sub>
+              <FormattedMessage id="config.ids" defaultMessage="IDs" />
+            </Header>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.ids.HIDE"
+                    defaultMessage="hide"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="hide"
+                checked={props.config.id === Ids.HIDE}
+                onClick={() =>
+                  props.onChange({...props.config, id: Ids.HIDE})
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.ids.SHOW"
+                    defaultMessage="show"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="show"
+                checked={props.config.id === Ids.SHOW}
+                onClick={() =>
+                  props.onChange({...props.config, id: Ids.SHOW})
                 }
               />
             </Form.Field>
