@@ -59,17 +59,6 @@ function Contents() {
       <ul>
         <li>
           <GedcomLink
-            url="http://genpol.com/module-Downloads-prep_hand_out-lid-32.html"
-            text="Karol Wojtyła"
-          />{' '}
-          (<FormattedMessage id="intro.from" defaultMessage="from" />{' '}
-          <a href="http://genpol.com/module-Downloads-display-lid-32.html">
-            GENPOL
-          </a>
-          )
-        </li>
-        <li>
-          <GedcomLink
             url="https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/shakespeare.ged"
             text="Shakespeare"
           />{' '}
