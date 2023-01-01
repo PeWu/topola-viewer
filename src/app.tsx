@@ -16,6 +16,7 @@ import {TopBar} from './menu/top_bar';
 import {TopolaData} from './util/gedcom_util';
 import {useEffect, useState} from 'react';
 import {useHistory, useLocation} from 'react-router';
+import {idToIndiMap} from './util/gedcom_util';
 import {
   Chart,
   ChartType,
@@ -30,6 +31,7 @@ import {
   ConfigPanel,
   configToArgs,
   DEFALUT_CONFIG,
+  Ids,
 } from './config';
 import {
   getSelection,
@@ -217,6 +219,17 @@ export function App() {
     }
   }
 
+  function toggleIds(config: Config, data: TopolaData | undefined) {
+    if (data === undefined) {
+      return;
+    }
+    let shouldHideIds = config.id === Ids.HIDE;
+    let indiMap = idToIndiMap(data.chartData);
+    indiMap.forEach((indi) => {
+      indi.hideId = shouldHideIds;
+    });
+  }
+
   /** Sets error message after data load failure. */
   function setErrorMessage(message: string) {
     setError(message);
@@ -325,6 +338,7 @@ export function App() {
           const data = await loadData(args.sourceSpec, args.selection);
           // Set state with data.
           setData(data);
+          toggleIds(args.config, data);
           setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
         } catch (error: any) {
@@ -468,6 +482,7 @@ export function App() {
                 config={config}
                 onChange={(config) => {
                   setConfig(config);
+                  toggleIds(config, data);
                   updateUrl(configToArgs(config));
                 }}
               />
@@ -491,6 +506,7 @@ export function App() {
               onSelection={onSelection}
               freezeAnimation={freezeAnimation}
               colors={config.color}
+              hideIds={config.id}
             />
             {showSidePanel ? (
               <Media greaterThanOrEqual="large" className="sidePanel">
