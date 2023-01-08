@@ -1,5 +1,9 @@
 # Changelog
 
+## 2023-01-08
+
+- Added option to hide profile identifiers by Kent Grigo
+
 ## 2022-12-08
 
 - French translation updated by Olivier Berten
