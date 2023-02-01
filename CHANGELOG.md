@@ -2,7 +2,8 @@
 
 ## 2023-02-01
 
-- Added option to hide sex indicators by Kent Grigo
+- Added option to hide sex indicators (by Kent Grigo)
+- Empty family boxes are now not shown (by Kent Grigo)
 
 ## 2023-01-08
 
