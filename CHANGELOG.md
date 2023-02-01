@@ -1,5 +1,9 @@
 # Changelog
 
+## 2023-02-01
+
+- Added option to hide sex indicators by Kent Grigo
+
 ## 2023-01-08
 
 - Added option to hide profile identifiers by Kent Grigo
