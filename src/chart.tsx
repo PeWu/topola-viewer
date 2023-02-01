@@ -1,4 +1,4 @@
-import {ChartColors, Ids} from './config';
+import {ChartColors, Ids, Sex} from './config';
 import {interpolateNumber} from 'd3-interpolate';
 import {IntlShape, useIntl} from 'react-intl';
 import {max, min} from 'd3-array';
@@ -258,6 +258,7 @@ export interface ChartProps {
   freezeAnimation?: boolean;
   colors?: ChartColors;
   hideIds?: Ids;
+  hideSex?: Sex;
 }
 
 class ChartWrapper {
@@ -420,7 +421,8 @@ export function Chart(props: ChartProps) {
       const initialRender =
         props.chartType !== prevProps?.chartType ||
         props.colors !== prevProps?.colors ||
-        props.hideIds !== prevProps?.hideIds;
+        props.hideIds !== prevProps?.hideIds ||
+        props.hideSex !== prevProps?.hideSex;
       const resetPosition =
         props.chartType !== prevProps?.chartType ||
         props.data !== prevProps.data ||

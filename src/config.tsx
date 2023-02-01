@@ -13,14 +13,21 @@ export enum Ids {
   SHOW,
 }
 
+export enum Sex {
+  HIDE,
+  SHOW,
+}
+
 export interface Config {
   color: ChartColors;
   id: Ids;
+  sex: Sex;
 }
 
 export const DEFALUT_CONFIG: Config = {
   color: ChartColors.COLOR_BY_GENERATION,
   id: Ids.SHOW,
+  sex: Sex.SHOW,
 };
 
 const COLOR_ARG = new Map<string, ChartColors>([
@@ -38,6 +45,13 @@ const ID_ARG = new Map<string, Ids>([
 const ID_ARG_INVERSE = new Map<Ids, string>();
 ID_ARG.forEach((v, k) => ID_ARG_INVERSE.set(v, k));
 
+const SEX_ARG = new Map<string, Sex>([
+  ['h', Sex.HIDE],
+  ['s', Sex.SHOW],
+]);
+const SEX_ARG_INVERSE = new Map<Sex, string>();
+SEX_ARG.forEach((v, k) => SEX_ARG_INVERSE.set(v, k));
+
 export function argsToConfig(args: ParsedQuery<any>): Config {
   const getParam = (name: string) => {
     const value = args[name];
@@ -47,6 +61,7 @@ export function argsToConfig(args: ParsedQuery<any>): Config {
   return {
     color: COLOR_ARG.get(getParam('c') ?? '') ?? DEFALUT_CONFIG.color,
     id: ID_ARG.get(getParam('i') ?? '') ?? DEFALUT_CONFIG.id,
+    sex: SEX_ARG.get(getParam('s') ?? '') ?? DEFALUT_CONFIG.sex,
   };
 }
 
@@ -54,6 +69,7 @@ export function configToArgs(config: Config): ParsedQuery<any> {
   return {
     c: COLOR_ARG_INVERSE.get(config.color),
     i: ID_ARG_INVERSE.get(config.id),
+    s: SEX_ARG_INVERSE.get(config.sex),
   };
 }
 
@@ -163,6 +179,49 @@ export function ConfigPanel(props: {
                 checked={props.config.id === Ids.SHOW}
                 onClick={() =>
                   props.onChange({...props.config, id: Ids.SHOW})
+                }
+              />
+            </Form.Field>
+          </Item.Content>
+        </Item>
+        <Item>
+        <Item.Content>
+            <Header sub>
+              <FormattedMessage id="config.sex" defaultMessage="Sex" />
+            </Header>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.sex.HIDE"
+                    defaultMessage="hide"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="hide"
+                checked={props.config.sex === Sex.HIDE}
+                onClick={() =>
+                  props.onChange({...props.config, sex: Sex.HIDE})
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.sex.SHOW"
+                    defaultMessage="show"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="show"
+                checked={props.config.sex === Sex.SHOW}
+                onClick={() =>
+                  props.onChange({...props.config, sex: Sex.SHOW})
                 }
               />
             </Form.Field>

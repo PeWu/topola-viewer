@@ -32,6 +32,7 @@ import {
   configToArgs,
   DEFALUT_CONFIG,
   Ids,
+  Sex,
 } from './config';
 import {
   getSelection,
@@ -219,14 +220,16 @@ export function App() {
     }
   }
 
-  function toggleIds(config: Config, data: TopolaData | undefined) {
+  function toggleDetails(config: Config, data: TopolaData | undefined) {
     if (data === undefined) {
       return;
     }
     let shouldHideIds = config.id === Ids.HIDE;
+    let shouldHideSex = config.sex === Sex.HIDE;
     let indiMap = idToIndiMap(data.chartData);
     indiMap.forEach((indi) => {
       indi.hideId = shouldHideIds;
+      indi.hideSex = shouldHideSex;
     });
   }
 
@@ -338,7 +341,7 @@ export function App() {
           const data = await loadData(args.sourceSpec, args.selection);
           // Set state with data.
           setData(data);
-          toggleIds(args.config, data);
+          toggleDetails(args.config, data);
           setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
         } catch (error: any) {
@@ -482,7 +485,7 @@ export function App() {
                 config={config}
                 onChange={(config) => {
                   setConfig(config);
-                  toggleIds(config, data);
+                  toggleDetails(config, data);
                   updateUrl(configToArgs(config));
                 }}
               />
@@ -507,6 +510,7 @@ export function App() {
               freezeAnimation={freezeAnimation}
               colors={config.color}
               hideIds={config.id}
+              hideSex={config.sex}
             />
             {showSidePanel ? (
               <Media greaterThanOrEqual="large" className="sidePanel">
