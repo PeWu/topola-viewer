@@ -22,6 +22,7 @@ Website: https://pewu.github.io/topola-viewer
 * Print the whole genealogy tree
 * Export to PDF, PNG, SVG
 * Side panel with details
+* Configuration options
 * Permalinks when loading from URL
 * Cool transition animations
 
@@ -32,6 +33,7 @@ Website: https://pewu.github.io/topola-viewer
 Here is an example from the Web:
 
 * [Shakespeare](https://pewu.github.io/topola-viewer/#/view?url=https%3A%2F%2Fwebtreeprint.com%2Ftp_downloader.php%3Fpath%3Dfamous_gedcoms%2Fshakespeare.ged) (from [webtreeprint.com](https://webtreeprint.com/tp_famous_gedcoms.php))
+* [Marie Skłodowska-Curie](https://pewu.github.io/topola-viewer/#/view?indi=Sk%C5%82odowska-2&source=wikitree) (from [WikiTree](https://www.wikitree.com/wiki/Sk%C5%82odowska-2))
 
 If you have data in a genealogy database, you can export your data in GEDCOM format and load it using the "Load from file" menu.
 
@@ -73,3 +75,58 @@ to benefit from the ability of being logged in to the WikiTree API.
 npm install
 npm start
 ```
+
+## Self-hosting
+
+You can host Topola Genealogy Viewer on your own server. There are no specific requirements for the hosting server. There is no code that is executed on the server side. The server only hosts the application files and whole application runs in the browser.
+
+You can build Topola Genealogy Viewer from source code or take a ready-to-deploy package.
+
+### Bulid your own
+
+Here are the commands to build the application:
+```
+git clone https://github.com/PeWu/topola-viewer.git
+cd topola-viewer
+npm install
+npm run build
+```
+Now, take the contents of the `build/` folder and host it on your own server.
+
+### Use an existing package
+
+Download the following file, unpack it and upload the contents to your server:
+https://github.com/PeWu/topola-viewer/archive/refs/heads/gh-pages.zip
+
+These are the exact files that are hosted on GitHub pages.
+
+### Alternative build
+
+The [topola-webpack](https://github.com/develancer/topola-webpack) tool can build a Topola Genealogy Viewer package bundled together with a GEDCOM file.
+
+## Additional options
+
+### `handleCors`
+
+Add `&handleCors=false` to the URL to avoid using the CORS proxy
+
+### `embedded`
+
+Add `&embedded=true` to the URL. This option removes the options to open a different file. It is an option that was intended to be used when Topola Genealogy Viewer is in an iframe.
+
+## Hosting a GEDCOM file
+
+One of the common ways to host a GEDCOM file which can be used in Topola Genealogy Viewer is using [Google Drive](https://drive.google.com). Here are the steps you can follow:
+
+1. Upload the GEDCOM file to Google Drive
+2. Right-click the file in Google Drive and choose "Get link"
+3. In the "General access" section change "Restricted" to "Anyone with the link" with "Viewer" permissions.
+4. Click "Copy link" to get the link to the GEDCOM file.
+5. Open [Topola Genealogy Viewer](https://pewu.github.io/topola-viewer).
+6. Click "Open URL"
+7. Paste the copied URL and click "Open"
+8. Once the tree opens, copy the current URL.
+
+You can now share the copied URL with someone.
+
+Note that the URL you just copied is not discoverable. Only people who have the link will be able to see your data. It's similar to an "Unlisted" YouTube video – you can see it only if you know the link.
