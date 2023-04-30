@@ -23,6 +23,8 @@ import {
   Person,
 } from 'wikitree-js';
 
+const WIKITREE_APP_ID = 'topola-viewer';
+
 /** Prefix for IDs of private individuals. */
 export const PRIVATE_ID_PREFIX = '~Private';
 
@@ -46,12 +48,15 @@ function setSessionStorageItem(key: string, value: string) {
 }
 
 function getApiOptions(handleCors: boolean) {
-  return handleCors
-    ? {
-        apiUrl:
-          'https://topola-cors-server.up.railway.app/https://api.wikitree.com/api.php',
-      }
-    : {};
+  return Object.assign(
+    {appId: WIKITREE_APP_ID},
+    handleCors
+      ? {
+          apiUrl:
+            'https://topola-cors-server.up.railway.app/https://api.wikitree.com/api.php',
+        }
+      : {},
+  );
 }
 
 /**
@@ -128,7 +133,7 @@ export async function loadWikiTree(
   const handleCors = window.location.hostname !== 'apps.wikitree.com';
 
   if (!handleCors && !getLoggedInUserName() && authcode) {
-    const loginResult = await clientLogin(authcode);
+    const loginResult = await clientLogin(authcode, {appId: WIKITREE_APP_ID});
     if (loginResult.result === 'Success') {
       sessionStorage.clear();
     }
@@ -826,4 +831,3 @@ export class WikiTreeDataSource implements DataSource<WikiTreeSourceSpec> {
     }
   }
 }
-
