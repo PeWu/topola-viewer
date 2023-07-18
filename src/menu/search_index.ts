@@ -1,11 +1,10 @@
-import lunr from 'lunr';
+import lunr, {PipelineFunction} from 'lunr';
 import naturalSort from 'javascript-natural-sort';
 import {idToFamMap, idToIndiMap} from '../util/gedcom_util';
 import {JsonFam, JsonGedcomData, JsonIndi} from 'topola';
 
 // TODO: Add type declarations and use import instead of require.
 require('lunr-languages/lunr.stemmer.support')(lunr);
-require('lunr-languages/lunr.multi')(lunr);
 require('lunr-languages/lunr.de')(lunr);
 require('lunr-languages/lunr.fr')(lunr);
 require('lunr-languages/lunr.it')(lunr);
@@ -66,7 +65,14 @@ class LunrSearchIndex implements SearchIndex {
   initialize() {
     const self = this;
     this.index = lunr(function () {
-      this.use((lunr as any).multiLanguage('de', 'en', 'fr', 'it', 'ru'));
+      //Trimmer will break non-latin characters, so custom multilingual implementation must be used
+      self.initMultiLingualLunrWithoutTrimmer(this, [
+        'de',
+        'en',
+        'fr',
+        'it',
+        'ru',
+      ]);
       this.ref('id');
       this.field('id');
       this.field('name', {boost: 10});
@@ -90,6 +96,42 @@ class LunrSearchIndex implements SearchIndex {
         });
       });
     });
+  }
+
+  private initMultiLingualLunrWithoutTrimmer(
+    lunrInstance: any,
+    languages: string[],
+  ): void {
+    let wordCharacters = '';
+    const pipelineFunctions: PipelineFunction[] = [];
+    const searchPipelineFunctions: PipelineFunction[] = [];
+    languages.forEach((language) => {
+      if (language === 'en') {
+        wordCharacters += '\\w';
+        pipelineFunctions.unshift(lunr.stopWordFilter);
+        pipelineFunctions.push(lunr.stemmer);
+        searchPipelineFunctions.push(lunr.stemmer);
+      } else {
+        wordCharacters += lunr[language].wordCharacters;
+        if (lunr[language].stopWordFilter) {
+          pipelineFunctions.unshift(lunr[language].stopWordFilter);
+        }
+        if (lunr[language].stemmer) {
+          pipelineFunctions.push(lunr[language].stemmer);
+          searchPipelineFunctions.push(lunr[language].stemmer);
+        }
+      }
+    });
+    lunrInstance.pipeline.reset();
+    lunrInstance.pipeline.add.apply(lunrInstance.pipeline, pipelineFunctions);
+
+    if (lunrInstance.searchPipeline) {
+      lunrInstance.searchPipeline.reset();
+      lunrInstance.searchPipeline.add.apply(
+        lunrInstance.searchPipeline,
+        searchPipelineFunctions,
+      );
+    }
   }
 
   public search(input: string): SearchResult[] {
