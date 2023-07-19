@@ -1,5 +1,9 @@
 # Changelog
 
+## 2023-07-20
+
+- Fixed search for Hebrew names (by czifumasa)
+
 ## 2023-02-01
 
 - Added option to hide sex indicators (by Kent Grigo)
