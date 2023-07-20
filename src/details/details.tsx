@@ -4,8 +4,7 @@ import {
   GedcomData,
   getData,
   getFileName,
-  getImageFileEntry,
-  isImageFile,
+  getImageFileEntry
 } from '../util/gedcom_util';
 import {Events} from './events';
 import {GedcomEntry} from 'parse-gedcom';
