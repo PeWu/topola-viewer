@@ -91,5 +91,8 @@
   "config.colors.NO_COLOR": "brak",
   "config.colors.COLOR_BY_GENERATION": "według pokolenia",
   "config.colors.COLOR_BY_SEX": "według płci",
-  "name.unknown_name": "N.N."
+  "name.unknown_name": "N.N.",
+  "extras.images": "Zdjęcia",
+  "extras.notes": "Notatki",
+  "extras.sources": "Źródła"
 }

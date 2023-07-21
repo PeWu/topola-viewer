@@ -206,3 +206,29 @@ div.zoom {
 .image-placeholder {
   height: 100%;
 }
+
+.event-extras .ui.attached.menu {
+  border: none;
+  min-height: auto;
+}
+
+.event-extras .ui.attached.segment.tab {
+  border: none;
+}
+
+.event-extras .ui.tabular.menu .item {
+  border: none;
+}
+
+.event-extras .ui.menu .active.item .icon{
+  background-color: #1b1c1d;
+  color: #ffffff;
+}
+
+.event-extras .ui.attached.segment.active.tab{
+  word-break: normal;
+  overflow-wrap: anywhere;
+  max-width: 289px;
+  padding: 14px 0px 0px;
+}
+

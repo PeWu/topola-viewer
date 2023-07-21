@@ -4,7 +4,7 @@ import {
   GedcomData,
   getData,
   getFileName,
-  isImageFile,
+  getImageFileEntry
 } from '../util/gedcom_util';
 import {Events} from './events';
 import {GedcomEntry} from 'parse-gedcom';
@@ -56,12 +56,7 @@ function dataDetails(entry: GedcomEntry) {
 }
 
 function fileDetails(objectEntry: GedcomEntry) {
-  const imageFileEntry = objectEntry.tree.find(
-    (entry) =>
-      entry.tag === 'FILE' &&
-      entry.data.startsWith('http') &&
-      isImageFile(entry.data),
-  );
+  const imageFileEntry = getImageFileEntry(objectEntry);
 
   return imageFileEntry ? (
     <div className="person-image">

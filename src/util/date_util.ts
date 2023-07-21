@@ -27,7 +27,9 @@ function formatDate(date: TopolaDate, intl: IntlShape) {
     formatOptions,
   ).format(dateObject);
 
-  return [translatedQualifier, translatedDate].join(' ');
+  return [translatedQualifier, translatedDate]
+    .filter((dateElement) => dateElement)
+    .join(' ');
 }
 
 function formatDateRage(dateRange: DateRange, intl: IntlShape) {
