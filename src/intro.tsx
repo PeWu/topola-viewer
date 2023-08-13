@@ -94,7 +94,7 @@ function Contents() {
           ' cross-site file loading in the browser (CORS).'
         }
         values={{
-          link: <a href="https://topola-cors-server.up.railway.app/">cors-anywhere</a>,
+          link: <a href="https://topolaproxy.bieda.it/">cors-anywhere</a>,
         }}
       />
 

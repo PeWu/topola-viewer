@@ -53,7 +53,7 @@ function getApiOptions(handleCors: boolean) {
     handleCors
       ? {
           apiUrl:
-            'https://topola-cors-server.up.railway.app/https://api.wikitree.com/api.php',
+            'https://topolaproxy.bieda.it/https://api.wikitree.com/api.php',
         }
       : {},
   );
