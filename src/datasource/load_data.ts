@@ -3,6 +3,7 @@ import {convertGedcom, getSoftware, TopolaData} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 import {IndiInfo, JsonGedcomData} from 'topola';
 import {TopolaError} from '../util/error';
+import AdmZip from 'adm-zip';
 
 /**
  * Returns a valid IndiInfo object, either with the given indi and generation
@@ -36,6 +37,45 @@ function prepareData(
   return data;
 }
 
+async function loadGedzip(
+  blob: Blob,
+): Promise<{gedcom: string; images: Map<string, string>}> {
+  const zip = new AdmZip(Buffer.from(await blob.arrayBuffer()));
+  const entries = zip.getEntries();
+
+  let gedcom = undefined;
+  const images = new Map<string, string>();
+  for (const entry of entries) {
+    if (entry.entryName.endsWith('.ged')) {
+      if (gedcom) {
+        console.warn('Multiple GEDCOM files found in zip archive.');
+      } else {
+        gedcom = entry.getData().toString();
+      }
+    } else {
+      // Save image for later.
+      images.set(
+        entry.entryName,
+        URL.createObjectURL(new Blob([entry.getData()])),
+      );
+    }
+  }
+  if (!gedcom) {
+    throw new Error('GEDCOM file not found in zip archive.');
+  }
+  return {gedcom, images};
+}
+
+export async function loadFile(
+  blob: Blob,
+): Promise<{gedcom: string; images: Map<string, string>}> {
+  const fileHeader = await blob.slice(0, 2).text();
+  if (fileHeader === 'PK') {
+    return loadGedzip(blob);
+  }
+  return {gedcom: await blob.text(), images: new Map()};
+}
+
 /** Fetches data from the given URL. Uses cors-anywhere if handleCors is true. */
 export async function loadFromUrl(
   url: string,
@@ -63,16 +103,15 @@ export async function loadFromUrl(
     url = `https://drive.google.com/uc?id=${driveUrlMatch2[1]}&export=download`;
   }
 
-  const urlToFetch = handleCors
-    ? 'https://topolaproxy.bieda.it/' + url
-    : url;
+  const urlToFetch = handleCors ? 'https://topolaproxy.bieda.it/' + url : url;
 
   const response = await window.fetch(urlToFetch);
   if (response.status !== 200) {
     throw new Error(response.statusText);
   }
-  const gedcom = await response.text();
-  return prepareData(gedcom, url);
+
+  const {gedcom, images} = await loadFile(await response.blob());
+  return prepareData(gedcom, url, images);
 }
 
 /** Loads data from the given GEDCOM file contents. */

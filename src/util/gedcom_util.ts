@@ -210,9 +210,12 @@ function filterImage(indi: JsonIndi, images: Map<string, string>): JsonIndi {
   }
   const newImages: JsonImage[] = [];
   indi.images.forEach((image) => {
-    const fileName = image.url.match(/[^/\\]*$/)![0];
+    const filePath = image.url.replaceAll('\\', '/');
+    const fileName = filePath.match(/[^/]*$/)![0];
     // If the image file has been loaded into memory, use it.
-    if (images.has(fileName)) {
+    if (images.has(filePath)) {
+      newImages.push({url: images.get(filePath)!, title: image.title});
+    } else if (images.has(fileName)) {
       newImages.push({url: images.get(fileName)!, title: image.title});
     } else if (image.url.startsWith('http') && isImageFile(image.url)) {
       newImages.push(image);

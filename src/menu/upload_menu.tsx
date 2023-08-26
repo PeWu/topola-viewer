@@ -6,16 +6,7 @@ import {FormattedMessage} from 'react-intl';
 import {MenuType} from './menu_item';
 import {SyntheticEvent} from 'react';
 import {useHistory, useLocation} from 'react-router';
-
-function loadFileAsText(file: File): Promise<string> {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (evt: ProgressEvent) => {
-      resolve((evt.target as FileReader).result as string);
-    };
-    reader.readAsText(file);
-  });
-}
+import {loadFile} from '../datasource/load_data';
 
 function isImageFileName(fileName: string) {
   const lower = fileName.toLowerCase();
@@ -47,27 +38,18 @@ export function UploadMenu(props: Props) {
         ? filesArray[0]
         : filesArray.find((file) => file.name.toLowerCase().endsWith('.ged')) ||
           filesArray[0];
+    const {gedcom, images} = await loadFile(gedcomFile);
 
     // Convert uploaded images to object URLs.
-    const images = filesArray
+    filesArray
       .filter(
         (file) => file.name !== gedcomFile.name && isImageFileName(file.name),
       )
-      .map((file) => ({
-        name: file.name,
-        url: URL.createObjectURL(file),
-      }));
-    const imageMap = new Map(
-      images.map((entry) => [entry.name, entry.url] as [string, string]),
-    );
+      .forEach((file) => images.set(file.name, URL.createObjectURL(file)));
 
-    const data = await loadFileAsText(gedcomFile);
-    const imageFileNames = images
-      .map((image) => image.name)
-      .sort()
-      .join('|');
     // Hash GEDCOM contents with uploaded image file names.
-    const hash = md5(md5(data) + imageFileNames);
+    const imageFileNames = Array.from(images.keys()).sort().join('|');
+    const hash = md5(md5(gedcom) + imageFileNames);
 
     // Use history.replace() when reuploading the same file and history.push() when loading
     // a new file.
@@ -77,7 +59,7 @@ export function UploadMenu(props: Props) {
     historyPush({
       pathname: '/view',
       search: queryString.stringify({file: hash}),
-      state: {data, images: imageMap},
+      state: {data: gedcom, images},
     });
   }
 
@@ -101,7 +83,7 @@ export function UploadMenu(props: Props) {
       <input
         className="hidden"
         type="file"
-        accept=".ged,image/*"
+        accept=".ged,.gdz,.gedzip,.zip,image/*"
         id="fileInput"
         multiple
         onChange={handleUpload}

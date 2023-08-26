@@ -1,5 +1,9 @@
 # Changelog
 
+## 2023-08-25
+
+- Added support for loading gedzip files
+
 ## 2023-07-21
 
 - Display images, notes, sources for events as collapsible tabs (by czifumasa)
