@@ -59,7 +59,7 @@ function Contents() {
       <ul>
         <li>
           <GedcomLink
-            url="https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/shakespeare.ged"
+            url="https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/shakespeare.ged&file=shakespeare.ged"
             text="Shakespeare"
           />{' '}
           (<FormattedMessage id="intro.from" defaultMessage="from" />{' '}
