@@ -32,7 +32,7 @@ Website: https://pewu.github.io/topola-viewer
 
 Here is an example from the Web:
 
-* [Shakespeare](https://pewu.github.io/topola-viewer/#/view?url=https%3A%2F%2Fwebtreeprint.com%2Ftp_downloader.php%3Fpath%3Dfamous_gedcoms%2Fshakespeare.ged) (from [webtreeprint.com](https://webtreeprint.com/tp_famous_gedcoms.php))
+* [Shakespeare](https://pewu.github.io/topola-viewer/#/view?url=https%3A%2F%2Fwebtreeprint.com%2Ftp_downloader.php%3Fpath%3Dfamous_gedcoms%2Fshakespeare.ged%26file%3Dshakespeare.ged) (from [webtreeprint.com](https://webtreeprint.com/tp_famous_gedcoms.php))
 * [Marie Skłodowska-Curie](https://pewu.github.io/topola-viewer/#/view?indi=Sk%C5%82odowska-2&source=wikitree) (from [WikiTree](https://www.wikitree.com/wiki/Sk%C5%82odowska-2))
 
 If you have data in a genealogy database, you can export your data in GEDCOM format and load it using the "Load from file" menu.
