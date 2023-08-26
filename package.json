@@ -21,6 +21,7 @@
     "lunr": "^2.3.9",
     "lunr-languages": "^1.4.0",
     "md5": "^2.3.0",
+    "original-fs": "^1.2.0",
     "parse-gedcom": "^1.0.5",
     "query-string": "^7.0.0",
     "react": "^17.0.2",
