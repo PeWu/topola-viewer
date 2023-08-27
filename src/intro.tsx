@@ -7,12 +7,10 @@ import {Link} from 'react-router-dom';
 import {Media} from './util/media';
 import {getChangelog, updateSeenVersion} from './changelog';
 
-/** Link that loads a GEDCOM file from URL. */
-function GedcomLink(props: {url: string; text: string}) {
+/** Link that loads a view. */
+function ViewLink(props: {params: {[key: string]: string}; text: string}) {
   return (
-    <Link
-      to={{pathname: '/view', search: queryString.stringify({url: props.url})}}
-    >
+    <Link to={{pathname: '/view', search: queryString.stringify(props.params)}}>
       {props.text}
     </Link>
   );
@@ -58,13 +56,44 @@ function Contents() {
       </h3>
       <ul>
         <li>
-          <GedcomLink
-            url="https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/shakespeare.ged&file=shakespeare.ged"
+          <ViewLink
+            params={{
+              url:
+                'https://chronoplexsoftware.com/myfamilytree/samples/The%20Kennedy%20Family.gdz',
+            }}
+            text="J. F. Kennedy"
+          />{' '}
+          (<FormattedMessage id="intro.from" defaultMessage="from" />{' '}
+          <a href="https://chronoplexsoftware.com/myfamilytree/samples/">
+            chronoplexsoftware.com
+          </a>
+          )
+        </li>
+        <li>
+          <ViewLink
+            params={{
+              url:
+                'https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/shakespeare.ged&file=shakespeare.ged',
+            }}
             text="Shakespeare"
           />{' '}
           (<FormattedMessage id="intro.from" defaultMessage="from" />{' '}
           <a href="https://webtreeprint.com/tp_famous_gedcoms.php">
             webtreeprint.com
+          </a>
+          )
+        </li>
+        <li>
+          <ViewLink
+            params={{
+              indi:
+                'Skłodowska-2', source: 'wikitree'
+            }}
+            text="Maria Skłodowska-Curie"
+          />{' '}
+          (<FormattedMessage id="intro.from" defaultMessage="from" />{' '}
+          <a href="https://www.wikitree.com/wiki/Sk%C5%82odowska-2">
+            wikitree.com
           </a>
           )
         </li>
@@ -151,3 +180,4 @@ export function Intro() {
     </div>
   );
 }
+
