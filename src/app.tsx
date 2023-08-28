@@ -48,6 +48,14 @@ import {
   WikiTreeSourceSpec,
 } from './datasource/wikitree';
 
+/**
+ * Load GEDCOM URL from REACT_APP_STATIC_URL environment variable.
+ *
+ * If this environment variable is provided, the viewer is switched to
+ * single-tree mode without the option to load other data.
+ */
+const staticUrl = process.env.REACT_APP_STATIC_URL;
+
 /** Shows an error message in the middle of the screen. */
 function ErrorMessage(props: {message?: string}) {
   return (
@@ -137,7 +145,13 @@ function getArguments(location: H.Location<any>): Arguments {
   const url = getParam('url');
   const embedded = getParam('embedded') === 'true'; // False by default.
   var sourceSpec: DataSourceSpec | undefined = undefined;
-  if (getParam('source') === 'wikitree') {
+  if (staticUrl) {
+    sourceSpec = {
+      source: DataSourceEnum.GEDCOM_URL,
+      url: staticUrl,
+      handleCors: false,
+    };
+  } else if (getParam('source') === 'wikitree') {
     const windowSearch = queryString.parse(window.location.search);
     sourceSpec = {
       source: DataSourceEnum.WIKITREE,
@@ -173,7 +187,7 @@ function getArguments(location: H.Location<any>): Arguments {
     chartType: chartTypes.get(view) || ChartType.Hourglass,
 
     showSidePanel: getParam('sidePanel') !== 'false', // True by default.
-    standalone: getParam('standalone') !== 'false' && !embedded,
+    standalone: getParam('standalone') !== 'false' && !embedded && !staticUrl,
     showWikiTreeMenus: getParam('showWikiTreeMenus') !== 'false', // True by default.
     freezeAnimation: getParam('freeze') === 'true', // False by default
     config: argsToConfig(search),
@@ -562,11 +576,19 @@ export function App() {
           />
         )}
       />
-      <Switch>
-        <Route exact path="/" component={Intro} />
-        <Route exact path="/view" render={renderMainArea} />
-        <Redirect to={'/'} />
-      </Switch>
+      {staticUrl ? (
+        <Switch>
+          <Route exact path="/view" render={renderMainArea} />
+          <Redirect to={'/view'} />
+        </Switch>
+      ) : (
+        <Switch>
+          <Route exact path="/" component={Intro} />
+          <Route exact path="/view" render={renderMainArea} />
+          <Redirect to={'/'} />
+        </Switch>
+      )}
     </>
   );
 }
+

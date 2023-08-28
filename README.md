@@ -101,6 +101,21 @@ https://github.com/PeWu/topola-viewer/archive/refs/heads/gh-pages.zip
 
 These are the exact files that are hosted on GitHub pages.
 
+### Build for your own data only
+
+You can run Topola Viewer in a "single tree mode" that displays only the GEDCOM you specify. Specify the URL to a GEDCOM file in the `REACT_APP_STATIC_URL` environment variable when building and running the application.
+
+Run locally with the specified data URL:
+```
+REACT_APP_STATIC_URL=https://example.org/sample.ged npm start
+```
+
+Build with the specified data URL:
+```
+REACT_APP_STATIC_URL=https://example.org/sample.ged npm run build
+```
+The `build/` folder will contain files that can be hosted on a Web server.
+
 ### Alternative build
 
 The [topola-webpack](https://github.com/develancer/topola-webpack) tool can build a Topola Genealogy Viewer package bundled together with a GEDCOM file.
