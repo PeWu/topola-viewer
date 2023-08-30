@@ -120,30 +120,21 @@ async function getRelatives(
   return result.concat(response);
 }
 
-/**
- * Loads data from WikiTree to populate an hourglass chart starting from the
- * given person ID.
- */
-export async function loadWikiTree(
-  key: string,
-  intl: IntlShape,
-  authcode?: string,
-): Promise<TopolaData> {
-  // Work around CORS if not in apps.wikitree.com domain.
-  const handleCors = window.location.hostname !== 'apps.wikitree.com';
-
+async function logInIfNeeded(
+  authcode: string | undefined,
+  handleCors: boolean,
+) {
   if (!handleCors && !getLoggedInUserName() && authcode) {
     const loginResult = await clientLogin(authcode, {appId: WIKITREE_APP_ID});
     if (loginResult.result === 'Success') {
       sessionStorage.clear();
     }
   }
+}
 
-  const everyone: Person[] = [];
-
-  // Fetch the ancestors of the input person and ancestors of his/her spouses.
-  const firstPerson = await getRelatives([key], handleCors);
-  if (!firstPerson[0]?.Name) {
+async function getFirstPerson(key: string, handleCors: boolean) {
+  const person = (await getRelatives([key], handleCors))[0];
+  if (!person?.Name) {
     const id = key;
     throw new TopolaError(
       'WIKITREE_PROFILE_NOT_ACCESSIBLE',
@@ -151,14 +142,16 @@ export async function loadWikiTree(
       {id},
     );
   }
+  return person;
+}
 
-  const spouseKeys = Object.values(firstPerson[0].Spouses || {}).map(
-    (s) => s.Name,
-  );
+function getSpouseKeys(person: Person) {
+  return Object.values(person.Spouses || {}).map((s) => s.Name);
+}
+
+async function getAllAncestors(keys: string[], handleCors: boolean) {
   const ancestors = await Promise.all(
-    [key]
-      .concat(spouseKeys)
-      .map((personId) => getAncestors(personId, handleCors)),
+    keys.map((key) => getAncestors(key, handleCors)),
   );
   const ancestorKeys = ancestors
     .flat()
@@ -204,11 +197,15 @@ export async function loadWikiTree(
       person.Mother = privateMother;
     }
   });
-  everyone.push(...ancestorDetails);
 
   // Collect private individuals.
   const privateAncestors = ancestors.flat().filter((person) => person.Id < 0);
-  everyone.push(...privateAncestors);
+
+  return ancestorDetails.concat(privateAncestors);
+}
+
+async function getAllDescendants(key: string, handleCors: boolean) {
+  const everyone: Person[] = [];
 
   // Limit the number of generations of descendants because there may be tens of
   // generations for some profiles.
@@ -230,64 +227,84 @@ export async function loadWikiTree(
     );
     generation++;
   }
+  return everyone;
+}
 
-  //Map from human-readable person id to person names
-  const personNames = new Map<
-    string,
-    {birth?: string; married?: string; aka?: string}
-  >();
+async function loadData(key: string, authcode?: string) {
+  // Work around CORS if not in apps.wikitree.com domain.
+  const handleCors = window.location.hostname !== 'apps.wikitree.com';
 
+  await logInIfNeeded(authcode, handleCors);
+
+  const firstPerson = await getFirstPerson(key, handleCors);
+  const spouseKeys = getSpouseKeys(firstPerson);
+
+  // Fetch the ancestors of the input person and ancestors of his/her spouses.
+  const allAncestors = getAllAncestors([key].concat(spouseKeys), handleCors);
+  // Fetch descendants and their spouses.
+  const allDescendants = getAllDescendants(key, handleCors);
+
+  const everyone: Person[] = [
+    ...(await allAncestors),
+    ...(await allDescendants),
+  ];
+  // Make sure the list contains unique elements.
+  return Array.from(
+    new Map(everyone.map((person) => [person.Id, person])).values(),
+  );
+}
+
+function getFamilies(people: Person[]) {
   // Map from person id to the set of families where they are a spouse.
   const families = new Map<number, Set<string>>();
-  // Map from family id to the set of children.
-  const children = new Map<string, Set<number>>();
-  // Map from famliy id to the spouses.
-  const spouses = new Map<
-    string,
-    {wife?: number; husband?: number; spouse?: Person}
-  >();
-  // Map from numerical id to human-readable id.
-  const idToName = new Map<number, string>();
-  // Map from human-readable person id to fullSizeUrl of person photo.
-  const fullSizePhotoUrls: Map<string, string> = new Map();
-
-  everyone.forEach((person) => {
-    idToName.set(person.Id, person.Name);
+  people.forEach((person) => {
     if (person.Mother || person.Father) {
       const famId = getFamilyId(person.Mother, person.Father);
       getSet(families, person.Mother).add(famId);
       getSet(families, person.Father).add(famId);
-      getSet(children, famId).add(person.Id);
-      spouses.set(famId, {
-        wife: person.Mother || undefined,
-        husband: person.Father || undefined,
-      });
     }
-  });
-
-  const indis: JsonIndi[] = [];
-
-  const converted = new Set<number>();
-  everyone.forEach((person) => {
-    if (converted.has(person.Id)) {
-      return;
-    }
-    converted.add(person.Id);
-    const indi = convertPerson(person, intl);
-    if (person.PhotoData?.path) {
-      fullSizePhotoUrls.set(
-        person.Name,
-        `https://www.wikitree.com${person.PhotoData.path}`,
-      );
-    }
-
-    personNames.set(person.Name, convertPersonNames(person));
-
     if (person.Spouses) {
       Object.values(person.Spouses).forEach((spouse) => {
         const famId = getFamilyId(person.Id, spouse.Id);
         getSet(families, person.Id).add(famId);
         getSet(families, spouse.Id).add(famId);
+      });
+    }
+  });
+  return families;
+}
+
+function getChildren(people: Person[]) {
+  // Map from family id to the set of children.
+  const children = new Map<string, Set<number>>();
+
+  people.forEach((person) => {
+    if (person.Mother || person.Father) {
+      const famId = getFamilyId(person.Mother, person.Father);
+      getSet(children, famId).add(person.Id);
+    }
+  });
+  return children;
+}
+
+function getSpouses(people: Person[]) {
+  // Map from famliy id to the spouses.
+  const spouses = new Map<
+    string,
+    {wife?: number; husband?: number; spouse?: Person}
+  >();
+
+  people.forEach((person) => {
+    if (person.Mother || person.Father) {
+      const famId = getFamilyId(person.Mother, person.Father);
+      spouses.set(famId, {
+        wife: person.Mother || undefined,
+        husband: person.Father || undefined,
+      });
+    }
+    if (person.Spouses) {
+      Object.values(person.Spouses).forEach((spouse) => {
+        const famId = getFamilyId(person.Id, spouse.Id);
         const familySpouses =
           person.Gender === 'Male'
             ? {wife: spouse.Id, husband: person.Id, spouse}
@@ -295,11 +312,25 @@ export async function loadWikiTree(
         spouses.set(famId, familySpouses);
       });
     }
-    indi.fams = Array.from(getSet(families, person.Id));
-    indis.push(indi);
   });
+  return spouses;
+}
 
-  const fams = Array.from(spouses.entries()).map(([key, value]) => {
+function convertIndis(people: Person[], intl: IntlShape) {
+  const families = getFamilies(people);
+  return people.map((person) => {
+    const indi = convertPerson(person, intl);
+    indi.fams = Array.from(getSet(families, person.Id));
+    return indi;
+  });
+}
+
+function convertFams(people: Person[]) {
+  // Map from numerical id to human-readable id.
+  const idToName = new Map(people.map((person) => [person.Id, person.Name]));
+  const children = getChildren(people);
+  const spouses = getSpouses(people);
+  return Array.from(spouses.entries()).map(([key, value]) => {
     const fam: JsonFam = {
       id: key,
     };
@@ -327,9 +358,34 @@ export async function loadWikiTree(
     }
     return fam;
   });
+}
 
+export async function loadWikiTree(
+  key: string,
+  intl: IntlShape,
+  authcode?: string,
+): Promise<TopolaData> {
+  const everyone = await loadData(key, authcode);
+
+  const indis = convertIndis(everyone, intl);
+  const fams = convertFams(everyone);
   const chartData = normalizeGedcom({indis, fams});
+
+  //Map from human-readable person id to person names
+  const personNames = new Map(
+    everyone.map((person) => [person.Name, convertPersonNames(person)]),
+  );
+  // Map from human-readable person id to fullSizeUrl of person photo.
+  const fullSizePhotoUrls = new Map(
+    everyone
+      .filter((person) => person.PhotoData?.path)
+      .map((person) => [
+        person.Name,
+        `https://www.wikitree.com${person.PhotoData!.path}`,
+      ]),
+  );
   const gedcom = buildGedcom(chartData, fullSizePhotoUrls, personNames);
+
   return {chartData, gedcom};
 }
 
@@ -831,3 +887,4 @@ export class WikiTreeDataSource implements DataSource<WikiTreeSourceSpec> {
     }
   }
 }
+
