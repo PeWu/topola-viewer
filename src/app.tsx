@@ -114,16 +114,18 @@ interface Arguments {
   config: Config;
 }
 
+function getParamFromSearch(name: string, search: queryString.ParsedQuery<string>) {
+  const value = search[name];
+  return typeof value === 'string' ? value : undefined;
+}
+
 /**
  * Retrieve arguments passed into the application through the URL and uploaded
  * data.
  */
 function getArguments(location: H.Location<any>): Arguments {
   const search = queryString.parse(location.search);
-  const getParam = (name: string) => {
-    const value = search[name];
-    return typeof value === 'string' ? value : undefined;
-  };
+  const getParam = (name: string) => getParamFromSearch(name, search);
 
   const view = getParam('view');
   const chartTypes = new Map<string | undefined, ChartType>([
@@ -136,9 +138,10 @@ function getArguments(location: H.Location<any>): Arguments {
   const embedded = getParam('embedded') === 'true'; // False by default.
   var sourceSpec: DataSourceSpec | undefined = undefined;
   if (getParam('source') === 'wikitree') {
+    const windowSearch = queryString.parse(window.location.search);
     sourceSpec = {
       source: DataSourceEnum.WIKITREE,
-      authcode: getParam('authcode'),
+      authcode: getParam('authcode') || getParamFromSearch('authcode', windowSearch),
     };
   } else if (hash) {
     sourceSpec = {
