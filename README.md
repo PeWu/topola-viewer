@@ -129,20 +129,3 @@ Add `&handleCors=false` to the URL to avoid using the CORS proxy
 ### `embedded`
 
 Add `&embedded=true` to the URL. This option removes the options to open a different file. It is an option that was intended to be used when Topola Genealogy Viewer is in an iframe.
-
-## Hosting a GEDCOM file
-
-One of the common ways to host a GEDCOM file which can be used in Topola Genealogy Viewer is using [Google Drive](https://drive.google.com). Here are the steps you can follow:
-
-1. Upload the GEDCOM file to Google Drive
-2. Right-click the file in Google Drive and choose "Get link"
-3. In the "General access" section change "Restricted" to "Anyone with the link" with "Viewer" permissions.
-4. Click "Copy link" to get the link to the GEDCOM file.
-5. Open [Topola Genealogy Viewer](https://pewu.github.io/topola-viewer).
-6. Click "Open URL"
-7. Paste the copied URL and click "Open"
-8. Once the tree opens, copy the current URL.
-
-You can now share the copied URL with someone.
-
-Note that the URL you just copied is not discoverable. Only people who have the link will be able to see your data. It's similar to an "Unlisted" YouTube video – you can see it only if you know the link.
