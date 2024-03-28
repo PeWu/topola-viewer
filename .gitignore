@@ -7,3 +7,4 @@ cypress/support/commands.js
 cypress/support/index.js
 cypress/videos
 .idea
+.vscode
