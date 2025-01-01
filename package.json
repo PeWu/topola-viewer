@@ -34,7 +34,7 @@
     "remark-rehype": "^10.0.0",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^2.0.3",
-    "topola": "^3.6.2",
+    "topola": "^3.7.3",
     "turbocommons-ts": "^3.8.0",
     "unified": "^10.1.0",
     "wikitree-js": "^0.4.0"
