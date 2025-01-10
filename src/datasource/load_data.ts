@@ -3,7 +3,8 @@ import {convertGedcom, getSoftware, TopolaData} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 import {IndiInfo, JsonGedcomData} from 'topola';
 import {TopolaError} from '../util/error';
-import AdmZip from 'adm-zip';
+import {strFromU8, unzip, Unzipped} from 'fflate';
+import {Buffer} from 'buffer';
 
 /**
  * Returns a valid IndiInfo object, either with the given indi and generation
@@ -40,24 +41,29 @@ function prepareData(
 async function loadGedzip(
   blob: Blob,
 ): Promise<{gedcom: string; images: Map<string, string>}> {
-  const zip = new AdmZip(Buffer.from(await blob.arrayBuffer()));
-  const entries = zip.getEntries();
+  const buffer = Buffer.from(await blob.arrayBuffer());
+  const unzipped: Unzipped = await new Promise((resolve, reject) => {
+    unzip(buffer, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
 
   let gedcom = undefined;
   const images = new Map<string, string>();
-  for (const entry of entries) {
-    if (entry.entryName.endsWith('.ged')) {
+  for (let fileName of Object.keys(unzipped)) {
+    if (fileName.endsWith('.ged')) {
       if (gedcom) {
         console.warn('Multiple GEDCOM files found in zip archive.');
       } else {
-        gedcom = entry.getData().toString();
+        gedcom = strFromU8(unzipped[fileName]);
       }
     } else {
       // Save image for later.
-      images.set(
-        entry.entryName,
-        URL.createObjectURL(new Blob([entry.getData()])),
-      );
+      images.set(fileName, URL.createObjectURL(new Blob([unzipped[fileName]])));
     }
   }
   if (!gedcom) {
