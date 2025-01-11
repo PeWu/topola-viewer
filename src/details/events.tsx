@@ -158,9 +158,7 @@ function eventSources(entry: GedcomEntry, gedcom: GedcomData): Source[] {
         (subEntry) => 'TITL' === subEntry.tag,
       );
 
-      const abbr = sourceEntry.tree.find(
-          (subEntry) => 'ABBR' === subEntry.tag,
-      );
+      const abbr = sourceEntry.tree.find((subEntry) => 'ABBR' === subEntry.tag);
 
       const author = sourceEntry.tree.find(
         (subEntry) => 'AUTH' === subEntry.tag,

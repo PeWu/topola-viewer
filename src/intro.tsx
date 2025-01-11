@@ -58,8 +58,7 @@ function Contents() {
         <li>
           <ViewLink
             params={{
-              url:
-                'https://chronoplexsoftware.com/myfamilytree/samples/The%20Kennedy%20Family.gdz',
+              url: 'https://chronoplexsoftware.com/myfamilytree/samples/The%20Kennedy%20Family.gdz',
             }}
             text="J. F. Kennedy"
           />{' '}
@@ -72,8 +71,7 @@ function Contents() {
         <li>
           <ViewLink
             params={{
-              url:
-                'https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/shakespeare.ged&file=shakespeare.ged',
+              url: 'https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/shakespeare.ged&file=shakespeare.ged',
             }}
             text="Shakespeare"
           />{' '}
@@ -86,8 +84,8 @@ function Contents() {
         <li>
           <ViewLink
             params={{
-              indi:
-                'Skłodowska-2', source: 'wikitree'
+              indi: 'Skłodowska-2',
+              source: 'wikitree',
             }}
             text="Maria Skłodowska-Curie"
           />{' '}
@@ -180,4 +178,3 @@ export function Intro() {
     </div>
   );
 }
-

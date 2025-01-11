@@ -122,7 +122,10 @@ interface Arguments {
   config: Config;
 }
 
-function getParamFromSearch(name: string, search: queryString.ParsedQuery<string>) {
+function getParamFromSearch(
+  name: string,
+  search: queryString.ParsedQuery<string>,
+) {
   const value = search[name];
   return typeof value === 'string' ? value : undefined;
 }
@@ -155,7 +158,8 @@ function getArguments(location: H.Location<any>): Arguments {
     const windowSearch = queryString.parse(window.location.search);
     sourceSpec = {
       source: DataSourceEnum.WIKITREE,
-      authcode: getParam('authcode') || getParamFromSearch('authcode', windowSearch),
+      authcode:
+        getParam('authcode') || getParamFromSearch('authcode', windowSearch),
     };
   } else if (hash) {
     sourceSpec = {
@@ -591,4 +595,3 @@ export function App() {
     </>
   );
 }
-

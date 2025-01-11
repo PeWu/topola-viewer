@@ -117,7 +117,10 @@ export function ConfigPanel(props: {
                 value="generation"
                 checked={props.config.color === ChartColors.COLOR_BY_GENERATION}
                 onClick={() =>
-                  props.onChange({...props.config, color: ChartColors.COLOR_BY_GENERATION})
+                  props.onChange({
+                    ...props.config,
+                    color: ChartColors.COLOR_BY_GENERATION,
+                  })
                 }
               />
             </Form.Field>
@@ -135,14 +138,17 @@ export function ConfigPanel(props: {
                 value="gender"
                 checked={props.config.color === ChartColors.COLOR_BY_SEX}
                 onClick={() =>
-                  props.onChange({...props.config, color: ChartColors.COLOR_BY_SEX})
+                  props.onChange({
+                    ...props.config,
+                    color: ChartColors.COLOR_BY_SEX,
+                  })
                 }
               />
             </Form.Field>
           </Item.Content>
         </Item>
         <Item>
-        <Item.Content>
+          <Item.Content>
             <Header sub>
               <FormattedMessage id="config.ids" defaultMessage="IDs" />
             </Header>
@@ -159,9 +165,7 @@ export function ConfigPanel(props: {
                 name="checkboxRadioGroup"
                 value="hide"
                 checked={props.config.id === Ids.HIDE}
-                onClick={() =>
-                  props.onChange({...props.config, id: Ids.HIDE})
-                }
+                onClick={() => props.onChange({...props.config, id: Ids.HIDE})}
               />
             </Form.Field>
             <Form.Field className="no-margin">
@@ -177,15 +181,13 @@ export function ConfigPanel(props: {
                 name="checkboxRadioGroup"
                 value="show"
                 checked={props.config.id === Ids.SHOW}
-                onClick={() =>
-                  props.onChange({...props.config, id: Ids.SHOW})
-                }
+                onClick={() => props.onChange({...props.config, id: Ids.SHOW})}
               />
             </Form.Field>
           </Item.Content>
         </Item>
         <Item>
-        <Item.Content>
+          <Item.Content>
             <Header sub>
               <FormattedMessage id="config.sex" defaultMessage="Sex" />
             </Header>
@@ -202,9 +204,7 @@ export function ConfigPanel(props: {
                 name="checkboxRadioGroup"
                 value="hide"
                 checked={props.config.sex === Sex.HIDE}
-                onClick={() =>
-                  props.onChange({...props.config, sex: Sex.HIDE})
-                }
+                onClick={() => props.onChange({...props.config, sex: Sex.HIDE})}
               />
             </Form.Field>
             <Form.Field className="no-margin">
@@ -220,9 +220,7 @@ export function ConfigPanel(props: {
                 name="checkboxRadioGroup"
                 value="show"
                 checked={props.config.sex === Sex.SHOW}
-                onClick={() =>
-                  props.onChange({...props.config, sex: Sex.SHOW})
-                }
+                onClick={() => props.onChange({...props.config, sex: Sex.SHOW})}
               />
             </Form.Field>
           </Item.Content>
