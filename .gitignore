@@ -2,9 +2,6 @@ build
 node_modules
 src/react-app-env.d.ts
 cypress/fixtures/example.json
-cypress/plugins/index.js
-cypress/support/commands.js
-cypress/support/index.js
 cypress/videos
 .idea
 .vscode
