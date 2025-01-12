@@ -87,7 +87,7 @@
   "error.WIKITREE_PROFILE_NOT_ACCESSIBLE": "Профиль WikiTree {id} недоступен",
   "error.WIKITREE_PROFILE_NOT_FOUND": "Профиль WikiTree {id} не найден",
   "error.failed_to_load_image": "Ошибка при открытии картинки",
-  "wikitree.private": "Частный"
+  "wikitree.private": "Частный",
   "tab.info": "Инфо",
   "tab.settings": "Установки",
   "config.colors": "Цвет",
