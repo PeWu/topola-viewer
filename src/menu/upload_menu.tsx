@@ -1,4 +1,4 @@
-import * as queryString from 'query-string';
+import queryString from 'query-string';
 import md5 from 'md5';
 import {analyticsEvent} from '../util/analytics';
 import {Dropdown, Icon, Menu} from 'semantic-ui-react';

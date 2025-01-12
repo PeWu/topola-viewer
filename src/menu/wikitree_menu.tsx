@@ -1,4 +1,4 @@
-import * as queryString from 'query-string';
+import queryString from 'query-string';
 import wikitreeLogo from './wikitree.png';
 import {analyticsEvent} from '../util/analytics';
 import {Button, Form, Header, Input, Modal} from 'semantic-ui-react';

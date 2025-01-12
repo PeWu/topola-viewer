@@ -1,5 +1,5 @@
 import * as H from 'history';
-import * as queryString from 'query-string';
+import queryString from 'query-string';
 import {analyticsEvent} from './util/analytics';
 import {Changelog} from './changelog';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';

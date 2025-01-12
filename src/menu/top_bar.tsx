@@ -1,4 +1,4 @@
-import * as queryString from 'query-string';
+import queryString from 'query-string';
 import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {IndiInfo, JsonGedcomData} from 'topola';

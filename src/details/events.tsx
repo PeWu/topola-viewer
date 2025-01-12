@@ -1,4 +1,4 @@
-import * as queryString from 'query-string';
+import queryString from 'query-string';
 import flatMap from 'array.prototype.flatmap';
 import {calcAge} from '../util/age_util';
 import {compareDates, formatDateOrRange} from '../util/date_util';

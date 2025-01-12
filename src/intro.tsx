@@ -1,4 +1,4 @@
-import * as queryString from 'query-string';
+import queryString from 'query-string';
 import {useEffect, useState} from 'react';
 import logo from './topola.jpg';
 import {Card, Grid, Image} from 'semantic-ui-react';
