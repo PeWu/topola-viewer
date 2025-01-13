@@ -15,7 +15,7 @@ import './index.css';
 import 'semantic-ui-css/semantic.min.css';
 import 'canvas-toBlob';
 
-const messages = {
+const messages: {[language: string]: {[message_id: string]: string}} = {
   cs: messages_cs,
   de: messages_de,
   fr: messages_fr,

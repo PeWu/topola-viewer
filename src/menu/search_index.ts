@@ -106,19 +106,21 @@ class LunrSearchIndex implements SearchIndex {
     const pipelineFunctions: PipelineFunction[] = [];
     const searchPipelineFunctions: PipelineFunction[] = [];
     languages.forEach((language) => {
+      // @ts-ignore
+      const lunrLanguage = lunr[language];
       if (language === 'en') {
         wordCharacters += '\\w';
         pipelineFunctions.unshift(lunr.stopWordFilter);
         pipelineFunctions.push(lunr.stemmer);
         searchPipelineFunctions.push(lunr.stemmer);
       } else {
-        wordCharacters += lunr[language].wordCharacters;
-        if (lunr[language].stopWordFilter) {
-          pipelineFunctions.unshift(lunr[language].stopWordFilter);
+        wordCharacters += lunrLanguage.wordCharacters;
+        if (lunrLanguage.stopWordFilter) {
+          pipelineFunctions.unshift(lunrLanguage.stopWordFilter);
         }
-        if (lunr[language].stemmer) {
-          pipelineFunctions.push(lunr[language].stemmer);
-          searchPipelineFunctions.push(lunr[language].stemmer);
+        if (lunrLanguage.stemmer) {
+          pipelineFunctions.push(lunrLanguage.stemmer);
+          searchPipelineFunctions.push(lunrLanguage.stemmer);
         }
       }
     });
