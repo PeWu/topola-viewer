@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import {createRoot} from 'react-dom/client';
 import messages_cs from './translations/cs.json';
 import messages_de from './translations/de.json';
 import messages_fr from './translations/fr.json';
@@ -27,16 +27,18 @@ const language = navigator.language && navigator.language.split(/[-_]/)[0];
 
 const browser = detect();
 
+const container = document.getElementById('root');
+const root = createRoot(container!);
+
 if (browser && browser.name === 'ie') {
-  ReactDOM.render(
+  root.render(
     <p>
       Topola Genealogy Viewer does not support Internet Explorer. Please try a
       different (modern) browser.
     </p>,
-    document.querySelector('#root'),
   );
 } else {
-  ReactDOM.render(
+  root.render(
     <IntlProvider locale={language} messages={messages[language]}>
       <MediaContextProvider>
         <style>{mediaStyles}</style>
@@ -45,6 +47,5 @@ if (browser && browser.name === 'ie') {
         </Router>
       </MediaContextProvider>
     </IntlProvider>,
-    document.querySelector('#root'),
   );
 }

@@ -106,8 +106,8 @@ function nameDetails(entry: GedcomEntry) {
 function getDetails(
   entries: GedcomEntry[],
   tags: string[],
-  detailsFunction: (entry: GedcomEntry) => JSX.Element | null,
-): JSX.Element[] {
+  detailsFunction: (entry: GedcomEntry) => React.ReactNode | null,
+): React.ReactNode[] {
   return flatMap(tags, (tag) =>
     entries
       .filter((entry) => entry.tag === tag)

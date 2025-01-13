@@ -30,7 +30,7 @@ interface Props {
 export function SearchBar(props: Props) {
   const [searchResults, setSearchResults] = useState<SearchResultProps[]>([]);
   const [searchString, setSearchString] = useState('');
-  const searchIndex = useRef<SearchIndex>();
+  const searchIndex = useRef<SearchIndex | undefined>(undefined);
   const intl = useIntl();
 
   function getDescriptionLine(indi: JsonIndi) {
