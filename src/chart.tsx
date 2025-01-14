@@ -371,10 +371,9 @@ class ChartWrapper {
     ]);
     const svgTransition = svg.transition().delay(200).duration(500);
     const transition = args.initialRender ? svg : svgTransition;
-    transition
-      .attr('transform', `translate(${offsetX}, ${offsetY})`)
-      .attr('width', chartInfo.size[0] * scale)
-      .attr('height', chartInfo.size[1] * scale);
+    transition.attr('transform', `translate(${offsetX}, ${offsetY})`);
+    transition.attr('width', chartInfo.size[0] * scale);
+    transition.attr('height', chartInfo.size[1] * scale);
     if (args.resetPosition) {
       if (args.initialRender) {
         parent.scrollLeft = -dx;

@@ -7,11 +7,11 @@
     "array.prototype.flatmap": "^1.2.4",
     "buffer": "^6.0.3",
     "canvas-toBlob": "^1.0.0",
-    "d3-array": "^2.12.1",
-    "d3-interpolate": "^2.0.1",
-    "d3-selection": "^2.0.0",
-    "d3-transition": "^2.0.0",
-    "d3-zoom": "^2.0.0",
+    "d3-array": "^3.2.4",
+    "d3-interpolate": "^3.0.1",
+    "d3-selection": "^3.0.0",
+    "d3-transition": "^3.0.1",
+    "d3-zoom": "^3.0.0",
     "debounce": "^2.2.0",
     "detect-browser": "^5.2.0",
     "fflate": "^0.8.2",
@@ -35,7 +35,7 @@
     "remark-rehype": "^11.1.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^2.0.3",
-    "topola": "^3.7.4",
+    "topola": "^3.8.0",
     "turbocommons-ts": "^3.8.0",
     "unified": "^11.0.5",
     "wikitree-js": "^0.4.0"
@@ -46,11 +46,11 @@
     "@formatjs/intl": "^2.10.15",
     "@types/adm-zip": "^0.5.0",
     "@types/array.prototype.flatmap": "^1.2.2",
-    "@types/d3-array": "^2.9.0",
-    "@types/d3-interpolate": "^2.0.0",
-    "@types/d3-selection": "^2.0.0",
-    "@types/d3-transition": "^2.0.0",
-    "@types/d3-zoom": "^2.0.0",
+    "@types/d3-array": "^3.2.1",
+    "@types/d3-interpolate": "^3.0.4",
+    "@types/d3-selection": "^3.0.11",
+    "@types/d3-transition": "^3.0.9",
+    "@types/d3-zoom": "^3.0.8",
     "@types/debounce": "^1.2.0",
     "@types/file-saver": "^2.0.1",
     "@types/history": "^4.7.8",
@@ -76,7 +76,7 @@
     "start": "GENERATE_SOURCEMAP=false run-script-os",
     "start:default": "REACT_APP_CHANGELOG=`cat CHANGELOG.md` REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts start",
     "start:windows": "react-scripts start",
-    "build": "run-script-os",
+    "build": "GENERATE_SOURCEMAP=false run-script-os",
     "build:default": "REACT_APP_CHANGELOG=`cat CHANGELOG.md` REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts build",
     "build:windows": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
@@ -99,6 +99,17 @@
     "rules": {
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-use-before-define": "off"
+    }
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "d3-array": "<rootDir>/node_modules/d3-array/dist/d3-array.js",
+      "d3-ease": "<rootDir>/node_modules/d3-ease/dist/d3-ease.js",
+      "d3-hierarchy": "<rootDir>/node_modules/d3-hierarchy/dist/d3-hierarchy.js",
+      "d3-interpolate": "<rootDir>/node_modules/d3-interpolate/dist/d3-interpolate.js",
+      "d3-selection": "<rootDir>/node_modules/d3-selection/dist/d3-selection.js",
+      "d3-timer": "<rootDir>/node_modules/d3-timer/dist/d3-timer.js",
+      "d3-transition": "<rootDir>/node_modules/d3-transition/dist/d3-transition.js"
     }
   }
 }
