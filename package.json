@@ -73,12 +73,12 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "start": "GENERATE_SOURCEMAP=false run-script-os",
-    "start:default": "REACT_APP_CHANGELOG=`cat CHANGELOG.md` REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts start",
-    "start:windows": "react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false run-script-os",
-    "build:default": "REACT_APP_CHANGELOG=`cat CHANGELOG.md` REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts build",
-    "build:windows": "react-scripts build",
+    "start": "run-script-os",
+    "start:default": "GENERATE_SOURCEMAP=false REACT_APP_CHANGELOG=`cat CHANGELOG.md` REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts start",
+    "start:windows": "set \"GENERATE_SOURCEMAP=false\" && react-scripts start",
+    "build": "run-script-os",
+    "build:default": "GENERATE_SOURCEMAP=false REACT_APP_CHANGELOG=`cat CHANGELOG.md` REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts build",
+    "build:windows": "set \"GENERATE_SOURCEMAP=false\" && react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "prettier": "prettier --write src/**/*.{ts,tsx,json} --end-of-line lf && prettier --write src/*.{ts,tsx,json} --end-of-line lf",
     "predeploy": "npm run build",
