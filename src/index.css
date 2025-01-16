@@ -232,3 +232,49 @@ div.zoom {
   padding: 14px 0px 0px;
 }
 
+#dotatsoSvgContainer {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+#dotatsoSvgContainer svg.main_svg {
+  width: 100%;
+  height: 100%;
+}
+
+#dotatsoSvgContainer rect.card-female, #dotatsoSvgContainer .card-female .card-body-rect, #dotatsoSvgContainer .card-female .text-overflow-mask {
+  fill: rgb(196, 138, 146);
+}
+
+#dotatsoSvgContainer rect.card-male, #dotatsoSvgContainer .card-male .card-body-rect, #dotatsoSvgContainer .card-male .text-overflow-mask {
+  fill: rgb(120, 159, 172);
+}
+
+#dotatsoSvgContainer .card-genderless .card-body-rect, #dotatsoSvgContainer .card-genderless .text-overflow-mask {
+  fill: lightgray;
+}
+
+#dotatsoSvgContainer g.card_add text {
+  fill: #fff;
+}
+
+#dotatsoSvgContainer .card-main-outline {
+  stroke: black;
+  stroke-width: 3px;
+}
+
+#dotatsoSvgContainer .card_family_tree rect {
+  transition: 0.3s;
+}
+
+#dotatsoSvgContainer .card_family_tree:hover rect {
+  transform: scale(1.1);
+}
+
+#dotatsoSvgContainer .card_family_tree line {
+  stroke: black;
+}
+
+#dotatsoSvgContainer .link {
+  stroke: black;
+}

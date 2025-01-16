@@ -26,6 +26,7 @@ import {
   CircleRenderer,
   ChartColors as TopolaChartColors,
 } from 'topola';
+import {usePrevious} from './util/previous-hook';
 
 /** How much to zoom when using the +/- buttons. */
 const ZOOM_FACTOR = 1.3;
@@ -217,6 +218,7 @@ export async function downloadPdf() {
 export enum ChartType {
   Hourglass,
   Relatives,
+  Donatso,
   Fancy,
 }
 
@@ -400,14 +402,6 @@ class ChartWrapper {
       }
     });
   }
-}
-
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T | undefined>(undefined);
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
 }
 
 export function Chart(props: ChartProps) {

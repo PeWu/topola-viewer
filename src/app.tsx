@@ -47,6 +47,7 @@ import {
   WikiTreeDataSource,
   WikiTreeSourceSpec,
 } from './datasource/wikitree';
+import {DonatsoChart} from './donatso-chart';
 
 /**
  * Load GEDCOM URL from REACT_APP_STATIC_URL environment variable.
@@ -142,6 +143,7 @@ function getArguments(location: H.Location<any>): Arguments {
   const chartTypes = new Map<string | undefined, ChartType>([
     ['relatives', ChartType.Relatives],
     ['fancy', ChartType.Fancy],
+    ['donatso', ChartType.Donatso],
   ]);
 
   const hash = getParam('file');
@@ -481,6 +483,30 @@ export function App() {
     setShowErrorPopup(false);
   }
 
+  function renderChart(selection: IndiInfo) {
+    if (chartType === ChartType.Donatso) {
+      return (
+        <DonatsoChart
+          data={data!.chartData}
+          selection={selection}
+          onSelection={onSelection}
+        />
+      );
+    }
+    return (
+      <Chart
+        data={data!.chartData}
+        selection={selection}
+        chartType={chartType}
+        onSelection={onSelection}
+        freezeAnimation={freezeAnimation}
+        colors={config.color}
+        hideIds={config.id}
+        hideSex={config.sex}
+      />
+    );
+  }
+
   function renderMainArea() {
     switch (state) {
       case AppState.SHOWING_CHART:
@@ -523,16 +549,7 @@ export function App() {
             {state === AppState.LOADING_MORE ? (
               <Loader active size="small" className="loading-more" />
             ) : null}
-            <Chart
-              data={data!.chartData}
-              selection={updatedSelection}
-              chartType={chartType}
-              onSelection={onSelection}
-              freezeAnimation={freezeAnimation}
-              colors={config.color}
-              hideIds={config.id}
-              hideSex={config.sex}
-            />
+            {renderChart(updatedSelection)}
             {showSidePanel ? (
               <Media greaterThanOrEqual="large" className="sidePanel">
                 <Tab panes={sidePanelTabs} />
