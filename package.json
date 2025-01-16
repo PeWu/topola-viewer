@@ -104,6 +104,7 @@
   "jest": {
     "moduleNameMapper": {
       "d3-array": "<rootDir>/node_modules/d3-array/dist/d3-array.js",
+      "d3-color": "<rootDir>/node_modules/d3-color/dist/d3-color.js",
       "d3-ease": "<rootDir>/node_modules/d3-ease/dist/d3-ease.js",
       "d3-hierarchy": "<rootDir>/node_modules/d3-hierarchy/dist/d3-hierarchy.js",
       "d3-interpolate": "<rootDir>/node_modules/d3-interpolate/dist/d3-interpolate.js",
