@@ -12,6 +12,10 @@ Website: https://pewu.github.io/topola-viewer
   </a>
 </p>
 
+If you find this project useful, consider buying me a coffee.
+
+[![buy me a coffee](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/pewu)
+
 ## Features
 * Hourglass chart
 * All relatives chart
