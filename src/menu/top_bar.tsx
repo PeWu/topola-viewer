@@ -32,6 +32,7 @@ interface Props {
   standalone: boolean;
   /** Whether to show the "All relatives" chart type in the menu. */
   allowAllRelativesChart: boolean;
+  allowPrintAndDownload: boolean;
   eventHandlers: EventHandlers;
   /** Whether to show additional WikiTree menus. */
   showWikiTreeMenus: boolean;
@@ -72,6 +73,13 @@ export function TopBar(props: Props) {
             />
           </Dropdown.Item>
         ) : null}
+        <Dropdown.Item onClick={() => changeView('donatso')}>
+          <Icon name="users" />
+          <FormattedMessage
+            id="menu.donatso"
+            defaultMessage="Donatso family chart"
+          />
+        </Dropdown.Item>
         <Dropdown.Item onClick={() => changeView('fancy')}>
           <Icon name="users" />
           <FormattedMessage
@@ -85,7 +93,10 @@ export function TopBar(props: Props) {
       case ScreenSize.LARGE:
         return (
           <>
-            <Menu.Item onClick={props.eventHandlers.onPrint}>
+            <Menu.Item
+              onClick={props.eventHandlers.onPrint}
+              disabled={!props.allowPrintAndDownload}
+            >
               <Icon name="print" />
               <FormattedMessage id="menu.print" defaultMessage="Print" />
             </Menu.Item>
@@ -101,6 +112,7 @@ export function TopBar(props: Props) {
                 </div>
               }
               className="item"
+              disabled={!props.allowPrintAndDownload}
             >
               <Dropdown.Menu>
                 <Dropdown.Item onClick={props.eventHandlers.onDownloadPdf}>

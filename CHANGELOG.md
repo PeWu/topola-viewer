@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-01-21
+
+- Added new chart type based on [github.com/donatso/family-chart](https://github.com/donatso/family-chart)
+
 ## 2023-08-25
 
 - Added support for loading gedzip files

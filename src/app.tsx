@@ -577,6 +577,7 @@ export function App() {
             allowAllRelativesChart={
               sourceSpec?.source !== DataSourceEnum.WIKITREE
             }
+            allowPrintAndDownload={chartType !== ChartType.Donatso}
             showingChart={
               history.location.pathname === '/view' &&
               (state === AppState.SHOWING_CHART ||
