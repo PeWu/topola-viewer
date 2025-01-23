@@ -13,7 +13,7 @@ import {
 } from '../util/gedcom_util';
 import {GedcomEntry} from 'parse-gedcom';
 import {FormattedMessage, IntlShape, useIntl} from 'react-intl';
-import {Link, useLocation} from 'react-router-dom';
+import {Link, useLocation} from 'react-router';
 import {pointerToId} from '../util/gedcom_util';
 import {TranslatedTag} from './translated-tag';
 import {Header, Item} from 'semantic-ui-react';

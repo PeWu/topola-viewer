@@ -3,7 +3,7 @@ import {useEffect, useState} from 'react';
 import logo from './topola.jpg';
 import {Card, Grid, Image} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
-import {Link} from 'react-router-dom';
+import {Link} from 'react-router';
 import {Media} from './util/media';
 import {getChangelog, updateSeenVersion} from './changelog';
 

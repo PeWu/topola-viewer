@@ -8,7 +8,7 @@ import messages_pl from './translations/pl.json';
 import messages_ru from './translations/ru.json';
 import {App} from './app';
 import {detect} from 'detect-browser';
-import {HashRouter as Router, Route} from 'react-router-dom';
+import {HashRouter as Router, Route} from 'react-router';
 import {IntlProvider} from 'react-intl';
 import {MediaContextProvider, mediaStyles} from './util/media';
 import './index.css';

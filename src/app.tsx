@@ -11,7 +11,7 @@ import {IndiInfo} from 'topola';
 import {Intro} from './intro';
 import {Loader, Message, Portal, Tab} from 'semantic-ui-react';
 import {Media} from './util/media';
-import {Navigate, Route, Routes} from 'react-router-dom';
+import {Navigate, Route, Routes} from 'react-router';
 import {TopBar} from './menu/top_bar';
 import {TopolaData} from './util/gedcom_util';
 import {useEffect, useState} from 'react';

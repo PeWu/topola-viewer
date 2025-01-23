@@ -2,7 +2,7 @@ import queryString from 'query-string';
 import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {IndiInfo, JsonGedcomData} from 'topola';
-import {Link} from 'react-router-dom';
+import {Link} from 'react-router';
 import {Media} from '../util/media';
 import {MenuType} from './menu_item';
 import {SearchBar} from './search';
