@@ -11,11 +11,11 @@ import {IndiInfo} from 'topola';
 import {Intro} from './intro';
 import {Loader, Message, Portal, Tab} from 'semantic-ui-react';
 import {Media} from './util/media';
-import {Redirect, Route, Switch} from 'react-router-dom';
+import {Navigate, Route, Routes} from 'react-router-dom';
 import {TopBar} from './menu/top_bar';
 import {TopolaData} from './util/gedcom_util';
 import {useEffect, useState} from 'react';
-import {useHistory, useLocation} from 'react-router';
+import {useNavigate, useLocation} from 'react-router';
 import {idToIndiMap} from './util/gedcom_util';
 import {
   Chart,
@@ -229,7 +229,7 @@ export function App() {
   const [config, setConfig] = useState(DEFALUT_CONFIG);
 
   const intl = useIntl();
-  const history = useHistory();
+  const navigate = useNavigate();
   const location = useLocation();
 
   /** Sets the state with a new individual selection and chart type. */
@@ -342,7 +342,7 @@ export function App() {
       const args = getArguments(location);
 
       if (!args.sourceSpec) {
-        history.replace({pathname: '/'});
+        navigate({pathname: '/'}, {replace: true});
         return;
       }
 
@@ -413,7 +413,7 @@ export function App() {
       search[key] = args[key];
     }
     location.search = queryString.stringify(search);
-    history.push(location);
+    navigate(location);
   }
 
   /**
@@ -570,45 +570,37 @@ export function App() {
 
   return (
     <>
-      <Route
-        render={() => (
-          <TopBar
-            data={data?.chartData}
-            allowAllRelativesChart={
-              sourceSpec?.source !== DataSourceEnum.WIKITREE
-            }
-            allowPrintAndDownload={chartType !== ChartType.Donatso}
-            showingChart={
-              history.location.pathname === '/view' &&
-              (state === AppState.SHOWING_CHART ||
-                state === AppState.LOADING_MORE)
-            }
-            standalone={standalone}
-            eventHandlers={{
-              onSelection,
-              onPrint,
-              onDownloadPdf,
-              onDownloadPng,
-              onDownloadSvg,
-            }}
-            showWikiTreeMenus={
-              sourceSpec?.source === DataSourceEnum.WIKITREE &&
-              showWikiTreeMenus
-            }
-          />
-        )}
+      <TopBar
+        data={data?.chartData}
+        allowAllRelativesChart={sourceSpec?.source !== DataSourceEnum.WIKITREE}
+        allowPrintAndDownload={chartType !== ChartType.Donatso}
+        showingChart={
+          location.pathname === '/view' &&
+          (state === AppState.SHOWING_CHART || state === AppState.LOADING_MORE)
+        }
+        standalone={standalone}
+        eventHandlers={{
+          onSelection,
+          onPrint,
+          onDownloadPdf,
+          onDownloadPng,
+          onDownloadSvg,
+        }}
+        showWikiTreeMenus={
+          sourceSpec?.source === DataSourceEnum.WIKITREE && showWikiTreeMenus
+        }
       />
       {staticUrl ? (
-        <Switch>
-          <Route exact path="/view" render={renderMainArea} />
-          <Redirect to={'/view'} />
-        </Switch>
+        <Routes>
+          <Route path="/view" element={renderMainArea()} />
+          <Route path="*" element={<Navigate to="/view" replace />} />
+        </Routes>
       ) : (
-        <Switch>
-          <Route exact path="/" component={Intro} />
-          <Route exact path="/view" render={renderMainArea} />
-          <Redirect to={'/'} />
-        </Switch>
+        <Routes>
+          <Route path="/" element={<Intro />} />
+          <Route path="/view" element={renderMainArea()} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       )}
     </>
   );

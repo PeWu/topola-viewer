@@ -30,7 +30,7 @@
     "react-dom": "^18.3.1",
     "react-intl": "^6.8.9",
     "react-linkify": "^1.0.0-alpha",
-    "react-router-dom": "^5.3.4",
+    "react-router-dom": "^6.28.2",
     "rehype-stringify": "^10.0.1",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.1",

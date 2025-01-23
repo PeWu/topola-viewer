@@ -43,7 +43,7 @@ if (browser && browser.name === 'ie') {
       <MediaContextProvider>
         <style>{mediaStyles}</style>
         <Router>
-          <Route component={App} />
+          <App />
         </Router>
       </MediaContextProvider>
     </IntlProvider>,

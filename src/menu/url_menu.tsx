@@ -4,7 +4,7 @@ import {Button, Form, Header, Icon, Input, Modal} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {MenuItem, MenuType} from './menu_item';
 import {useEffect, useRef, useState} from 'react';
-import {useHistory} from 'react-router';
+import {useNavigate} from 'react-router';
 
 interface Props {
   menuType: MenuType;
@@ -15,7 +15,7 @@ export function UrlMenu(props: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [url, setUrl] = useState('');
   const inputRef = useRef<Input>(null);
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (dialogOpen) {
@@ -29,7 +29,7 @@ export function UrlMenu(props: Props) {
     setDialogOpen(false);
     if (url) {
       analyticsEvent('url_selected');
-      history.push({
+      navigate({
         pathname: '/view',
         search: queryString.stringify({url}),
       });

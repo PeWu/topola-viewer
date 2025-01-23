@@ -5,7 +5,7 @@ import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {MenuType} from './menu_item';
 import {SyntheticEvent} from 'react';
-import {useHistory, useLocation} from 'react-router';
+import {useNavigate, useLocation} from 'react-router';
 import {loadFile} from '../datasource/load_data';
 
 function isImageFileName(fileName: string) {
@@ -19,7 +19,7 @@ interface Props {
 
 /** Displays and handles the "Open file" menu. */
 export function UploadMenu(props: Props) {
-  const history = useHistory();
+  const navigate = useNavigate();
   const location = useLocation();
 
   async function handleUpload(event: SyntheticEvent<HTMLInputElement>) {
@@ -54,13 +54,18 @@ export function UploadMenu(props: Props) {
     // Use history.replace() when reuploading the same file and history.push() when loading
     // a new file.
     const search = queryString.parse(location.search);
-    const historyPush = search.file === hash ? history.replace : history.push;
+    const replace = search.file === hash;
 
-    historyPush({
-      pathname: '/view',
-      search: queryString.stringify({file: hash}),
-      state: {data: gedcom, images},
-    });
+    navigate(
+      {
+        pathname: '/view',
+        search: queryString.stringify({file: hash}),
+      },
+      {
+        replace,
+        state: {data: gedcom, images},
+      },
+    );
   }
 
   const content = (

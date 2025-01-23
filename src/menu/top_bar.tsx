@@ -8,7 +8,7 @@ import {MenuType} from './menu_item';
 import {SearchBar} from './search';
 import {UploadMenu} from './upload_menu';
 import {UrlMenu} from './url_menu';
-import {useHistory, useLocation} from 'react-router';
+import {useNavigate, useLocation} from 'react-router';
 import {WikiTreeLoginMenu, WikiTreeMenu} from './wikitree_menu';
 
 enum ScreenSize {
@@ -39,7 +39,7 @@ interface Props {
 }
 
 export function TopBar(props: Props) {
-  const history = useHistory();
+  const navigate = useNavigate();
   const location = useLocation();
 
   function changeView(view: string) {
@@ -47,7 +47,7 @@ export function TopBar(props: Props) {
     if (search.view !== view) {
       search.view = view;
       location.search = queryString.stringify(search);
-      history.push(location);
+      navigate(location);
     }
   }
 

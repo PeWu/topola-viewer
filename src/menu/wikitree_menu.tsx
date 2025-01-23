@@ -5,7 +5,7 @@ import {Button, Form, Header, Input, Modal} from 'semantic-ui-react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import {MenuItem, MenuType} from './menu_item';
 import {useEffect, useRef, useState} from 'react';
-import {useHistory, useLocation} from 'react-router';
+import {useNavigate, useLocation} from 'react-router';
 import {getLoggedInUserName, navigateToLoginPage} from 'wikitree-js';
 
 interface Props {
@@ -17,7 +17,7 @@ export function WikiTreeMenu(props: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [wikiTreeId, setWikiTreeId] = useState('');
   const inputRef = useRef<Input>(null);
-  const history = useHistory();
+  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export function WikiTreeMenu(props: Props) {
     const search = queryString.parse(location.search);
     const standalone =
       search.standalone !== undefined ? search.standalone : true;
-    history.push({
+    navigate({
       pathname: '/view',
       search: queryString.stringify({
         indi: wikiTreeId,
