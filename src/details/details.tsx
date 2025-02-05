@@ -1,4 +1,7 @@
 import flatMap from 'array.prototype.flatmap';
+import {GedcomEntry} from 'parse-gedcom';
+import {FormattedMessage} from 'react-intl';
+import {Header, Item} from 'semantic-ui-react';
 import {
   dereference,
   GedcomData,
@@ -7,11 +10,8 @@ import {
   getImageFileEntry,
 } from '../util/gedcom_util';
 import {Events} from './events';
-import {GedcomEntry} from 'parse-gedcom';
 import {MultilineText} from './multiline-text';
 import {TranslatedTag} from './translated-tag';
-import {Header, Item} from 'semantic-ui-react';
-import {FormattedMessage} from 'react-intl';
 import {WrappedImage} from './wrapped-image';
 
 const EXCLUDED_TAGS = [

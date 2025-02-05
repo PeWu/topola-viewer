@@ -1,14 +1,13 @@
 import queryString from 'query-string';
-import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
+import {Link, useLocation, useNavigate} from 'react-router';
+import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {IndiInfo, JsonGedcomData} from 'topola';
-import {Link} from 'react-router';
 import {Media} from '../util/media';
 import {MenuType} from './menu_item';
 import {SearchBar} from './search';
 import {UploadMenu} from './upload_menu';
 import {UrlMenu} from './url_menu';
-import {useNavigate, useLocation} from 'react-router';
 import {WikiTreeLoginMenu, WikiTreeMenu} from './wikitree_menu';
 
 enum ScreenSize {

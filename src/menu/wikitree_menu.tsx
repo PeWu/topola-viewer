@@ -1,12 +1,12 @@
 import queryString from 'query-string';
-import wikitreeLogo from './wikitree.png';
-import {analyticsEvent} from '../util/analytics';
-import {Button, Form, Header, Input, Modal} from 'semantic-ui-react';
-import {FormattedMessage, useIntl} from 'react-intl';
-import {MenuItem, MenuType} from './menu_item';
 import {useEffect, useRef, useState} from 'react';
-import {useNavigate, useLocation} from 'react-router';
+import {FormattedMessage, useIntl} from 'react-intl';
+import {useLocation, useNavigate} from 'react-router';
+import {Button, Form, Header, Input, Modal} from 'semantic-ui-react';
 import {getLoggedInUserName, navigateToLoginPage} from 'wikitree-js';
+import {analyticsEvent} from '../util/analytics';
+import {MenuItem, MenuType} from './menu_item';
+import wikitreeLogo from './wikitree.png';
 
 interface Props {
   menuType: MenuType;

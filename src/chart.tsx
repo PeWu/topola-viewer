@@ -1,11 +1,6 @@
-import {ChartColors, Ids, Sex} from './config';
-import {interpolateNumber} from 'd3-interpolate';
-import {IntlShape, useIntl} from 'react-intl';
 import {max, min} from 'd3-array';
-import {Media} from './util/media';
-import {saveAs} from 'file-saver';
+import {interpolateNumber} from 'd3-interpolate';
 import {select, Selection} from 'd3-selection';
-import {useEffect, useRef} from 'react';
 import 'd3-transition';
 import {
   D3ZoomEvent,
@@ -14,18 +9,23 @@ import {
   ZoomedElementBaseType,
   zoomTransform,
 } from 'd3-zoom';
+import {saveAs} from 'file-saver';
+import {useEffect, useRef} from 'react';
+import {IntlShape, useIntl} from 'react-intl';
 import {
-  JsonGedcomData,
   ChartHandle,
-  IndiInfo,
+  CircleRenderer,
   createChart,
   DetailedRenderer,
-  HourglassChart,
-  RelativesChart,
   FancyChart,
-  CircleRenderer,
+  HourglassChart,
+  IndiInfo,
+  JsonGedcomData,
+  RelativesChart,
   ChartColors as TopolaChartColors,
 } from 'topola';
+import {ChartColors, Ids, Sex} from './config';
+import {Media} from './util/media';
 import {usePrevious} from './util/previous-hook';
 
 /** How much to zoom when using the +/- buttons. */

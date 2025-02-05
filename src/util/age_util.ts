@@ -1,6 +1,6 @@
-import {Date as TopolaDate} from 'topola/dist/data';
 import {IntlShape} from 'react-intl';
 import {DateOrRange, getDate} from 'topola';
+import {Date as TopolaDate} from 'topola/dist/data';
 import {
   areDateRangesOverlapped,
   compareDates,

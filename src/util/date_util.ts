@@ -1,5 +1,5 @@
-import {Date as TopolaDate, DateOrRange, DateRange, getDate} from 'topola';
 import {IntlShape} from 'react-intl';
+import {DateOrRange, DateRange, getDate, Date as TopolaDate} from 'topola';
 
 const DATE_QUALIFIERS = new Map([
   ['abt', 'about'],

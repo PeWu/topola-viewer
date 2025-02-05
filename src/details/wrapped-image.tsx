@@ -1,3 +1,5 @@
+import {SyntheticEvent, useState} from 'react';
+import {FormattedMessage} from 'react-intl';
 import {
   Container,
   Icon,
@@ -7,8 +9,6 @@ import {
   Modal,
   Placeholder,
 } from 'semantic-ui-react';
-import {SyntheticEvent, useState} from 'react';
-import {FormattedMessage} from 'react-intl';
 
 interface Props {
   url: string;

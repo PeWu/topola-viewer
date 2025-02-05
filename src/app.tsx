@@ -1,22 +1,11 @@
 import * as H from 'history';
 import queryString from 'query-string';
-import {analyticsEvent} from './util/analytics';
-import {Changelog} from './changelog';
-import {DataSourceEnum, SourceSelection} from './datasource/data_source';
-import {Details} from './details/details';
-import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
-import {FormattedMessage, useIntl} from 'react-intl';
-import {getI18nMessage} from './util/error_i18n';
-import {IndiInfo} from 'topola';
-import {Intro} from './intro';
-import {Loader, Message, Portal, Tab} from 'semantic-ui-react';
-import {Media} from './util/media';
-import {Navigate, Route, Routes} from 'react-router';
-import {TopBar} from './menu/top_bar';
-import {TopolaData} from './util/gedcom_util';
 import {useEffect, useState} from 'react';
-import {useNavigate, useLocation} from 'react-router';
-import {idToIndiMap} from './util/gedcom_util';
+import {FormattedMessage, useIntl} from 'react-intl';
+import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router';
+import {Loader, Message, Portal, Tab} from 'semantic-ui-react';
+import {IndiInfo} from 'topola';
+import {Changelog} from './changelog';
 import {
   Chart,
   ChartType,
@@ -34,12 +23,14 @@ import {
   Ids,
   Sex,
 } from './config';
+import {DataSourceEnum, SourceSelection} from './datasource/data_source';
+import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
 import {
+  GedcomUrlDataSource,
   getSelection,
+  UploadedDataSource,
   UploadSourceSpec,
   UrlSourceSpec,
-  GedcomUrlDataSource,
-  UploadedDataSource,
 } from './datasource/load_data';
 import {
   loadWikiTree,
@@ -47,7 +38,14 @@ import {
   WikiTreeDataSource,
   WikiTreeSourceSpec,
 } from './datasource/wikitree';
+import {Details} from './details/details';
 import {DonatsoChart} from './donatso-chart';
+import {Intro} from './intro';
+import {TopBar} from './menu/top_bar';
+import {analyticsEvent} from './util/analytics';
+import {getI18nMessage} from './util/error_i18n';
+import {idToIndiMap, TopolaData} from './util/gedcom_util';
+import {Media} from './util/media';
 
 /**
  * Load GEDCOM URL from VITE_STATIC_URL environment variable.

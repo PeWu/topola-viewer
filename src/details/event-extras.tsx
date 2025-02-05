@@ -1,4 +1,7 @@
+import * as React from 'react';
+import {useState} from 'react';
 import {FormattedMessage, IntlShape, useIntl} from 'react-intl';
+import Linkify from 'react-linkify';
 import {
   Icon,
   Item,
@@ -8,13 +11,10 @@ import {
   Popup,
   Tab,
 } from 'semantic-ui-react';
-import {useState} from 'react';
-import {WrappedImage} from './wrapped-image';
-import * as React from 'react';
-import {MultilineText} from './multiline-text';
 import {DateOrRange} from 'topola';
 import {formatDateOrRange} from '../util/date_util';
-import Linkify from 'react-linkify';
+import {MultilineText} from './multiline-text';
+import {WrappedImage} from './wrapped-image';
 
 export interface Image {
   url: string;

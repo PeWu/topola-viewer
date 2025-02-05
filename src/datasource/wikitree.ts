@@ -1,5 +1,5 @@
-import {analyticsEvent} from '../util/analytics';
-import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
+import {GedcomEntry} from 'parse-gedcom';
+import {IntlShape} from 'react-intl';
 import {
   Date,
   DateOrRange,
@@ -9,19 +9,19 @@ import {
   JsonImage,
   JsonIndi,
 } from 'topola';
-import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
-import {GedcomEntry} from 'parse-gedcom';
-import {IntlShape} from 'react-intl';
-import {TopolaError} from '../util/error';
-import {isValidDateOrRange} from '../util/date_util';
 import {StringUtils} from 'turbocommons-ts';
 import {
-  getAncestors as getAncestorsApi,
-  getRelatives as getRelativesApi,
   clientLogin,
+  getAncestors as getAncestorsApi,
   getLoggedInUserName,
+  getRelatives as getRelativesApi,
   Person,
 } from 'wikitree-js';
+import {analyticsEvent} from '../util/analytics';
+import {isValidDateOrRange} from '../util/date_util';
+import {TopolaError} from '../util/error';
+import {GedcomData, normalizeGedcom, TopolaData} from '../util/gedcom_util';
+import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 
 const WIKITREE_APP_ID = 'topola-viewer';
 

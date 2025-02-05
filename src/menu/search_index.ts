@@ -1,13 +1,12 @@
-import lunr, {PipelineFunction} from 'lunr';
 import naturalSort from 'javascript-natural-sort';
-import {idToFamMap, idToIndiMap} from '../util/gedcom_util';
-import {JsonFam, JsonGedcomData, JsonIndi} from 'topola';
-
-import lunrStemmer from 'lunr-languages/lunr.stemmer.support';
+import lunr, {PipelineFunction} from 'lunr';
 import lunrDe from 'lunr-languages/lunr.de';
 import lunrFr from 'lunr-languages/lunr.fr';
 import lunrIt from 'lunr-languages/lunr.it';
 import lunrRu from 'lunr-languages/lunr.ru';
+import lunrStemmer from 'lunr-languages/lunr.stemmer.support';
+import {JsonFam, JsonGedcomData, JsonIndi} from 'topola';
+import {idToFamMap, idToIndiMap} from '../util/gedcom_util';
 
 lunrStemmer(lunr);
 lunrDe(lunr);
@@ -151,7 +150,10 @@ class LunrSearchIndex implements SearchIndex {
     return results
       .sort(compare)
       .slice(0, MAX_RESULTS)
-      .map((result) => ({id: result.ref, indi: this.indiMap.get(result.ref)!}));
+      .map((result) => ({
+        id: result.ref,
+        indi: this.indiMap.get(result.ref)!,
+      }));
   }
 }
 

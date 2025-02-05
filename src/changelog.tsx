@@ -1,10 +1,10 @@
+import {useEffect, useState} from 'react';
+import {FormattedMessage} from 'react-intl';
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import {Button, Header, Modal} from 'semantic-ui-react';
 import {unified} from 'unified';
-import {useEffect, useState} from 'react';
-import {FormattedMessage} from 'react-intl';
 
 const LAST_SEEN_VERSION_KEY = 'last_seen_version';
 

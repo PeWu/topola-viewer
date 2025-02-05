@@ -1,12 +1,12 @@
-import queryString from 'query-string';
 import md5 from 'md5';
-import {analyticsEvent} from '../util/analytics';
-import {Dropdown, Icon, Menu} from 'semantic-ui-react';
-import {FormattedMessage} from 'react-intl';
-import {MenuType} from './menu_item';
+import queryString from 'query-string';
 import {SyntheticEvent} from 'react';
-import {useNavigate, useLocation} from 'react-router';
+import {FormattedMessage} from 'react-intl';
+import {useLocation, useNavigate} from 'react-router';
+import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {loadFile} from '../datasource/load_data';
+import {analyticsEvent} from '../util/analytics';
+import {MenuType} from './menu_item';
 
 function isImageFileName(fileName: string) {
   const lower = fileName.toLowerCase();

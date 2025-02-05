@@ -1,11 +1,11 @@
 import queryString from 'query-string';
 import {useEffect, useState} from 'react';
-import logo from './topola.jpg';
-import {Card, Grid, Image} from 'semantic-ui-react';
 import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router';
-import {Media} from './util/media';
+import {Card, Grid, Image} from 'semantic-ui-react';
 import {getChangelog, updateSeenVersion} from './changelog';
+import logo from './topola.jpg';
+import {Media} from './util/media';
 
 /** Link that loads a view. */
 function ViewLink(props: {params: {[key: string]: string}; text: string}) {

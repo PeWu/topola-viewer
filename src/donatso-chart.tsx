@@ -2,7 +2,6 @@ import f3 from 'family-chart';
 import {useEffect, useRef} from 'react';
 import {IntlShape, useIntl} from 'react-intl';
 import {IndiInfo, JsonFam, JsonGedcomData} from 'topola';
-
 import {formatDateOrRange} from './util/date_util';
 import {usePrevious} from './util/previous-hook';
 

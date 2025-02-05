@@ -1,19 +1,18 @@
-import * as React from 'react';
+import 'canvas-toBlob';
+import {detect} from 'detect-browser';
 import {createRoot} from 'react-dom/client';
+import {IntlProvider} from 'react-intl';
+import {HashRouter as Router} from 'react-router';
+import 'semantic-ui-css/semantic.min.css';
+import {App} from './app';
+import './index.css';
 import messages_cs from './translations/cs.json';
 import messages_de from './translations/de.json';
 import messages_fr from './translations/fr.json';
 import messages_it from './translations/it.json';
 import messages_pl from './translations/pl.json';
 import messages_ru from './translations/ru.json';
-import {App} from './app';
-import {detect} from 'detect-browser';
-import {HashRouter as Router, Route} from 'react-router';
-import {IntlProvider} from 'react-intl';
 import {MediaContextProvider, mediaStyles} from './util/media';
-import './index.css';
-import 'semantic-ui-css/semantic.min.css';
-import 'canvas-toBlob';
 
 const messages: {[language: string]: {[message_id: string]: string}} = {
   cs: messages_cs,

@@ -1,5 +1,4 @@
 import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
-import {TopolaError} from './error';
 import {
   gedcomEntriesToJson,
   JsonFam,
@@ -8,6 +7,7 @@ import {
   JsonIndi,
 } from 'topola';
 import {compareDates} from './date_util';
+import {TopolaError} from './error';
 
 export interface GedcomData {
   /** The HEAD entry. */

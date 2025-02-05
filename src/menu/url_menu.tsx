@@ -1,10 +1,10 @@
 import queryString from 'query-string';
-import {analyticsEvent} from '../util/analytics';
-import {Button, Form, Header, Icon, Input, Modal} from 'semantic-ui-react';
-import {FormattedMessage} from 'react-intl';
-import {MenuItem, MenuType} from './menu_item';
 import {useEffect, useRef, useState} from 'react';
+import {FormattedMessage} from 'react-intl';
 import {useNavigate} from 'react-router';
+import {Button, Form, Header, Icon, Input, Modal} from 'semantic-ui-react';
+import {analyticsEvent} from '../util/analytics';
+import {MenuItem, MenuType} from './menu_item';
 
 interface Props {
   menuType: MenuType;

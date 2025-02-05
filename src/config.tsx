@@ -1,6 +1,6 @@
-import {Item, Checkbox, Form, Header} from 'semantic-ui-react';
-import {FormattedMessage} from 'react-intl';
 import {ParsedQuery} from 'query-string';
+import {FormattedMessage} from 'react-intl';
+import {Checkbox, Form, Header, Item} from 'semantic-ui-react';
 
 export enum ChartColors {
   NO_COLOR,
@@ -99,7 +99,10 @@ export function ConfigPanel(props: {
                 value="none"
                 checked={props.config.color === ChartColors.NO_COLOR}
                 onClick={() =>
-                  props.onChange({...props.config, color: ChartColors.NO_COLOR})
+                  props.onChange({
+                    ...props.config,
+                    color: ChartColors.NO_COLOR,
+                  })
                 }
               />
             </Form.Field>

@@ -1,23 +1,23 @@
-import queryString from 'query-string';
 import flatMap from 'array.prototype.flatmap';
+import {GedcomEntry} from 'parse-gedcom';
+import queryString from 'query-string';
+import {FormattedMessage, IntlShape, useIntl} from 'react-intl';
+import {Link, useLocation} from 'react-router';
+import {Header, Item} from 'semantic-ui-react';
+import {DateOrRange, getDate} from 'topola';
 import {calcAge} from '../util/age_util';
 import {compareDates, formatDateOrRange} from '../util/date_util';
-import {DateOrRange, getDate} from 'topola';
 import {
   dereference,
   GedcomData,
   getData,
-  getImageFileEntry,
   getFileName,
+  getImageFileEntry,
   getName,
+  pointerToId,
 } from '../util/gedcom_util';
-import {GedcomEntry} from 'parse-gedcom';
-import {FormattedMessage, IntlShape, useIntl} from 'react-intl';
-import {Link, useLocation} from 'react-router';
-import {pointerToId} from '../util/gedcom_util';
-import {TranslatedTag} from './translated-tag';
-import {Header, Item} from 'semantic-ui-react';
 import {EventExtras, Image, Source} from './event-extras';
+import {TranslatedTag} from './translated-tag';
 
 function PersonLink(props: {person: GedcomEntry}) {
   const location = useLocation();

@@ -1,12 +1,11 @@
 import debounce from 'debounce';
-import {analyticsEvent} from '../util/analytics';
-import {buildSearchIndex, SearchIndex, SearchResult} from './search_index';
-import {formatDateOrRange} from '../util/date_util';
-import {IndiInfo, JsonGedcomData} from 'topola';
-import {JsonIndi} from 'topola';
-import {Search, SearchResultProps} from 'semantic-ui-react';
 import {useEffect, useRef, useState} from 'react';
 import {useIntl} from 'react-intl';
+import {Search, SearchResultProps} from 'semantic-ui-react';
+import {IndiInfo, JsonGedcomData, JsonIndi} from 'topola';
+import {analyticsEvent} from '../util/analytics';
+import {formatDateOrRange} from '../util/date_util';
+import {buildSearchIndex, SearchIndex, SearchResult} from './search_index';
 
 function getNameLine(result: SearchResult) {
   const name = [result.indi.firstName, result.indi.lastName].join(' ').trim();

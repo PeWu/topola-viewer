@@ -1,8 +1,8 @@
 import {
-  Menu,
   Dropdown,
-  MenuItemProps,
   DropdownItemProps,
+  Menu,
+  MenuItemProps,
 } from 'semantic-ui-react';
 
 export enum MenuType {

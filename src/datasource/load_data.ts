@@ -1,10 +1,10 @@
+import {Buffer} from 'buffer';
+import {strFromU8, unzip, Unzipped} from 'fflate';
+import {IndiInfo, JsonGedcomData} from 'topola';
 import {analyticsEvent} from '../util/analytics';
+import {TopolaError} from '../util/error';
 import {convertGedcom, getSoftware, TopolaData} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
-import {IndiInfo, JsonGedcomData} from 'topola';
-import {TopolaError} from '../util/error';
-import {strFromU8, unzip, Unzipped} from 'fflate';
-import {Buffer} from 'buffer';
 
 /**
  * Returns a valid IndiInfo object, either with the given indi and generation

@@ -1,7 +1,7 @@
-import {expect, describe, it} from '@jest/globals';
-import {loadFile} from './load_data';
-import {readFileSync} from 'fs';
+import {describe, expect, it} from '@jest/globals';
 import {Blob} from 'buffer';
+import {readFileSync} from 'fs';
+import {loadFile} from './load_data';
 
 describe('loadFile', () => {
   global.URL.createObjectURL = jest.fn();
