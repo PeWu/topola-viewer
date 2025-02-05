@@ -1,3 +1,4 @@
+import {expect, describe, it} from '@jest/globals';
 import {getName, normalizeGedcom} from './gedcom_util';
 
 describe('normalizeGedcom()', () => {

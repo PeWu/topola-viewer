@@ -19,8 +19,10 @@ export async function getChangelog(maxVersions: number, seenVersion?: string) {
     ? Date.parse(seenVersion.slice(0, 10))
     : 0;
 
+  const changelog = import.meta.env.VITE_CHANGELOG as string;
   const changes =
-    process.env.REACT_APP_CHANGELOG?.split('##')
+    changelog
+      .split('##')
       .slice(1, maxVersions + 1)
       .map((notes) => {
         const date = Date.parse(notes.split('\n')[0].trim());
@@ -40,7 +42,7 @@ export async function getChangelog(maxVersions: number, seenVersion?: string) {
 
 /** Stores in local storage the current app version as the last seen version. */
 export function updateSeenVersion() {
-  localStorage.setItem(LAST_SEEN_VERSION_KEY, process.env.REACT_APP_GIT_TIME!);
+  localStorage.setItem(LAST_SEEN_VERSION_KEY, import.meta.env.VITE_GIT_TIME!);
 }
 
 /**
@@ -54,7 +56,7 @@ export function Changelog() {
   useEffect(() => {
     (async () => {
       const seenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
-      const currentVersion = process.env.REACT_APP_GIT_TIME!;
+      const currentVersion = import.meta.env.VITE_GIT_TIME!;
       if (!seenVersion || seenVersion === currentVersion) {
         return;
       }

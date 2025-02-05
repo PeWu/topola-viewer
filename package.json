@@ -45,6 +45,7 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@formatjs/fast-memoize": "^2.2.6",
     "@formatjs/intl": "^2.10.15",
+    "@jest/globals": "^29.7.0",
     "@types/adm-zip": "^0.5.0",
     "@types/array.prototype.flatmap": "^1.2.2",
     "@types/d3-array": "^3.2.1",
@@ -63,30 +64,36 @@
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "cypress": "^13.17.0",
     "gh-pages": "^6.3.0",
+    "jest": "^29.7.0",
+    "jsdom": "^26.0.0",
     "prettier": "^3.4.2",
-    "react-scripts": "^5.0.1",
     "run-script-os": "^1.1.6",
     "start-server-and-test": "^2.0.9",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11",
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "scripts": {
     "start": "run-script-os",
-    "start:default": "GENERATE_SOURCEMAP=false REACT_APP_CHANGELOG=`cat CHANGELOG.md` REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts start",
-    "start:windows": "set \"GENERATE_SOURCEMAP=false\" && react-scripts start",
+    "start:default": "GENERATE_SOURCEMAP=false VITE_CHANGELOG=`cat CHANGELOG.md` VITE_GIT_SHA=`git rev-parse --short HEAD` VITE_GIT_TIME=`git log -1 --format=%ci` vite",
+    "start:windows": "set \"GENERATE_SOURCEMAP=false\" && vite",
     "build": "run-script-os",
-    "build:default": "GENERATE_SOURCEMAP=false REACT_APP_CHANGELOG=`cat CHANGELOG.md` REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_GIT_TIME=`git log -1 --format=%ci` react-scripts build",
-    "build:windows": "set \"GENERATE_SOURCEMAP=false\" && react-scripts build",
-    "test": "react-scripts test --env=jsdom",
+    "build:default": "GENERATE_SOURCEMAP=false VITE_CHANGELOG=`cat CHANGELOG.md` VITE_GIT_SHA=`git rev-parse --short HEAD` VITE_GIT_TIME=`git log -1 --format=%ci` tsc && vite build",
+    "build:windows": "set \"GENERATE_SOURCEMAP=false\" && tsc && vite build",
+    "test": "jest",
     "prettier": "prettier --write src/**/*.{ts,tsx,json} --end-of-line lf && prettier --write src/*.{ts,tsx,json} --end-of-line lf",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d dist",
     "predeploy-wikitree": "npm run build",
     "deploy-wikitree": "./deploy-wikitree.sh",
     "cy:run": "cypress run",
-    "cy:start-and-run": "BROWSER=none start-server-and-test start 3000 cy:run"
+    "cy:start-and-run": "BROWSER=none start-server-and-test start localhost:3000 cy:run"
   },
   "homepage": ".",
   "browserslist": [
@@ -99,18 +106,6 @@
     "rules": {
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-use-before-define": "off"
-    }
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "d3-array": "<rootDir>/node_modules/d3-array/dist/d3-array.js",
-      "d3-color": "<rootDir>/node_modules/d3-color/dist/d3-color.js",
-      "d3-ease": "<rootDir>/node_modules/d3-ease/dist/d3-ease.js",
-      "d3-hierarchy": "<rootDir>/node_modules/d3-hierarchy/dist/d3-hierarchy.js",
-      "d3-interpolate": "<rootDir>/node_modules/d3-interpolate/dist/d3-interpolate.js",
-      "d3-selection": "<rootDir>/node_modules/d3-selection/dist/d3-selection.js",
-      "d3-timer": "<rootDir>/node_modules/d3-timer/dist/d3-timer.js",
-      "d3-transition": "<rootDir>/node_modules/d3-transition/dist/d3-transition.js"
     }
   }
 }

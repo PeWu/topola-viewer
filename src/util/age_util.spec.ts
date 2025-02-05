@@ -1,4 +1,4 @@
-import expect from 'expect';
+import {expect, describe, it} from '@jest/globals';
 import {createIntl} from 'react-intl';
 import {calcAge} from './age_util';
 

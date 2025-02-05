@@ -50,12 +50,12 @@ import {
 import {DonatsoChart} from './donatso-chart';
 
 /**
- * Load GEDCOM URL from REACT_APP_STATIC_URL environment variable.
+ * Load GEDCOM URL from VITE_STATIC_URL environment variable.
  *
  * If this environment variable is provided, the viewer is switched to
  * single-tree mode without the option to load other data.
  */
-const staticUrl = process.env.REACT_APP_STATIC_URL;
+const staticUrl = import.meta.env.VITE_STATIC_URL;
 
 /** Shows an error message in the middle of the screen. */
 function ErrorMessage(props: {message?: string}) {

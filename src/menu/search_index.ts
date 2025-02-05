@@ -3,12 +3,17 @@ import naturalSort from 'javascript-natural-sort';
 import {idToFamMap, idToIndiMap} from '../util/gedcom_util';
 import {JsonFam, JsonGedcomData, JsonIndi} from 'topola';
 
-// TODO: Add type declarations and use import instead of require.
-require('lunr-languages/lunr.stemmer.support')(lunr);
-require('lunr-languages/lunr.de')(lunr);
-require('lunr-languages/lunr.fr')(lunr);
-require('lunr-languages/lunr.it')(lunr);
-require('lunr-languages/lunr.ru')(lunr);
+import lunrStemmer from 'lunr-languages/lunr.stemmer.support';
+import lunrDe from 'lunr-languages/lunr.de';
+import lunrFr from 'lunr-languages/lunr.fr';
+import lunrIt from 'lunr-languages/lunr.it';
+import lunrRu from 'lunr-languages/lunr.ru';
+
+lunrStemmer(lunr);
+lunrDe(lunr);
+lunrFr(lunr);
+lunrIt(lunr);
+lunrRu(lunr);
 
 const MAX_RESULTS = 8;
 

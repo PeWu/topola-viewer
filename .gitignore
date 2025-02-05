@@ -1,4 +1,4 @@
-build
+dist
 node_modules
 src/react-app-env.d.ts
 cypress/fixtures/example.json

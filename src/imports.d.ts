@@ -1,2 +1,2 @@
-declare module '*.jng';
+declare module '*.jpg';
 declare module '*.png';
