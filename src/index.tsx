@@ -6,6 +6,7 @@ import {HashRouter as Router} from 'react-router';
 import 'semantic-ui-css/semantic.min.css';
 import {App} from './app';
 import './index.css';
+import messages_bg from './translations/bg.json';
 import messages_cs from './translations/cs.json';
 import messages_de from './translations/de.json';
 import messages_fr from './translations/fr.json';
@@ -15,6 +16,7 @@ import messages_ru from './translations/ru.json';
 import {MediaContextProvider, mediaStyles} from './util/media';
 
 const messages: {[language: string]: {[message_id: string]: string}} = {
+  bg: messages_bg,
   cs: messages_cs,
   de: messages_de,
   fr: messages_fr,
