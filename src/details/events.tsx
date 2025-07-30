@@ -14,9 +14,12 @@ import {
   getFileName,
   getImageFileEntry,
   getName,
+  getNonImageFileEntry,
   pointerToId,
 } from '../util/gedcom_util';
-import {EventExtras, Image, Source} from './event-extras';
+import {FileEntry} from './additional-files';
+import {EventExtras, Image} from './event-extras';
+import {Source} from './sources';
 import {TranslatedTag} from './translated-tag';
 
 function PersonLink(props: {person: GedcomEntry}) {
@@ -53,6 +56,7 @@ interface EventData {
   personLink?: GedcomEntry;
   place?: string[];
   images?: Image[];
+  files?: FileEntry[];
   notes?: string[][];
   sources?: Source[];
   indi: string;
@@ -74,7 +78,7 @@ const FAMILY_EVENT_TAGS = ['MARR', 'DIV'];
 function EventHeader(props: {event: EventData}) {
   const intl = useIntl();
   return (
-    <div className="event-header">
+    <div className="item-header">
       <Header as="span" size="small">
         <TranslatedTag tag={props.event.type} />
       </Header>
@@ -138,6 +142,25 @@ function eventImages(entry: GedcomEntry, gedcom: GedcomData): Image[] {
             {
               url: imageFileEntry?.data || '',
               filename: getFileName(imageFileEntry) || '',
+            },
+          ]
+        : [],
+    );
+}
+
+function eventFiles(entry: GedcomEntry, gedcom: GedcomData): Image[] {
+  return entry.tree
+    .filter((subEntry) => 'OBJE' === subEntry.tag)
+    .map((objectEntry) =>
+      dereference(objectEntry, gedcom, (gedcom) => gedcom.other),
+    )
+    .map((objectEntry) => getNonImageFileEntry(objectEntry))
+    .flatMap((fileEntry) =>
+      fileEntry
+        ? [
+            {
+              url: fileEntry?.data || '',
+              filename: getFileName(fileEntry) || '',
             },
           ]
         : [],
@@ -221,6 +244,7 @@ function toIndiEvent(
       age: getAge(entry, indi, gedcom, intl),
       place: eventPlace(entry),
       images: eventImages(entry, gedcom),
+      files: eventFiles(entry, gedcom),
       notes: eventNotes(entry, gedcom),
       sources: eventSources(entry, gedcom),
       indi: indi,
@@ -248,6 +272,7 @@ function toFamilyEvents(
       personLink: getSpouse(indi, family, gedcom),
       place: eventPlace(familyMarriageEvent),
       images: eventImages(familyMarriageEvent, gedcom),
+      files: eventFiles(familyMarriageEvent, gedcom),
       notes: eventNotes(familyMarriageEvent, gedcom),
       sources: eventSources(familyMarriageEvent, gedcom),
       indi: indi,
@@ -272,6 +297,7 @@ function Event(props: {event: EventData}) {
           notes={props.event.notes}
           sources={props.event.sources}
           indi={props.event.indi}
+          files={props.event.files}
         />
       </Item.Content>
     </Item>

@@ -60,6 +60,7 @@
   "gedcom.RIN": "ID",
   "gedcom.TITL": "Titre",
   "gedcom.WWW": "Site Web",
+  "gedcom.OBJE": "Fichiers supplémentaires",
   "gedcom._UPD": "Dernière mise à jour",
   "gedcom.MARR": "Mariage",
   "gedcom.DIV": "Divorce",

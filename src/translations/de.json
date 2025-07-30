@@ -50,6 +50,7 @@
   "gedcom.RIN": "ID",
   "gedcom.TITL": "Titel",
   "gedcom.WWW": "Website",
+  "gedcom.OBJE": "Zusätzliche Dateien",
   "gedcom._UPD": "Zuletzt aktualisiert",
   "gedcom.birth": "Geburtsname",
   "gedcom.married": "Ehenamen",

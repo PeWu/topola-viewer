@@ -62,6 +62,7 @@
   "gedcom.RIN": "ID",
   "gedcom.TITL": "Обръщение",
   "gedcom.WWW": "Линк",
+  "gedcom.OBJE": "Допълнителни файлове",
   "gedcom._UPD": "Последно обновление",
   "gedcom.birth": "Рождено име",
   "gedcom.married": "Име след брак",
@@ -106,5 +107,6 @@
   "name.unknown_name": "Неизвестно име",
   "extras.images": "Изображение",
   "extras.notes": "Бележки",
-  "extras.sources": "Източници"
+  "extras.sources": "Източници",
+  "extras.files": "Допълнителни файлове"
 }

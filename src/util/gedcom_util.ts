@@ -296,13 +296,24 @@ export function getFileName(fileEntry: GedcomEntry): string | undefined {
   return fileTitle && fileExtension && fileTitle + '.' + fileExtension;
 }
 
-export function getImageFileEntry(
+function findFileEntry(
   objectEntry: GedcomEntry,
+  predicate: (entry: GedcomEntry) => boolean,
 ): GedcomEntry | undefined {
   return objectEntry.tree.find(
     (entry) =>
-      entry.tag === 'FILE' &&
-      entry.data.startsWith('http') &&
-      isImageFile(entry.data),
+      entry.tag === 'FILE' && entry.data.startsWith('http') && predicate(entry),
   );
+}
+
+export function getNonImageFileEntry(
+  objectEntry: GedcomEntry,
+): GedcomEntry | undefined {
+  return findFileEntry(objectEntry, (entry) => !isImageFile(entry.data));
+}
+
+export function getImageFileEntry(
+  objectEntry: GedcomEntry,
+): GedcomEntry | undefined {
+  return findFileEntry(objectEntry, (entry) => isImageFile(entry.data));
 }

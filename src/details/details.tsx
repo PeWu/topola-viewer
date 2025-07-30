@@ -8,7 +8,9 @@ import {
   getData,
   getFileName,
   getImageFileEntry,
+  getNonImageFileEntry,
 } from '../util/gedcom_util';
+import {AdditionalFiles} from './additional-files';
 import {Events} from './events';
 import {MultilineText} from './multiline-text';
 import {TranslatedTag} from './translated-tag';
@@ -55,17 +57,46 @@ function dataDetails(entry: GedcomEntry) {
   );
 }
 
-function fileDetails(objectEntry: GedcomEntry) {
+function imageDetails(objectEntry: GedcomEntry) {
   const imageFileEntry = getImageFileEntry(objectEntry);
 
-  return imageFileEntry ? (
+  if (!imageFileEntry) {
+    return null;
+  }
+
+  return (
     <div className="person-image">
       <WrappedImage
         url={imageFileEntry.data}
         filename={getFileName(imageFileEntry) || ''}
       />
     </div>
-  ) : null;
+  );
+}
+
+function fileDetails(objectEntries: GedcomEntry[]) {
+  const fileEntries = objectEntries
+    .map((objectEntry) => getNonImageFileEntry(objectEntry))
+    .filter((objectEntry): objectEntry is GedcomEntry => !!objectEntry)
+    .map((fileEntry) => ({
+      url: fileEntry.data,
+      filename: getFileName(fileEntry),
+    }));
+
+  if (!fileEntries.length) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="item-header">
+        <Header as="span" size="small">
+          <TranslatedTag tag="OBJE" />
+        </Header>
+      </div>
+      <AdditionalFiles files={fileEntries} />
+    </>
+  );
 }
 
 function noteDetails(entry: GedcomEntry) {
@@ -103,7 +134,7 @@ function nameDetails(entry: GedcomEntry) {
   );
 }
 
-function getDetails(
+function getSectionForEachMatchingEntry(
   entries: GedcomEntry[],
   tags: string[],
   detailsFunction: (entry: GedcomEntry) => React.ReactNode | null,
@@ -121,6 +152,26 @@ function getDetails(
     ));
 }
 
+function combineAllMatchingEntriesIntoSingleSection(
+  entries: GedcomEntry[],
+  tags: string[],
+  detailsFunction: (entries: GedcomEntry[]) => React.ReactNode | null,
+): React.ReactNode {
+  const entriesWithMatchingTag = flatMap(tags, (tag) =>
+    entries.filter((entry) => entry.tag === tag),
+  ).filter((element) => element !== null);
+
+  if (!entriesWithMatchingTag.length) {
+    return null;
+  }
+
+  return (
+    <Item>
+      <Item.Content>{detailsFunction(entriesWithMatchingTag)}</Item.Content>
+    </Item>
+  );
+}
+
 /**
  * Returns true if there is displayable information in this entry.
  * Returns false if there is no data in this entry or this is only a reference
@@ -130,7 +181,7 @@ function hasData(entry: GedcomEntry) {
   return entry.tree.length > 0 || (entry.data && !entry.data.startsWith('@'));
 }
 
-function getOtherDetails(entries: GedcomEntry[]) {
+function getOtherSections(entries: GedcomEntry[]) {
   return entries
     .filter((entry) => !EXCLUDED_TAGS.includes(entry.tag))
     .filter(hasData)
@@ -157,11 +208,20 @@ export function Details(props: Props) {
   return (
     <div className="details">
       <Item.Group divided>
-        {getDetails(entries, ['NAME'], nameDetails)}
-        {getDetails(entriesWithData, ['OBJE'], fileDetails)}
+        {getSectionForEachMatchingEntry(entries, ['NAME'], nameDetails)}
+        {getSectionForEachMatchingEntry(
+          entriesWithData,
+          ['OBJE'],
+          imageDetails,
+        )}
         <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
-        {getOtherDetails(entriesWithData)}
-        {getDetails(entriesWithData, ['NOTE'], noteDetails)}
+        {getOtherSections(entriesWithData)}
+        {getSectionForEachMatchingEntry(entriesWithData, ['NOTE'], noteDetails)}
+        {combineAllMatchingEntriesIntoSingleSection(
+          entriesWithData,
+          ['OBJE'],
+          fileDetails,
+        )}
       </Item.Group>
     </div>
   );

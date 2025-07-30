@@ -63,6 +63,7 @@
   "gedcom.RIN": "ID",
   "gedcom.TITL": "Titul",
   "gedcom.WWW": "Stránka WWW",
+  "gedcom.OBJE": "Další soubory",
   "gedcom.RELI": "Vyznání",
   "gedcom._UPD": "Poslední aktualizace",
   "gedcom.birth": "Rodné jméno",
@@ -107,5 +108,6 @@
   "name.unknown_name": "N.N.",
   "extras.images": "Obrázky",
   "extras.notes": "Poznámky",
-  "extras.sources": "Zdroje"
+  "extras.sources": "Zdroje",
+  "extras.files": "Další soubory"
 }

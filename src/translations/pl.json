@@ -55,6 +55,7 @@
   "gedcom.RIN": "ID",
   "gedcom.TITL": "Tytuł",
   "gedcom.WWW": "Strona WWW",
+  "gedcom.OBJE": "Dodatkowe pliki",
   "gedcom._UPD": "Ostatnia aktualizacja",
   "gedcom.MARR": "Małżeństwo",
   "gedcom.DIV": "Rozwód",
@@ -94,5 +95,6 @@
   "name.unknown_name": "N.N.",
   "extras.images": "Zdjęcia",
   "extras.notes": "Notatki",
-  "extras.sources": "Źródła"
+  "extras.sources": "Źródła",
+  "extras.files": "Dodatkowe pliki"
 }
