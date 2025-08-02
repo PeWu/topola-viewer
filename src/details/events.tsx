@@ -15,11 +15,13 @@ import {
   getImageFileEntry,
   getName,
   getNonImageFileEntry,
+  mapToSource,
   pointerToId,
+  resolveDate,
+  Source,
 } from '../util/gedcom_util';
 import {FileEntry} from './additional-files';
 import {EventExtras, Image} from './event-extras';
-import {Source} from './sources';
 import {TranslatedTag} from './translated-tag';
 
 function PersonLink(props: {person: GedcomEntry}) {
@@ -170,45 +172,7 @@ function eventFiles(entry: GedcomEntry, gedcom: GedcomData): Image[] {
 function eventSources(entry: GedcomEntry, gedcom: GedcomData): Source[] {
   return entry.tree
     .filter((subEntry) => 'SOUR' === subEntry.tag)
-    .map((sourceEntryReference) => {
-      const sourceEntry = dereference(
-        sourceEntryReference,
-        gedcom,
-        (gedcom) => gedcom.other,
-      );
-
-      const title = sourceEntry.tree.find(
-        (subEntry) => 'TITL' === subEntry.tag,
-      );
-
-      const abbr = sourceEntry.tree.find((subEntry) => 'ABBR' === subEntry.tag);
-
-      const author = sourceEntry.tree.find(
-        (subEntry) => 'AUTH' === subEntry.tag,
-      );
-
-      const publicationInfo = sourceEntry.tree.find(
-        (subEntry) => 'PUBL' === subEntry.tag,
-      );
-
-      const page = sourceEntryReference.tree.find(
-        (subEntry) => 'PAGE' === subEntry.tag,
-      );
-
-      const sourceData = sourceEntryReference.tree.find(
-        (subEntry) => 'DATA' === subEntry.tag,
-      );
-
-      const date = sourceData ? resolveDate(sourceData) : undefined;
-
-      return {
-        title: title?.data || abbr?.data,
-        author: author?.data,
-        page: page?.data,
-        date: date ? getDate(date.data) : undefined,
-        publicationInfo: publicationInfo?.data,
-      };
-    });
+    .map((sourceEntryReference) => mapToSource(sourceEntryReference, gedcom));
 }
 
 function eventNotes(entry: GedcomEntry, gedcom: GedcomData): string[][] {
@@ -250,10 +214,6 @@ function toIndiEvent(
       indi: indi,
     },
   ];
-}
-
-function resolveDate(entry: GedcomEntry) {
-  return entry.tree.find((subEntry) => subEntry.tag === 'DATE');
 }
 
 function toFamilyEvents(
