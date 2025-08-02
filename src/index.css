@@ -153,13 +153,13 @@ div.zoom {
   padding: 0 15px;
 }
 
-.details .event-header {
+.details .item-header {
   justify-content: space-between;
   display: flex;
   word-break: break-word;
 }
 
-.details .event-header .header {
+.details .item-header .header {
   text-transform: uppercase;
   margin: 0;
   min-width: 40%;

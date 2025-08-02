@@ -14,9 +14,14 @@ import {
   getFileName,
   getImageFileEntry,
   getName,
+  getNonImageFileEntry,
+  mapToSource,
   pointerToId,
+  resolveDate,
+  Source,
 } from '../util/gedcom_util';
-import {EventExtras, Image, Source} from './event-extras';
+import {FileEntry} from './additional-files';
+import {EventExtras, Image} from './event-extras';
 import {TranslatedTag} from './translated-tag';
 
 function PersonLink(props: {person: GedcomEntry}) {
@@ -53,6 +58,7 @@ interface EventData {
   personLink?: GedcomEntry;
   place?: string[];
   images?: Image[];
+  files?: FileEntry[];
   notes?: string[][];
   sources?: Source[];
   indi: string;
@@ -74,7 +80,7 @@ const FAMILY_EVENT_TAGS = ['MARR', 'DIV'];
 function EventHeader(props: {event: EventData}) {
   const intl = useIntl();
   return (
-    <div className="event-header">
+    <div className="item-header">
       <Header as="span" size="small">
         <TranslatedTag tag={props.event.type} />
       </Header>
@@ -144,48 +150,29 @@ function eventImages(entry: GedcomEntry, gedcom: GedcomData): Image[] {
     );
 }
 
+function eventFiles(entry: GedcomEntry, gedcom: GedcomData): Image[] {
+  return entry.tree
+    .filter((subEntry) => 'OBJE' === subEntry.tag)
+    .map((objectEntry) =>
+      dereference(objectEntry, gedcom, (gedcom) => gedcom.other),
+    )
+    .map((objectEntry) => getNonImageFileEntry(objectEntry))
+    .flatMap((fileEntry) =>
+      fileEntry
+        ? [
+            {
+              url: fileEntry?.data || '',
+              filename: getFileName(fileEntry) || '',
+            },
+          ]
+        : [],
+    );
+}
+
 function eventSources(entry: GedcomEntry, gedcom: GedcomData): Source[] {
   return entry.tree
     .filter((subEntry) => 'SOUR' === subEntry.tag)
-    .map((sourceEntryReference) => {
-      const sourceEntry = dereference(
-        sourceEntryReference,
-        gedcom,
-        (gedcom) => gedcom.other,
-      );
-
-      const title = sourceEntry.tree.find(
-        (subEntry) => 'TITL' === subEntry.tag,
-      );
-
-      const abbr = sourceEntry.tree.find((subEntry) => 'ABBR' === subEntry.tag);
-
-      const author = sourceEntry.tree.find(
-        (subEntry) => 'AUTH' === subEntry.tag,
-      );
-
-      const publicationInfo = sourceEntry.tree.find(
-        (subEntry) => 'PUBL' === subEntry.tag,
-      );
-
-      const page = sourceEntryReference.tree.find(
-        (subEntry) => 'PAGE' === subEntry.tag,
-      );
-
-      const sourceData = sourceEntryReference.tree.find(
-        (subEntry) => 'DATA' === subEntry.tag,
-      );
-
-      const date = sourceData ? resolveDate(sourceData) : undefined;
-
-      return {
-        title: title?.data || abbr?.data,
-        author: author?.data,
-        page: page?.data,
-        date: date ? getDate(date.data) : undefined,
-        publicationInfo: publicationInfo?.data,
-      };
-    });
+    .map((sourceEntryReference) => mapToSource(sourceEntryReference, gedcom));
 }
 
 function eventNotes(entry: GedcomEntry, gedcom: GedcomData): string[][] {
@@ -221,15 +208,12 @@ function toIndiEvent(
       age: getAge(entry, indi, gedcom, intl),
       place: eventPlace(entry),
       images: eventImages(entry, gedcom),
+      files: eventFiles(entry, gedcom),
       notes: eventNotes(entry, gedcom),
       sources: eventSources(entry, gedcom),
       indi: indi,
     },
   ];
-}
-
-function resolveDate(entry: GedcomEntry) {
-  return entry.tree.find((subEntry) => subEntry.tag === 'DATE');
 }
 
 function toFamilyEvents(
@@ -248,6 +232,7 @@ function toFamilyEvents(
       personLink: getSpouse(indi, family, gedcom),
       place: eventPlace(familyMarriageEvent),
       images: eventImages(familyMarriageEvent, gedcom),
+      files: eventFiles(familyMarriageEvent, gedcom),
       notes: eventNotes(familyMarriageEvent, gedcom),
       sources: eventSources(familyMarriageEvent, gedcom),
       indi: indi,
@@ -272,6 +257,7 @@ function Event(props: {event: EventData}) {
           notes={props.event.notes}
           sources={props.event.sources}
           indi={props.event.indi}
+          files={props.event.files}
         />
       </Item.Content>
     </Item>
