@@ -9,9 +9,10 @@ import {
   Popup,
   Tab,
 } from 'semantic-ui-react';
+import {Source} from '../util/gedcom_util';
 import {AdditionalFiles, FileEntry} from './additional-files';
 import {MultilineText} from './multiline-text';
-import {Source, Sources} from './sources';
+import {Sources} from './sources';
 import {WrappedImage} from './wrapped-image';
 
 export interface Image {

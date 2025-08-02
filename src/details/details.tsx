@@ -9,10 +9,12 @@ import {
   getFileName,
   getImageFileEntry,
   getNonImageFileEntry,
+  mapToSource,
 } from '../util/gedcom_util';
 import {AdditionalFiles} from './additional-files';
 import {Events} from './events';
 import {MultilineText} from './multiline-text';
+import {Sources} from './sources';
 import {TranslatedTag} from './translated-tag';
 import {WrappedImage} from './wrapped-image';
 
@@ -57,10 +59,16 @@ function dataDetails(entry: GedcomEntry) {
   );
 }
 
-function imageDetails(objectEntry: GedcomEntry) {
-  const imageFileEntry = getImageFileEntry(objectEntry);
+function imageDetails(objectEntryReference: GedcomEntry, gedcom: GedcomData) {
+  const imageEntry = dereference(
+    objectEntryReference,
+    gedcom,
+    (gedcom) => gedcom.other,
+  );
 
-  if (!imageFileEntry) {
+  const imageFileEntry = getImageFileEntry(imageEntry);
+
+  if (!imageFileEntry || !hasData(imageEntry)) {
     return null;
   }
 
@@ -74,8 +82,35 @@ function imageDetails(objectEntry: GedcomEntry) {
   );
 }
 
-function fileDetails(objectEntries: GedcomEntry[]) {
-  const fileEntries = objectEntries
+function sourceDetails(
+  sourceReferenceEntries: GedcomEntry[],
+  gedcom: GedcomData,
+) {
+  const sources = sourceReferenceEntries.map((sourceEntryReference) =>
+    mapToSource(sourceEntryReference, gedcom),
+  );
+
+  if (!sources.length) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="item-header">
+        <Header as="span" size="small">
+          <TranslatedTag tag="SOUR" />
+        </Header>
+      </div>
+      <Sources sources={sources} />
+    </>
+  );
+}
+
+function fileDetails(objectEntries: GedcomEntry[], gedcom: GedcomData) {
+  const files = objectEntries
+    .map((objectEntry) =>
+      dereference(objectEntry, gedcom, (gedcom) => gedcom.other),
+    )
     .map((objectEntry) => getNonImageFileEntry(objectEntry))
     .filter((objectEntry): objectEntry is GedcomEntry => !!objectEntry)
     .map((fileEntry) => ({
@@ -83,7 +118,7 @@ function fileDetails(objectEntries: GedcomEntry[]) {
       filename: getFileName(fileEntry),
     }));
 
-  if (!fileEntries.length) {
+  if (!files.length) {
     return null;
   }
 
@@ -94,15 +129,25 @@ function fileDetails(objectEntries: GedcomEntry[]) {
           <TranslatedTag tag="OBJE" />
         </Header>
       </div>
-      <AdditionalFiles files={fileEntries} />
+      <AdditionalFiles files={files} />
     </>
   );
 }
 
-function noteDetails(entry: GedcomEntry) {
+function noteDetails(noteEntryReference: GedcomEntry, gedcom: GedcomData) {
+  const noteEntry = dereference(
+    noteEntryReference,
+    gedcom,
+    (gedcom) => gedcom.other,
+  );
+
+  if (!noteEntry || !hasData(noteEntry)) {
+    return null;
+  }
+
   return (
     <MultilineText
-      lines={getData(entry).map((line, index) => (
+      lines={getData(noteEntry).map((line, index) => (
         <i key={index}>{line}</i>
       ))}
     />
@@ -136,13 +181,17 @@ function nameDetails(entry: GedcomEntry) {
 
 function getSectionForEachMatchingEntry(
   entries: GedcomEntry[],
+  gedcom: GedcomData,
   tags: string[],
-  detailsFunction: (entry: GedcomEntry) => React.ReactNode | null,
+  detailsFunction: (
+    entry: GedcomEntry,
+    gedcom: GedcomData,
+  ) => React.ReactNode | null,
 ): React.ReactNode[] {
   return flatMap(tags, (tag) =>
     entries
       .filter((entry) => entry.tag === tag)
-      .map((entry) => detailsFunction(entry)),
+      .map((entry) => detailsFunction(entry, gedcom)),
   )
     .filter((element) => element !== null)
     .map((element, index) => (
@@ -154,20 +203,28 @@ function getSectionForEachMatchingEntry(
 
 function combineAllMatchingEntriesIntoSingleSection(
   entries: GedcomEntry[],
+  gedcom: GedcomData,
   tags: string[],
-  detailsFunction: (entries: GedcomEntry[]) => React.ReactNode | null,
+  detailsFunction: (
+    entries: GedcomEntry[],
+    gedcom: GedcomData,
+  ) => React.ReactNode | null,
 ): React.ReactNode {
   const entriesWithMatchingTag = flatMap(tags, (tag) =>
     entries.filter((entry) => entry.tag === tag),
   ).filter((element) => element !== null);
 
-  if (!entriesWithMatchingTag.length) {
+  const sectionWithDetails = entriesWithMatchingTag.length
+    ? detailsFunction(entriesWithMatchingTag, gedcom)
+    : null;
+
+  if (!sectionWithDetails) {
     return null;
   }
 
   return (
     <Item>
-      <Item.Content>{detailsFunction(entriesWithMatchingTag)}</Item.Content>
+      <Item.Content>{sectionWithDetails}</Item.Content>
     </Item>
   );
 }
@@ -181,9 +238,10 @@ function hasData(entry: GedcomEntry) {
   return entry.tree.length > 0 || (entry.data && !entry.data.startsWith('@'));
 }
 
-function getOtherSections(entries: GedcomEntry[]) {
+function getOtherSections(entries: GedcomEntry[], gedcom: GedcomData) {
   return entries
     .filter((entry) => !EXCLUDED_TAGS.includes(entry.tag))
+    .map((entry) => dereference(entry, gedcom, (gedcom) => gedcom.other))
     .filter(hasData)
     .map((entry) => dataDetails(entry))
     .filter((element) => element !== null)
@@ -201,26 +259,41 @@ interface Props {
 
 export function Details(props: Props) {
   const entries = props.gedcom.indis[props.indi].tree;
-  const entriesWithData = entries
-    .map((entry) => dereference(entry, props.gedcom, (gedcom) => gedcom.other))
-    .filter(hasData);
 
   return (
     <div className="details">
       <Item.Group divided>
-        {getSectionForEachMatchingEntry(entries, ['NAME'], nameDetails)}
         {getSectionForEachMatchingEntry(
-          entriesWithData,
+          entries,
+          props.gedcom,
+          ['NAME'],
+          nameDetails,
+        )}
+        {getSectionForEachMatchingEntry(
+          entries,
+          props.gedcom,
           ['OBJE'],
           imageDetails,
         )}
         <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
-        {getOtherSections(entriesWithData)}
-        {getSectionForEachMatchingEntry(entriesWithData, ['NOTE'], noteDetails)}
+        {getOtherSections(entries, props.gedcom)}
+        {getSectionForEachMatchingEntry(
+          entries,
+          props.gedcom,
+          ['NOTE'],
+          noteDetails,
+        )}
         {combineAllMatchingEntriesIntoSingleSection(
-          entriesWithData,
+          entries,
+          props.gedcom,
           ['OBJE'],
           fileDetails,
+        )}
+        {combineAllMatchingEntriesIntoSingleSection(
+          entries,
+          props.gedcom,
+          ['SOUR'],
+          sourceDetails,
         )}
       </Item.Group>
     </div>

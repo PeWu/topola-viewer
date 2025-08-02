@@ -1,16 +1,8 @@
 import {useIntl} from 'react-intl';
 import Linkify from 'react-linkify';
 import {List} from 'semantic-ui-react';
-import {DateOrRange} from 'topola';
 import {formatDateOrRange} from '../util/date_util';
-
-export interface Source {
-  title?: string;
-  author?: string;
-  page?: string;
-  date?: DateOrRange;
-  publicationInfo?: string;
-}
+import {Source} from '../util/gedcom_util';
 
 interface Props {
   sources?: Source[];

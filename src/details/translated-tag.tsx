@@ -23,6 +23,7 @@ const TAG_DESCRIPTIONS = new Map([
   ['TITL', 'Title'],
   ['WWW', 'WWW'],
   ['OBJE', 'Additional files'],
+  ['SOUR', 'Sources'],
   ['birth', 'Birth name'],
   ['married', 'Married name'],
   ['maiden', 'Maiden name'],
