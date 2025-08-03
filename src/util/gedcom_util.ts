@@ -1,6 +1,8 @@
 import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
 import {
+  DateOrRange,
   gedcomEntriesToJson,
+  getDate,
   JsonFam,
   JsonGedcomData,
   JsonImage,
@@ -23,6 +25,14 @@ export interface GedcomData {
 export interface TopolaData {
   chartData: JsonGedcomData;
   gedcom: GedcomData;
+}
+
+export interface Source {
+  title?: string;
+  author?: string;
+  page?: string;
+  date?: DateOrRange;
+  publicationInfo?: string;
 }
 
 /**
@@ -296,13 +306,67 @@ export function getFileName(fileEntry: GedcomEntry): string | undefined {
   return fileTitle && fileExtension && fileTitle + '.' + fileExtension;
 }
 
-export function getImageFileEntry(
+function findFileEntry(
   objectEntry: GedcomEntry,
+  predicate: (entry: GedcomEntry) => boolean,
 ): GedcomEntry | undefined {
   return objectEntry.tree.find(
     (entry) =>
-      entry.tag === 'FILE' &&
-      entry.data.startsWith('http') &&
-      isImageFile(entry.data),
+      entry.tag === 'FILE' && entry.data.startsWith('http') && predicate(entry),
   );
+}
+
+export function getNonImageFileEntry(
+  objectEntry: GedcomEntry,
+): GedcomEntry | undefined {
+  return findFileEntry(objectEntry, (entry) => !isImageFile(entry.data));
+}
+
+export function getImageFileEntry(
+  objectEntry: GedcomEntry,
+): GedcomEntry | undefined {
+  return findFileEntry(objectEntry, (entry) => isImageFile(entry.data));
+}
+
+export function resolveDate(entry: GedcomEntry) {
+  return entry.tree.find((subEntry) => subEntry.tag === 'DATE');
+}
+
+export function mapToSource(
+  sourceEntryReference: GedcomEntry,
+  gedcom: GedcomData,
+) {
+  const sourceEntry = dereference(
+    sourceEntryReference,
+    gedcom,
+    (gedcom) => gedcom.other,
+  );
+
+  const title = sourceEntry.tree.find((subEntry) => 'TITL' === subEntry.tag);
+
+  const abbr = sourceEntry.tree.find((subEntry) => 'ABBR' === subEntry.tag);
+
+  const author = sourceEntry.tree.find((subEntry) => 'AUTH' === subEntry.tag);
+
+  const publicationInfo = sourceEntry.tree.find(
+    (subEntry) => 'PUBL' === subEntry.tag,
+  );
+
+  const page = sourceEntryReference.tree.find(
+    (subEntry) => 'PAGE' === subEntry.tag,
+  );
+
+  const sourceData = sourceEntryReference.tree.find(
+    (subEntry) => 'DATA' === subEntry.tag,
+  );
+
+  const date = sourceData ? resolveDate(sourceData) : undefined;
+
+  return {
+    title: title?.data || abbr?.data,
+    author: author?.data,
+    page: page?.data,
+    date: date ? getDate(date.data) : undefined,
+    publicationInfo: publicationInfo?.data,
+  };
 }

@@ -60,6 +60,8 @@
   "gedcom.RIN": "ID",
   "gedcom.TITL": "Титул",
   "gedcom.WWW": "Веб-сайт WWW",
+  "gedcom.OBJE": "Дополнительные файлы",
+  "gedcom.SOUR": "Источники",
   "gedcom._UPD": "Последнее обновление",
   "gedcom.birth": "Имя при рождении",
   "gedcom.married": "Имя в браке",
@@ -97,5 +99,6 @@
   "name.unknown_name": "Н.И.",
   "extras.images": "Картинки",
   "extras.notes": "Примечание",
-  "extras.sources": "Источники"
+  "extras.sources": "Источники",
+  "extras.files": "Дополнительные файлы"
 }

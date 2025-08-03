@@ -1,7 +1,5 @@
-import * as React from 'react';
 import {useState} from 'react';
-import {FormattedMessage, IntlShape, useIntl} from 'react-intl';
-import Linkify from 'react-linkify';
+import {FormattedMessage} from 'react-intl';
 import {
   Icon,
   Item,
@@ -11,9 +9,10 @@ import {
   Popup,
   Tab,
 } from 'semantic-ui-react';
-import {DateOrRange} from 'topola';
-import {formatDateOrRange} from '../util/date_util';
+import {Source} from '../util/gedcom_util';
+import {AdditionalFiles, FileEntry} from './additional-files';
 import {MultilineText} from './multiline-text';
+import {Sources} from './sources';
 import {WrappedImage} from './wrapped-image';
 
 export interface Image {
@@ -22,19 +21,12 @@ export interface Image {
   title?: string;
 }
 
-export interface Source {
-  title?: string;
-  author?: string;
-  page?: string;
-  date?: DateOrRange;
-  publicationInfo?: string;
-}
-
 interface Props {
   images?: Image[];
   notes?: string[][];
   sources?: Source[];
   indi: string;
+  files?: FileEntry[];
 }
 
 function eventImages(images: Image[] | undefined) {
@@ -69,37 +61,7 @@ function eventNotes(notes: string[][] | undefined) {
   );
 }
 
-function eventSources(sources: Source[] | undefined, intl: IntlShape) {
-  return (
-    !!sources?.length && (
-      <List>
-        {sources.map((source, index) => (
-          <List.Item key={index}>
-            <List.Icon verticalAlign="middle" name="circle" size="tiny" />
-            <List.Content>
-              <List.Header>
-                <Linkify properties={{target: '_blank'}}>
-                  {[source.author, source.title, source.publicationInfo]
-                    .filter((sourceElement) => sourceElement)
-                    .join(', ')}
-                </Linkify>
-              </List.Header>
-              <List.Description>
-                <Linkify properties={{target: '_blank'}}>{source.page}</Linkify>
-                {source.date
-                  ? ' [' + formatDateOrRange(source.date, intl) + ']'
-                  : null}
-              </List.Description>
-            </List.Content>
-          </List.Item>
-        ))}
-      </List>
-    )
-  );
-}
-
 export function EventExtras(props: Props) {
-  const intl = useIntl();
   const [activeIndex, setActiveIndex] = useState(-1);
   const [indi, setIndi] = useState('');
 
@@ -109,7 +71,7 @@ export function EventExtras(props: Props) {
   }
 
   function handleTabOnClick(
-    event: React.MouseEvent<HTMLAnchorElement>,
+    _event: React.MouseEvent<HTMLAnchorElement>,
     menuItemProps: MenuItemProps,
   ) {
     menuItemProps.index !== undefined && activeIndex !== menuItemProps.index
@@ -162,10 +124,37 @@ export function EventExtras(props: Props) {
         />
       </Menu.Item>
     ),
-    render: () => <Tab.Pane>{eventSources(props.sources, intl)}</Tab.Pane>,
+    render: () => (
+      <Tab.Pane>
+        <Sources sources={props.sources} />
+      </Tab.Pane>
+    ),
   };
 
-  const panes = [imageTab, noteTab, sourceTab].flatMap((tab) =>
+  const filesTab = props.files?.length && {
+    menuItem: (
+      <Menu.Item fitted key="files" onClick={handleTabOnClick}>
+        <Popup
+          content={
+            <FormattedMessage
+              id="extras.files"
+              defaultMessage="Additonal files"
+            />
+          }
+          size="mini"
+          position="bottom center"
+          trigger={<Icon circular name="file alternate outline" />}
+        />
+      </Menu.Item>
+    ),
+    render: () => (
+      <Tab.Pane>
+        <AdditionalFiles files={props.files} />
+      </Tab.Pane>
+    ),
+  };
+
+  const panes = [imageTab, noteTab, sourceTab, filesTab].flatMap((tab) =>
     tab ? [tab] : [],
   );
 
