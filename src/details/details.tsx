@@ -12,20 +12,14 @@ import {
   mapToSource,
 } from '../util/gedcom_util';
 import {AdditionalFiles} from './additional-files';
-import {Events} from './events';
+import {ALL_SUPPORTED_EVENT_TYPES, Events} from './events';
 import {MultilineText} from './multiline-text';
 import {Sources} from './sources';
 import {TranslatedTag} from './translated-tag';
 import {WrappedImage} from './wrapped-image';
 
 const EXCLUDED_TAGS = [
-  'BIRT',
-  'BAPM',
-  'CHR',
-  'EVEN',
-  'CENS',
-  'DEAT',
-  'BURI',
+  ...ALL_SUPPORTED_EVENT_TYPES,
   'NAME',
   'SEX',
   'FAMC',

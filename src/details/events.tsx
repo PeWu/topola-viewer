@@ -18,6 +18,7 @@ import {
   mapToSource,
   pointerToId,
   resolveDate,
+  resolveType,
   Source,
 } from '../util/gedcom_util';
 import {FileEntry} from './additional-files';
@@ -52,7 +53,8 @@ interface Props {
 }
 
 interface EventData {
-  type: string;
+  tag: string;
+  type?: string;
   date?: DateOrRange;
   age?: string;
   personLink?: GedcomEntry;
@@ -64,25 +66,73 @@ interface EventData {
   indi: string;
 }
 
-const EVENT_TAGS = [
-  'BIRT',
+const BIRTH_EVENT_TAGS = ['BIRT'];
+const INDI_EVENT_TAGS = [
+  'ADOP',
   'BAPM',
-  'CHR',
-  'FAMS',
-  'EVEN',
+  'BARM',
+  'BASM',
+  'BLES',
   'CENS',
-  'DEAT',
-  'BURI',
+  'CHR',
+  'CHRA',
+  'CONF',
+  'EDUC',
+  'EMIG',
+  'EVEN',
+  'FAMS',
+  'FCOM',
+  'GRAD',
+  'IMMI',
+  'NATU',
+  'ORDN',
+  'OCCU',
+  'PROP',
+  'RESI',
+  'RETI',
+  'WILL',
+  '_DEG',
+  '_ELEC',
+  '_MDCL',
+  '_MILT',
 ];
 
-const FAMILY_EVENT_TAGS = ['MARR', 'DIV'];
+const FAMILY_EVENT_TAGS = [
+  'ANUL',
+  'CENS',
+  'DIV',
+  'DIVF',
+  'ENGA',
+  'EVEN',
+  'MARB',
+  'MARC',
+  'MARL',
+  'MARR',
+  'MARS',
+];
+const LIFE_EVENT_TAGS = [...INDI_EVENT_TAGS, ...FAMILY_EVENT_TAGS];
+const DEATH_EVENT_TAGS = ['DEAT'];
+const AFTER_DEATH_EVENT_TAGS = ['BURI', 'CREM', 'PROB'];
+const SORTED_EVENT_TYPE_GROUPS = [
+  BIRTH_EVENT_TAGS,
+  LIFE_EVENT_TAGS,
+  DEATH_EVENT_TAGS,
+  AFTER_DEATH_EVENT_TAGS,
+];
+
+export const ALL_SUPPORTED_EVENT_TYPES = [
+  ...BIRTH_EVENT_TAGS,
+  ...LIFE_EVENT_TAGS,
+  ...DEATH_EVENT_TAGS,
+  ...AFTER_DEATH_EVENT_TAGS,
+];
 
 function EventHeader(props: {event: EventData}) {
   const intl = useIntl();
   return (
     <div className="item-header">
       <Header as="span" size="small">
-        <TranslatedTag tag={props.event.type} />
+        <TranslatedTag tag={getEventTitle(props.event)} />
       </Header>
       {props.event.date ? (
         <Header as="span" textAlign="right" sub>
@@ -91,6 +141,13 @@ function EventHeader(props: {event: EventData}) {
       ) : null}
     </div>
   );
+}
+
+function getEventTitle(event: EventData) {
+  if (event.tag === 'EVEN' && event.type) {
+    return event.type;
+  }
+  return event.tag;
 }
 
 function getSpouse(indi: string, familyEntry: GedcomEntry, gedcom: GedcomData) {
@@ -110,13 +167,13 @@ function getAge(
   gedcom: GedcomData,
   intl: IntlShape,
 ): string | undefined {
-  if (eventEntry.tag !== 'DEAT') {
+  if (!DEATH_EVENT_TAGS.includes(eventEntry.tag)) {
     return undefined;
   }
   const deathDate = resolveDate(eventEntry);
 
   const birthDate = gedcom.indis[indi].tree
-    .filter((indiSubEntry) => indiSubEntry.tag === 'BIRT')
+    .filter((indiSubEntry) => BIRTH_EVENT_TAGS.includes(indiSubEntry.tag))
     .map((birthEvent) => resolveDate(birthEvent))
     .find((topolaDate) => topolaDate);
 
@@ -176,10 +233,25 @@ function eventSources(entry: GedcomEntry, gedcom: GedcomData): Source[] {
 }
 
 function eventNotes(entry: GedcomEntry, gedcom: GedcomData): string[][] {
-  return entry.tree
-    .filter((subentry) => ['NOTE', 'TYPE'].includes(subentry.tag))
-    .map((note) => dereference(note, gedcom, (gedcom) => gedcom.other))
-    .map((note) => getData(note));
+  const externalNotes = entry.tree
+    .filter((subEntry) => subEntry.tag === 'NOTE')
+    .map((note) => dereference(note, gedcom, (gedcom) => gedcom.other));
+
+  //for generic 'EVEN' tag 'TYPE is mandatory and is part of the header, for other types it can be worth it to display it as a note
+  const type =
+    entry.tag !== 'EVEN'
+      ? entry.tree.filter((subEntry) => subEntry.tag === 'TYPE')
+      : [];
+
+  //entry.data contains event description, so it's also displayed in notes section
+  return (
+    [entry, ...type, ...externalNotes]
+      .filter((entry) => !!entry.data)
+      /* In Gedcom 'Y' only indicates event occurred, but it doesn't contain any valuable information
+      like place, date or description, so it should be omitted when fetching entry data. */
+      .filter((entry) => entry.data !== 'Y')
+      .map((note) => getData(note))
+  );
 }
 
 function toEvent(
@@ -203,8 +275,9 @@ function toIndiEvent(
   const date = resolveDate(entry) || null;
   return [
     {
+      tag: entry.tag,
       date: date ? getDate(date.data) : undefined,
-      type: entry.tag,
+      type: resolveType(entry),
       age: getAge(entry, indi, gedcom, intl),
       place: eventPlace(entry),
       images: eventImages(entry, gedcom),
@@ -224,17 +297,18 @@ function toFamilyEvents(
   const family = dereference(entry, gedcom, (gedcom) => gedcom.fams);
   return flatMap(FAMILY_EVENT_TAGS, (tag) =>
     family.tree.filter((entry) => entry.tag === tag),
-  ).map((familyMarriageEvent) => {
-    const date = resolveDate(familyMarriageEvent) || null;
+  ).map((familyEvent) => {
+    const date = resolveDate(familyEvent) || null;
     return {
+      tag: familyEvent.tag,
       date: date ? getDate(date.data) : undefined,
-      type: familyMarriageEvent.tag,
+      type: resolveType(familyEvent),
       personLink: getSpouse(indi, family, gedcom),
-      place: eventPlace(familyMarriageEvent),
-      images: eventImages(familyMarriageEvent, gedcom),
-      files: eventFiles(familyMarriageEvent, gedcom),
-      notes: eventNotes(familyMarriageEvent, gedcom),
-      sources: eventSources(familyMarriageEvent, gedcom),
+      place: eventPlace(familyEvent),
+      images: eventImages(familyEvent, gedcom),
+      files: eventFiles(familyEvent, gedcom),
+      notes: eventNotes(familyEvent, gedcom),
+      sources: eventSources(familyEvent, gedcom),
       indi: indi,
     };
   });
@@ -267,9 +341,9 @@ function Event(props: {event: EventData}) {
 export function Events(props: Props) {
   const intl = useIntl();
 
-  const events = flatMap(EVENT_TAGS, (tag) =>
+  const events = flatMap(SORTED_EVENT_TYPE_GROUPS, (eventTypeGroup) =>
     props.entries
-      .filter((entry) => entry.tag === tag)
+      .filter((entry) => eventTypeGroup.includes(entry.tag))
       .map((eventEntry) => toEvent(eventEntry, props.gedcom, props.indi, intl))
       .flatMap((events) => events)
       .sort((event1, event2) => compareDates(event1.date, event2.date)),
