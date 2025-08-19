@@ -10,7 +10,7 @@ import {
   getImageFileEntry,
   getNonImageFileEntry,
   mapToSource,
-} from '../util/gedcom_util';
+} from '../../util/gedcom_util';
 import {AdditionalFiles} from './additional-files';
 import {ALL_SUPPORTED_EVENT_TYPES, Events} from './events';
 import {MultilineText} from './multiline-text';

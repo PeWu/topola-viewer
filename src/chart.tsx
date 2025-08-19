@@ -2,17 +2,12 @@ import {max, min} from 'd3-array';
 import {interpolateNumber} from 'd3-interpolate';
 import {select, Selection} from 'd3-selection';
 import 'd3-transition';
-import {
-  D3ZoomEvent,
-  zoom,
-  ZoomBehavior,
-  ZoomedElementBaseType,
-  zoomTransform,
-} from 'd3-zoom';
+import {D3ZoomEvent, zoom, ZoomBehavior, ZoomedElementBaseType, zoomTransform,} from 'd3-zoom';
 import {saveAs} from 'file-saver';
 import {useEffect, useRef} from 'react';
 import {IntlShape, useIntl} from 'react-intl';
 import {
+  ChartColors as TopolaChartColors,
   ChartHandle,
   CircleRenderer,
   createChart,
@@ -22,9 +17,8 @@ import {
   IndiInfo,
   JsonGedcomData,
   RelativesChart,
-  ChartColors as TopolaChartColors,
 } from 'topola';
-import {ChartColors, Ids, Sex} from './config';
+import {ChartColors, Ids, Sex} from './sidepanel/config/config';
 import {Media} from './util/media';
 import {usePrevious} from './util/previous-hook';
 

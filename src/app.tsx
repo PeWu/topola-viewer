@@ -3,26 +3,10 @@ import queryString from 'query-string';
 import {useEffect, useState} from 'react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router';
-import {Loader, Message, Portal, Tab} from 'semantic-ui-react';
+import {Loader, Message, Portal} from 'semantic-ui-react';
 import {IndiInfo} from 'topola';
-import {Changelog} from './changelog';
-import {
-  Chart,
-  ChartType,
-  downloadPdf,
-  downloadPng,
-  downloadSvg,
-  printChart,
-} from './chart';
-import {
-  argsToConfig,
-  Config,
-  ConfigPanel,
-  configToArgs,
-  DEFALUT_CONFIG,
-  Ids,
-  Sex,
-} from './config';
+import {Chart, ChartType, downloadPdf, downloadPng, downloadSvg, printChart,} from './chart';
+import {argsToConfig, Config, configToArgs, DEFALUT_CONFIG, Ids, Sex,} from './sidepanel/config/config';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
 import {
@@ -32,20 +16,14 @@ import {
   UploadSourceSpec,
   UrlSourceSpec,
 } from './datasource/load_data';
-import {
-  loadWikiTree,
-  PRIVATE_ID_PREFIX,
-  WikiTreeDataSource,
-  WikiTreeSourceSpec,
-} from './datasource/wikitree';
-import {Details} from './details/details';
+import {loadWikiTree, PRIVATE_ID_PREFIX, WikiTreeDataSource, WikiTreeSourceSpec,} from './datasource/wikitree';
 import {DonatsoChart} from './donatso-chart';
 import {Intro} from './intro';
 import {TopBar} from './menu/top_bar';
 import {analyticsEvent} from './util/analytics';
 import {getI18nMessage} from './util/error_i18n';
 import {idToIndiMap, TopolaData} from './util/gedcom_util';
-import {Media} from './util/media';
+import {SidePanel} from './sidepanel/side-panel';
 
 /**
  * Load GEDCOM URL from VITE_STATIC_URL environment variable.
@@ -241,7 +219,7 @@ export function App() {
     }
   }
 
-  function toggleDetails(config: Config, data: TopolaData | undefined) {
+  function updateChartWithConfig(config: Config, data: TopolaData | undefined) {
     if (data === undefined) {
       return;
     }
@@ -362,7 +340,7 @@ export function App() {
           const data = await loadData(args.sourceSpec, args.selection);
           // Set state with data.
           setData(data);
-          toggleDetails(args.config, data);
+          updateChartWithConfig(args.config, data);
           setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
         } catch (error: any) {
@@ -510,33 +488,6 @@ export function App() {
       case AppState.SHOWING_CHART:
       case AppState.LOADING_MORE:
         const updatedSelection = getSelection(data!.chartData, selection);
-        const sidePanelTabs = [
-          {
-            menuItem: intl.formatMessage({
-              id: 'tab.info',
-              defaultMessage: 'Info',
-            }),
-            render: () => (
-              <Details gedcom={data!.gedcom} indi={updatedSelection.id} />
-            ),
-          },
-          {
-            menuItem: intl.formatMessage({
-              id: 'tab.settings',
-              defaultMessage: 'Settings',
-            }),
-            render: () => (
-              <ConfigPanel
-                config={config}
-                onChange={(config) => {
-                  setConfig(config);
-                  toggleDetails(config, data);
-                  updateUrl(configToArgs(config));
-                }}
-              />
-            ),
-          },
-        ];
         return (
           <div id="content">
             <ErrorPopup
@@ -548,12 +499,17 @@ export function App() {
               <Loader active size="small" className="loading-more" />
             ) : null}
             {renderChart(updatedSelection)}
-            {showSidePanel ? (
-              <Media greaterThanOrEqual="large" className="sidePanel">
-                <Tab panes={sidePanelTabs} />
-              </Media>
-            ) : null}
-            <Changelog />
+            <SidePanel
+                data={data!}
+                selectedIndiId={updatedSelection.id}
+                config={config}
+                show={showSidePanel}
+                onConfigChange={(config) => {
+                  setConfig(config);
+                  updateChartWithConfig(config, data);
+                  updateUrl(configToArgs(config));
+                }}
+            />
           </div>
         );
 
