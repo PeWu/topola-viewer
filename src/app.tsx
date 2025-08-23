@@ -3,10 +3,22 @@ import queryString from 'query-string';
 import {useEffect, useState} from 'react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router';
-import {Loader, Message, Portal} from 'semantic-ui-react';
+import {
+  Loader,
+  Message,
+  Portal,
+  SidebarPushable,
+  SidebarPusher,
+} from 'semantic-ui-react';
 import {IndiInfo} from 'topola';
-import {Chart, ChartType, downloadPdf, downloadPng, downloadSvg, printChart,} from './chart';
-import {argsToConfig, Config, configToArgs, DEFALUT_CONFIG, Ids, Sex,} from './sidepanel/config/config';
+import {
+  Chart,
+  ChartType,
+  downloadPdf,
+  downloadPng,
+  downloadSvg,
+  printChart,
+} from './chart';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
 import {
@@ -16,14 +28,27 @@ import {
   UploadSourceSpec,
   UrlSourceSpec,
 } from './datasource/load_data';
-import {loadWikiTree, PRIVATE_ID_PREFIX, WikiTreeDataSource, WikiTreeSourceSpec,} from './datasource/wikitree';
+import {
+  loadWikiTree,
+  PRIVATE_ID_PREFIX,
+  WikiTreeDataSource,
+  WikiTreeSourceSpec,
+} from './datasource/wikitree';
 import {DonatsoChart} from './donatso-chart';
 import {Intro} from './intro';
 import {TopBar} from './menu/top_bar';
+import {
+  argsToConfig,
+  Config,
+  configToArgs,
+  DEFALUT_CONFIG,
+  Ids,
+  Sex,
+} from './sidepanel/config/config';
+import {SidePanel} from './sidepanel/side-panel';
 import {analyticsEvent} from './util/analytics';
 import {getI18nMessage} from './util/error_i18n';
 import {idToIndiMap, TopolaData} from './util/gedcom_util';
-import {SidePanel} from './sidepanel/side-panel';
 
 /**
  * Load GEDCOM URL from VITE_STATIC_URL environment variable.
@@ -229,6 +254,14 @@ export function App() {
     indiMap.forEach((indi) => {
       indi.hideId = shouldHideIds;
       indi.hideSex = shouldHideSex;
+    });
+  }
+
+  function onToggleSidePanel() {
+    const newShowSidePanel = !showSidePanel;
+    setShowSidePanel(newShowSidePanel);
+    updateUrl({
+      sidePanel: newShowSidePanel ? 'true' : 'false',
     });
   }
 
@@ -498,18 +531,21 @@ export function App() {
             {state === AppState.LOADING_MORE ? (
               <Loader active size="small" className="loading-more" />
             ) : null}
-            {renderChart(updatedSelection)}
-            <SidePanel
+            <SidebarPushable>
+              <SidePanel
                 data={data!}
                 selectedIndiId={updatedSelection.id}
                 config={config}
-                show={showSidePanel}
+                expanded={showSidePanel}
+                onToggle={onToggleSidePanel}
                 onConfigChange={(config) => {
                   setConfig(config);
                   updateChartWithConfig(config, data);
                   updateUrl(configToArgs(config));
                 }}
-            />
+              />
+              <SidebarPusher>{renderChart(updatedSelection)}</SidebarPusher>
+            </SidebarPushable>
           </div>
         );
 

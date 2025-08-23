@@ -1,6 +1,14 @@
 import {useState} from 'react';
 import {FormattedMessage} from 'react-intl';
-import {Icon, Item, List, Menu, MenuItemProps, Popup, Tab,} from 'semantic-ui-react';
+import {
+  Icon,
+  Item,
+  List,
+  Menu,
+  MenuItemProps,
+  Popup,
+  Tab,
+} from 'semantic-ui-react';
 import {Source} from '../../util/gedcom_util';
 import {AdditionalFiles, FileEntry} from './additional-files';
 import {MultilineText} from './multiline-text';
