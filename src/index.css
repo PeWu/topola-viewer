@@ -341,7 +341,7 @@ div.zoom {
   }
 
   #sidebar.very.thin {
-    width: 40px;
+    width: 35px;
   }
 
   #content #sidebar.wide ~ .pusher {
@@ -349,11 +349,11 @@ div.zoom {
   }
 
   #content #sidebar.very.thin ~ .pusher {
-    width: calc(100% - 40px);
+    width: calc(100% - 35px);
   }
 
   #sidebar.very.thin #sideToggle {
-    width: 40px;
+    width: 35px;
   }
 }
 
