@@ -332,6 +332,10 @@ export function resolveDate(entry: GedcomEntry) {
   return entry.tree.find((subEntry) => subEntry.tag === 'DATE');
 }
 
+export function resolveType(entry: GedcomEntry) {
+  return entry.tree.find((subEntry) => subEntry.tag === 'TYPE')?.data;
+}
+
 export function mapToSource(
   sourceEntryReference: GedcomEntry,
   gedcom: GedcomData,
