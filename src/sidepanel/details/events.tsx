@@ -5,8 +5,8 @@ import {FormattedMessage, IntlShape, useIntl} from 'react-intl';
 import {Link, useLocation} from 'react-router';
 import {Header, Item} from 'semantic-ui-react';
 import {DateOrRange, getDate} from 'topola';
-import {calcAge} from '../util/age_util';
-import {compareDates, formatDateOrRange} from '../util/date_util';
+import {calcAge} from '../../util/age_util';
+import {compareDates, formatDateOrRange} from '../../util/date_util';
 import {
   dereference,
   GedcomData,
@@ -20,7 +20,7 @@ import {
   resolveDate,
   resolveType,
   Source,
-} from '../util/gedcom_util';
+} from '../../util/gedcom_util';
 import {FileEntry} from './additional-files';
 import {EventExtras, Image} from './event-extras';
 import {TranslatedTag} from './translated-tag';

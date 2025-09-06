@@ -141,7 +141,7 @@ function Contents() {
 /** The intro page. */
 export function Intro() {
   return (
-    <div id="content">
+    <div id="introContent">
       <div className="backgroundImage" />
       <Card className="intro">
         <Card.Content as={Media} greaterThanOrEqual="large">

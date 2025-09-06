@@ -14,21 +14,20 @@ body, html {
 
 #content {
   flex: 1 1 auto;
-  display: flex;
-  overflow: hidden;
   height: 100%;
+  overflow: hidden;
+}
+
+#introContent {
+  flex: 1 1 auto;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
 }
 
 #svgContainer {
   flex: 1 1 auto;
   overflow: auto;
-}
-
-.sidePanel {
-  flex: 0 0 320px;
-  overflow: auto;
-  border-left: solid #ccc 1px;
-  overflow-x: hidden;
 }
 
 .hidden {
@@ -147,10 +146,12 @@ div.zoom {
 .details {
   padding: 15px 0px;
   border-bottom: 1px solid rgba(34,36,38,.15);
+  overflow-y: auto;
+  height: calc(100% - 43px);
 }
 
 .details .ui.items .item .content {
-  padding: 0 15px;
+  padding: 0 15px 0 25px;
 }
 
 .details .item-header {
@@ -166,8 +167,6 @@ div.zoom {
 }
 
 .details .person-image {
-  max-width: 289px;
-  width: 289px;
   padding: 0 10px;
 }
 
@@ -278,3 +277,85 @@ div.zoom {
 #dotatsoSvgContainer .link {
   stroke: black;
 }
+
+#content .pusher {
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+}
+
+#content #sidebar.wide ~ .pusher {
+  width: calc(100% - 350px);
+  transform: none;
+}
+
+#content #sidebar.very.thin ~ .pusher {
+  width: calc(100% - 60px);
+}
+
+#sidebar {
+  overflow: hidden;
+  height: 100%;
+}
+
+#sideTabs {
+  height: 100%;
+}
+
+#sideTabs > .ui.tabular.menu{
+  padding-left: 60px;
+}
+
+#sideToggle {
+  position: absolute;
+  background: inherit;
+  top: 0;
+  height: 42px;
+  border-radius: 0;
+  width: 60px;
+}
+
+#sideToggle:hover {
+  background-color: #ddd;
+}
+
+.collapsed-details {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.collapsed-details .vertical-name {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  transform-origin: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  white-space: pre;
+}
+
+@media (max-width: 767px) {
+  #sidebar.wide {
+    width: 100%;
+  }
+
+  #sidebar.very.thin {
+    width: 35px;
+  }
+
+  #content #sidebar.wide ~ .pusher {
+    width: 0;
+  }
+
+  #content #sidebar.very.thin ~ .pusher {
+    width: calc(100% - 35px);
+  }
+
+  #sidebar.very.thin #sideToggle {
+    width: 35px;
+  }
+}
+
+
+
