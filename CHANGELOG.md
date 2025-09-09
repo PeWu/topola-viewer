@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-09-09
+
+- Sidebar improvements (Collapse/Expand, Mobile view) (by czifumasa)
+
 ## 2025-01-21
 
 - Added new chart type based on [github.com/donatso/family-chart](https://github.com/donatso/family-chart)
