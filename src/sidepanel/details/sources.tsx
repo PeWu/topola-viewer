@@ -1,8 +1,8 @@
 import {useIntl} from 'react-intl';
 import Linkify from 'react-linkify';
 import {List} from 'semantic-ui-react';
-import {formatDateOrRange} from '../util/date_util';
-import {Source} from '../util/gedcom_util';
+import {formatDateOrRange} from '../../util/date_util';
+import {Source} from '../../util/gedcom_util';
 
 interface Props {
   sources?: Source[];

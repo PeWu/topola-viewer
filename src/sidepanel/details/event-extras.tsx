@@ -9,7 +9,7 @@ import {
   Popup,
   Tab,
 } from 'semantic-ui-react';
-import {Source} from '../util/gedcom_util';
+import {Source} from '../../util/gedcom_util';
 import {AdditionalFiles, FileEntry} from './additional-files';
 import {MultilineText} from './multiline-text';
 import {Sources} from './sources';
