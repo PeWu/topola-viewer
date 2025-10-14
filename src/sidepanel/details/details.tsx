@@ -149,18 +149,20 @@ function noteDetails(noteEntryReference: GedcomEntry, gedcom: GedcomData) {
 }
 
 function nameDetails(entry: GedcomEntry) {
-  const given = entry.tree.find((entry) => entry.tag === 'GIVN')?.data;
-  const surname = entry.tree.find((entry) => entry.tag === 'SURN')?.data;
   const prefix = entry.tree.find((entry) => entry.tag === 'NPFX')?.data;
-  const suffix = entry.tree.find((entry) => entry.tag === 'NSFX')?.data;
+  const given = entry.tree.find((entry) => entry.tag === 'GIVN')?.data;
   const rufname = entry.tree.find((entry) => entry.tag === '_RUFNAME')?.data;
   const nickname = entry.tree.find((entry) => entry.tag === 'NICK')?.data;
+  const surnamePrefix = entry.tree.find((entry) => entry.tag === 'SPFX')?.data;
+  const surname = entry.tree.find((entry) => entry.tag === 'SURN')?.data;
+  const suffix = entry.tree.find((entry) => entry.tag === 'NSFX')?.data;
 
   const fullNameParts = [
     prefix,
     given,
     rufname && `"${rufname}"`,
     nickname && `(${nickname})`,
+    surnamePrefix,
     surname,
     suffix,
   ].filter(Boolean);
