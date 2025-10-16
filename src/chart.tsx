@@ -14,6 +14,7 @@ import {useEffect, useRef} from 'react';
 import {IntlShape, useIntl} from 'react-intl';
 import {
   ChartHandle,
+  ChartInfo,
   CircleRenderer,
   createChart,
   DetailedRenderer,
@@ -24,7 +25,7 @@ import {
   RelativesChart,
   ChartColors as TopolaChartColors,
 } from 'topola';
-import {ChartColors, Ids, Sex} from './config';
+import {ChartColors, Ids, Sex} from './sidepanel/config/config';
 import {Media} from './util/media';
 import {usePrevious} from './util/previous-hook';
 
@@ -252,6 +253,40 @@ function getRendererType(chartType: ChartType) {
   }
 }
 
+/** Returns the element’s usable width and height by subtracting the assumed scrollbar size. */
+function getScrollbarAwareSize(
+  element: Element,
+  scrollbarSize = 20,
+): [number, number] {
+  const htmlElement = element as HTMLElement;
+  return [
+    htmlElement.clientWidth - scrollbarSize,
+    htmlElement.clientHeight - scrollbarSize,
+  ];
+}
+
+/**
+ * Calculates the allowed zoom scale range.
+ * Sets the minimum scale so the chart cannot zoom out beyond full visibility,
+ * and fixes the maximum scale at 2.
+ */
+function calculateScaleExtent(
+  parent: Element,
+  scale: number,
+  chartInfo: ChartInfo,
+): [number, number] {
+  const [availWidth, availHeight] = getScrollbarAwareSize(parent);
+
+  const zoomOutFactor = min([
+    1,
+    scale,
+    availWidth / chartInfo.size[0],
+    availHeight / chartInfo.size[1],
+  ])!;
+
+  return [max([0.1, zoomOutFactor])!, 2];
+}
+
 export interface ChartProps {
   data: JsonGedcomData;
   selection: IndiInfo;
@@ -328,20 +363,18 @@ class ChartWrapper {
     });
     const svg = select('#chartSvg');
     const parent = select('#svgContainer').node() as Element;
-
     const scale = zoomTransform(parent).k;
-    const zoomOutFactor = min([
-      1,
+    const extent: [number, number] = calculateScaleExtent(
+      parent,
       scale,
-      parent.clientWidth / chartInfo.size[0],
-      parent.clientHeight / chartInfo.size[1],
-    ])!;
-    const extent: [number, number] = [max([0.1, zoomOutFactor])!, 2];
+      chartInfo,
+    );
 
     this.zoomBehavior = zoom()
       .scaleExtent(extent)
       .translateExtent([[0, 0], chartInfo.size])
       .on('zoom', (event) => zoomed(chartInfo.size, event));
+
     select(parent).on('scroll', scrolled).call(this.zoomBehavior);
 
     const scrollTopTween = (scrollTop: number) => {

@@ -19,7 +19,7 @@
     "file-saver": "^2.0.5",
     "javascript-natural-sort": "^0.7.1",
     "js-cookie": "^3.0.5",
-    "jspdf": "^3.0.1",
+    "jspdf": "^3.0.2",
     "lunr": "^2.3.9",
     "lunr-languages": "^1.4.0",
     "md5": "^2.3.0",
@@ -77,7 +77,7 @@
     "ts-node": "^10.9.2",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^5.7.3",
-    "vite": "^6.3.5",
+    "vite": "^6.3.6",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "scripts": {
