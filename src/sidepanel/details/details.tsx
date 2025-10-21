@@ -26,6 +26,7 @@ const EXCLUDED_TAGS = [
   'FAMS',
   'NOTE',
   'SOUR',
+  'FACT',
 ];
 
 function dataDetails(entry: GedcomEntry) {
@@ -49,6 +50,31 @@ function dataDetails(entry: GedcomEntry) {
       <span>
         <MultilineText lines={lines} />
       </span>
+    </>
+  );
+}
+
+function attributeDetails(entry: GedcomEntry) {
+  if (!entry.data) {
+    return null;
+  }
+
+  let attributeName = entry.tree
+      .filter((subentry) => subentry.tag === 'TYPE')
+      .flatMap((type) => getData(type))
+      .join()
+      .trim();
+
+  let attributeValue = getData(entry).join(' ').trim();
+
+  return (
+    <>
+      <Header sub>
+        <TranslatedTag tag={entry.tag} />
+      </Header>
+      <div>
+        <b>{attributeName}</b>: {attributeValue}
+      </div>
     </>
   );
 }
@@ -289,6 +315,12 @@ export function Details(props: Props) {
           imageDetails,
         )}
         <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
+        {getSectionForEachMatchingEntry(
+            entries,
+            props.gedcom,
+            ['FACT'],
+            attributeDetails,
+        )}
         {getOtherSections(entries, props.gedcom)}
         {getSectionForEachMatchingEntry(
           entries,
