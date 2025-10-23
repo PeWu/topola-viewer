@@ -66,17 +66,29 @@ function attributeDetails(entry: GedcomEntry) {
       .trim();
 
   let attributeValue = getData(entry).join(' ').trim();
-
-  return (
-    <>
-      <Header sub>
-        <TranslatedTag tag={entry.tag} />
-      </Header>
-      <div>
-        <b>{attributeName}</b>: {attributeValue}
-      </div>
-    </>
-  );
+  if(attributeName) {
+    return (
+        <>
+          <Header sub>
+            <TranslatedTag tag={entry.tag}/>
+          </Header>
+          <div>
+            <b>{attributeName}</b>: {attributeValue}
+          </div>
+        </>
+    );
+  } else {
+    return (
+      <>
+        <Header sub>
+          <TranslatedTag tag={entry.tag}/>
+        </Header>
+        <div>
+          {attributeValue}
+        </div>
+      </>
+    );
+  }
 }
 
 function imageDetails(objectEntryReference: GedcomEntry, gedcom: GedcomData) {
