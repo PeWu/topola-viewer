@@ -136,6 +136,24 @@ set VITE_STATIC_URL=https://example.org/sample.ged && npm run build
 
 The `dist/` folder will contain files that can be hosted on a Web server.
 
+### Build without Google Analytics
+
+Set `VITE_GOOGLE_ANALYTICS=false` to exclude Google Analytics from the build output.  This will remove the external JavaScript dependency.
+
+```shell
+VITE_GOOGLE_ANALYTICS=false npm run build
+```
+
+<details>
+<summary>For Windows CMD:</summary>
+
+```cmd
+set VITE_GOOGLE_ANALYTICS=false && npm run build
+```
+</details>
+
+This may be combined with the other build environment variables described above.
+
 ### Alternative build
 
 The [topola-webpack](https://github.com/develancer/topola-webpack) tool can build a Topola Genealogy Viewer package bundled together with a GEDCOM file.
