@@ -110,14 +110,30 @@ These are the exact files that are hosted on GitHub pages.
 You can run Topola Viewer in a "single tree mode" that displays only the GEDCOM you specify. Specify the URL to a GEDCOM file in the `VITE_STATIC_URL` environment variable when building and running the application.
 
 Run locally with the specified data URL:
-```
+```shell
 VITE_STATIC_URL=https://example.org/sample.ged npm start
 ```
+<details>
+<summary>For Windows CMD:</summary>
+
+```cmd
+set VITE_STATIC_URL=https://example.org/sample.ged && npm run build
+```
+</details>
 
 Build with the specified data URL:
-```
+```shell
 VITE_STATIC_URL=https://example.org/sample.ged npm run build
 ```
+
+<details>
+<summary>For Windows CMD:</summary>
+
+```cmd
+set VITE_STATIC_URL=https://example.org/sample.ged && npm run build
+```
+</details>
+
 The `dist/` folder will contain files that can be hosted on a Web server.
 
 ### Alternative build
