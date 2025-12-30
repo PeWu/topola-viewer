@@ -36,7 +36,7 @@ If you find this project useful, consider buying me a coffee.
 
 Here is an example from the Web:
 
-* [J. F. Kennedy](https://pewu.github.io/topola-viewer/#/view?url=https%3A%2F%2Fchronoplexsoftware.com%2Fmyfamilytree%2Fsamples%2FThe%2520Kennedy%2520Family.gdz) (from [https://chronoplexsoftware.com/myfamilytree/samples/](chronoplexsoftware.com))
+* [J. F. Kennedy](https://pewu.github.io/topola-viewer/#/view?url=https%3A%2F%2Fchronoplexsoftware.com%2Fmyfamilytree%2Fsamples%2FThe%2520Kennedy%2520Family.gdz) (from [chronoplexsoftware.com](https://chronoplexsoftware.com/myfamilytree/samples/))
 * [Shakespeare](https://pewu.github.io/topola-viewer/#/view?url=https%3A%2F%2Fwebtreeprint.com%2Ftp_downloader.php%3Fpath%3Dfamous_gedcoms%2Fshakespeare.ged%26file%3Dshakespeare.ged) (from [webtreeprint.com](https://webtreeprint.com/tp_famous_gedcoms.php))
 * [Maria Skłodowska-Curie](https://pewu.github.io/topola-viewer/#/view?indi=Sk%C5%82odowska-2&source=wikitree) (from [WikiTree](https://www.wikitree.com/wiki/Sk%C5%82odowska-2))
 
