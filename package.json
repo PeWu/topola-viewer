@@ -94,7 +94,9 @@
     "predeploy-wikitree": "npm run build",
     "deploy-wikitree": "./deploy-wikitree.sh",
     "cy:run": "cypress run",
-    "cy:start-and-run": "BROWSER=none start-server-and-test start localhost:3000 cy:run"
+    "cy:start-and-run": "run-script-os",
+    "cy:start-and-run:default": "BROWSER=none start-server-and-test start localhost:3000 cy:run",
+    "cy:start-and-run:windows": "set BROWSER=none && start-server-and-test start localhost:3000 cy:run"
   },
   "homepage": ".",
   "browserslist": [
