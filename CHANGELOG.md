@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-02-21
+
+- Improved saving PDF files. Decreased file size and increased chart size that can be saved as PDF.
+
 ## 2026-02-13
 
 - Show header information of the gedcom file on the side panel (by FrankBuchholz)

@@ -1,6 +1,6 @@
-import {max, min} from 'd3-array';
-import {interpolateNumber} from 'd3-interpolate';
-import {select, Selection} from 'd3-selection';
+import { max, min } from 'd3-array';
+import { interpolateNumber } from 'd3-interpolate';
+import { select, Selection } from 'd3-selection';
 import 'd3-transition';
 import {
   D3ZoomEvent,
@@ -9,9 +9,9 @@ import {
   ZoomedElementBaseType,
   zoomTransform,
 } from 'd3-zoom';
-import {saveAs} from 'file-saver';
-import {useEffect, useRef} from 'react';
-import {IntlShape, useIntl} from 'react-intl';
+import { saveAs } from 'file-saver';
+import { useEffect, useRef } from 'react';
+import { IntlShape, useIntl } from 'react-intl';
 import {
   ChartHandle,
   ChartInfo,
@@ -25,9 +25,9 @@ import {
   RelativesChart,
   ChartColors as TopolaChartColors,
 } from 'topola';
-import {ChartColors, Ids, Sex} from './sidepanel/config/config';
-import {Media} from './util/media';
-import {usePrevious} from './util/previous-hook';
+import { ChartColors, Ids, Sex } from './sidepanel/config/config';
+import { Media } from './util/media';
+import { usePrevious } from './util/previous-hook';
 
 /** How much to zoom when using the +/- buttons. */
 const ZOOM_FACTOR = 1.3;
@@ -154,12 +154,29 @@ function getStrippedSvg() {
   return svg;
 }
 
+function getSvgDimensions() {
+  const svg = document.getElementById('chartSvg')!;
+  return { width: Number(svg.getAttribute('width')), height: Number(svg.getAttribute('height')) };
+}
+
 function getSvgContents() {
   return new XMLSerializer().serializeToString(getStrippedSvg());
 }
 
 async function getSvgContentsWithInlinedImages() {
   const svg = getStrippedSvg();
+
+  // Set white background because the default background of the SVG
+  // is transparent, which causes issues when printing or exporting to PDF.
+  const svgNs = 'http://www.w3.org/2000/svg';
+  const rect = document.createElementNS(svgNs, 'rect');
+  rect.setAttribute('x', '0');
+  rect.setAttribute('y', '0');
+  rect.setAttribute('width', '100%');
+  rect.setAttribute('height', '100%');
+  rect.setAttribute('fill', 'white');
+  svg.prepend(rect);
+
   await inlineImages(svg);
   return new XMLSerializer().serializeToString(svg);
 }
@@ -186,13 +203,13 @@ export function printChart() {
 
 export async function downloadSvg() {
   const contents = await getSvgContentsWithInlinedImages();
-  const blob = new Blob([contents], {type: 'image/svg+xml'});
+  const blob = new Blob([contents], { type: 'image/svg+xml' });
   saveAs(blob, 'topola.svg');
 }
 
 async function drawOnCanvas(): Promise<HTMLCanvasElement> {
   const contents = await getSvgContentsWithInlinedImages();
-  const blob = new Blob([contents], {type: 'image/svg+xml'});
+  const blob = new Blob([contents], { type: 'image/svg+xml' });
   return drawImageOnCanvas(await loadImage(blob));
 }
 
@@ -204,14 +221,16 @@ export async function downloadPng() {
 
 export async function downloadPdf() {
   // Lazy load jspdf.
-  const {default: jspdf} = await import('jspdf');
-  const canvas = await drawOnCanvas();
+  const { default: jspdf } = await import('jspdf');
+
+  const {width, height} = getSvgDimensions();
   const doc = new jspdf({
-    orientation: canvas.width > canvas.height ? 'l' : 'p',
+    orientation: width > height ? 'l' : 'p',
     unit: 'pt',
-    format: [canvas.width, canvas.height],
+    format: [width, height],
   });
-  doc.addImage(canvas, 'PNG', 0, 0, canvas.width, canvas.height, 'NONE');
+  const contents = await getSvgContentsWithInlinedImages();
+  await doc.addSvgAsImage(contents, 0, 0, width, height);
   doc.save('topola.pdf');
 }
 
@@ -323,7 +342,7 @@ class ChartWrapper {
   renderChart(
     props: ChartProps,
     intl: IntlShape,
-    args: {initialRender: boolean; resetPosition: boolean} = {
+    args: { initialRender: boolean; resetPosition: boolean } = {
       initialRender: false,
       resetPosition: false,
     },
