@@ -83,10 +83,10 @@
   "scripts": {
     "start": "run-script-os",
     "start:default": "GENERATE_SOURCEMAP=false VITE_CHANGELOG=`cat CHANGELOG.md` VITE_GIT_SHA=`git rev-parse --short HEAD` VITE_GIT_TIME=`git log -1 --format=%ci` vite",
-    "start:windows": "set \"GENERATE_SOURCEMAP=false\" && vite",
+    "start:windows": "powershell -Command \"Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser; $env:GENERATE_SOURCEMAP='false'; $env:VITE_CHANGELOG = Get-Content -Path \"CHANGELOG.md\" -Raw; $env:VITE_GIT_SHA=$(git rev-parse --short HEAD); $env:VITE_GIT_TIME=$(git log -1 --format='%ci'); vite\"",
     "build": "run-script-os",
-    "build:default": "GENERATE_SOURCEMAP=false VITE_CHANGELOG=`cat CHANGELOG.md` VITE_GIT_SHA=`git rev-parse --short HEAD` VITE_GIT_TIME=`git log -1 --format=%ci` tsc && vite build",
-    "build:windows": "set \"GENERATE_SOURCEMAP=false\" && tsc && vite build",
+    "build:default": "tsc && GENERATE_SOURCEMAP=false VITE_CHANGELOG=`cat CHANGELOG.md` VITE_GIT_SHA=`git rev-parse --short HEAD` VITE_GIT_TIME=`git log -1 --format=%ci` vite build",
+    "build:windows": "powershell -Command \"Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser; tsc; $env:GENERATE_SOURCEMAP='false'; $env:VITE_CHANGELOG = Get-Content -Path \"CHANGELOG.md\" -Raw; $env:VITE_GIT_SHA=$(git rev-parse --short HEAD); $env:VITE_GIT_TIME=$(git log -1 --format='%ci'); vite build",
     "test": "jest",
     "prettier": "prettier --write src/**/*.{ts,tsx,json} && prettier --write src/*.{ts,tsx,json}",
     "predeploy": "npm run build",
@@ -94,7 +94,9 @@
     "predeploy-wikitree": "npm run build",
     "deploy-wikitree": "./deploy-wikitree.sh",
     "cy:run": "cypress run",
-    "cy:start-and-run": "BROWSER=none start-server-and-test start localhost:3000 cy:run"
+    "cy:start-and-run": "run-script-os",
+    "cy:start-and-run:default": "BROWSER=none start-server-and-test start localhost:3000 cy:run",
+    "cy:start-and-run:windows": "set BROWSER=none && start-server-and-test start localhost:3000 cy:run"
   },
   "homepage": ".",
   "browserslist": [

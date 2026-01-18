@@ -407,7 +407,7 @@ export function App() {
         setState(
           loadMoreFromWikitree ? AppState.LOADING_MORE : AppState.SHOWING_CHART,
         );
-        updateDisplay(args.selection!);
+        updateDisplay(getSelection(data!.chartData, args.selection));
         if (loadMoreFromWikitree) {
           try {
             const data = await loadWikiTree(args.selection!.id, intl);
