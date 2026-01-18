@@ -187,13 +187,29 @@ function getArguments(location: H.Location<any>): Arguments {
     ? {id: indi, generation: !isNaN(parsedGen) ? parsedGen : 0}
     : undefined;
 
+  /**
+   * Determines whether the side panel should be shown taking into account the
+   * URL parameter and the viewport size.
+   *
+   * On mobile devices (max-width: 767px), the side panel is hidden by default.
+   * On tablet and desktop, the side panel is shown by default.
+   */
+  function getShowSidePanel() {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      // On mobile, hide the side panel by default.
+      return getParam('sidePanel') === 'true';
+    }
+    // On tablet and desktop, show the side panel by default.
+    return getParam('sidePanel') !== 'false';
+  }
+
   return {
     sourceSpec,
     selection,
     // Hourglass is the default view.
     chartType: chartTypes.get(view) || ChartType.Hourglass,
 
-    showSidePanel: getParam('sidePanel') !== 'false', // True by default.
+    showSidePanel: getShowSidePanel(),
     standalone: getParam('standalone') !== 'false' && !embedded && !staticUrl,
     showWikiTreeMenus: getParam('showWikiTreeMenus') !== 'false', // True by default.
     freezeAnimation: getParam('freeze') === 'true', // False by default
