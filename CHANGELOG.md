@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-01-19
+
+- Changed info panel behavior on mobile (by marionikolov)
+
 ## 2025-09-09
 
 - Sidebar improvements (Collapse/Expand, Mobile view) (by czifumasa)
