@@ -129,6 +129,7 @@
   "config.sex": "Pohlaví",
   "config.sex.HIDE": "skrýt",
   "config.sex.SHOW": "zobrazit",
+  "head.source": "Zdroj dat",
   "name.unknown_name": "N.N.",
   "extras.images": "Obrázky",
   "extras.notes": "Poznámky",

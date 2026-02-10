@@ -129,6 +129,7 @@
   "config.sex": "Пол",
   "config.sex.HIDE": "Скриване",
   "config.sex.SHOW": "Показване",
+  "head.source": "Източник на данни",
   "name.unknown_name": "Неизвестно име",
   "extras.images": "Изображение",
   "extras.notes": "Бележки",
