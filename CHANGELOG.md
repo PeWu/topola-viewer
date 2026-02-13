@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-02-13
+
+- Show header information of the gedcom file on the side panel (by FrankBuchholz)
+
 ## 2026-01-19
 
 - Changed info panel behavior on mobile (by marionikolov)
