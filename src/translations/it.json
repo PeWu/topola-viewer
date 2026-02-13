@@ -129,6 +129,7 @@
   "config.sex": "Sesso",
   "config.sex.HIDE": "nascondere",
   "config.sex.SHOW": "visualizzare",
+  "head.source": "Origine dati",
   "name.unknown_name": "N.N.",
   "extras.images": "Immagini",
   "extras.notes": "Appunti",

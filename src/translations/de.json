@@ -129,6 +129,7 @@
   "config.sex": "Geschlecht",
   "config.sex.HIDE": "verbergen",
   "config.sex.SHOW": "anzeigen",
+  "head.source": "Datenquelle",
   "name.unknown_name": "N.N.",
   "extras.images": "Bilder",
   "extras.notes": "Notizen",
