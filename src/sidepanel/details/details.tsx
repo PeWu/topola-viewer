@@ -11,7 +11,7 @@ import {
   getNonImageFileEntry,
   mapToSource,
 } from '../../util/gedcom_util';
-import {AdditionalFiles} from './additional-files';
+import {FileEntry, AdditionalFiles} from './additional-files';
 import {ALL_SUPPORTED_EVENT_TYPES, Events} from './events';
 import {MultilineText} from './multiline-text';
 import {Sources} from './sources';
@@ -139,16 +139,19 @@ function sourceDetails(
 }
 
 function fileDetails(objectEntries: GedcomEntry[], gedcom: GedcomData) {
-  const files = objectEntries
-    .map((objectEntry) =>
-      dereference(objectEntry, gedcom, (gedcom) => gedcom.other),
-    )
-    .map((objectEntry) => getNonImageFileEntry(objectEntry))
-    .filter((objectEntry): objectEntry is GedcomEntry => !!objectEntry)
-    .map((fileEntry) => ({
-      url: fileEntry.data,
-      filename: getFileName(fileEntry),
-    }));
+  const files: FileEntry[] = [];
+  objectEntries
+    .map((objectEntry) => dereference(objectEntry, gedcom, (gedcom) => gedcom.other))
+    .forEach((objectEntry) => {
+      const fileEntry = getNonImageFileEntry(objectEntry);
+      if (!!fileEntry) {
+        files.push({
+          url: fileEntry.data,
+          filename: getFileName(fileEntry),
+          titl: objectEntry.tree.find((entry) => entry.tag === 'TITL')?.data,
+        })
+      }
+    });
 
   if (!files.length) {
     return null;
