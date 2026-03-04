@@ -1,0 +1,10 @@
+name: Deploy everywhere
+
+on: workflow_dispatch
+
+jobs:
+  deploy-gh-pages:
+    uses: ./.github/workflows/deploy-gh-pages.yml
+  
+  deploy-wikitree-apps:
+    uses: ./.github/workflows/deploy-wikitree-apps.yml
