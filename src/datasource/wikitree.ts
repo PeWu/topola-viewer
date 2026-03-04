@@ -12,8 +12,8 @@ import {
 import {StringUtils} from 'turbocommons-ts';
 import {
   clientLogin,
-  getAncestors as getAncestorsApi,
   getLoggedInUserName,
+  getPeople,
   getRelatives as getRelativesApi,
   Person,
 } from 'wikitree-js';
@@ -67,12 +67,19 @@ async function getAncestors(
   key: string,
   handleCors: boolean,
 ): Promise<Person[]> {
+  // Limit the number of generations of ancestors.
+  const ancestorsGenerationLimit = 5;
+
   const cacheKey = `wikitree:ancestors:${key}`;
   const cachedData = getSessionStorageItem(cacheKey);
   if (cachedData) {
     return JSON.parse(cachedData);
   }
-  const result = await getAncestorsApi(key, {}, getApiOptions(handleCors));
+  const result = await getPeople(
+    [key],
+    {ancestors: ancestorsGenerationLimit},
+    getApiOptions(handleCors),
+  );
   setSessionStorageItem(cacheKey, JSON.stringify(result));
   return result;
 }
