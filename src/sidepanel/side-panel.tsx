@@ -37,7 +37,13 @@ export function SidePanel({
         id: 'tab.settings',
         defaultMessage: 'Settings',
       }),
-      render: () => <ConfigPanel gedcom={data.gedcom} config={config} onChange={onConfigChange} />,
+      render: () => (
+        <ConfigPanel
+          gedcom={data.gedcom}
+          config={config}
+          onChange={onConfigChange}
+        />
+      ),
     },
   ];
 
