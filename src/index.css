@@ -282,6 +282,15 @@ div.zoom {
   stroke: black;
 }
 
+#chartSvg text.sex {
+  font-style: normal;
+  font-weight: bold;
+}
+
+#chartSvg text.id {
+  font-style: normal;
+}
+
 #content .pusher {
   height: 100%;
   display: flex;
