@@ -6,3 +6,8 @@ cypress/screenshots
 cypress/videos
 .idea
 .vscode
+
+.claude\settings.local.json
+
+*.ged
+.claude/settings.local.json

@@ -170,6 +170,15 @@ div.zoom {
   padding: 0 10px;
 }
 
+.details .person-id-link {
+  font-weight: bold;
+  font-family: monospace;
+}
+
+.details .person-id-copy-button {
+  margin-top: 6px;
+}
+
 .ui.form .field.no-margin {
   margin: 0;
 }
@@ -280,6 +289,15 @@ div.zoom {
 
 #dotatsoSvgContainer .link {
   stroke: black;
+}
+
+#chartSvg text.sex {
+  font-style: normal;
+  font-weight: bold;
+}
+
+#chartSvg text.id {
+  font-style: normal;
 }
 
 #content .pusher {

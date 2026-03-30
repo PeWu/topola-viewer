@@ -1,7 +1,8 @@
 import flatMap from 'array.prototype.flatmap';
 import {GedcomEntry} from 'parse-gedcom';
+import {useState} from 'react';
 import {FormattedMessage} from 'react-intl';
-import {Header, Item} from 'semantic-ui-react';
+import {Button, Header, Icon, Item} from 'semantic-ui-react';
 import {
   dereference,
   GedcomData,
@@ -306,6 +307,41 @@ function getOtherSections(entries: GedcomEntry[], gedcom: GedcomData) {
     ));
 }
 
+function CopyLinkSection({indi}: {indi: string}) {
+  const [copied, setCopied] = useState(false);
+  const url = window.location.href;
+
+  function handleCopy() {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <>
+      <Header sub>PERSON ID</Header>
+      <div>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="person-id-link"
+          title={url}
+        >
+          {indi}
+        </a>
+      </div>
+      <div className="person-id-copy-button">
+        <Button icon size="mini" onClick={handleCopy} title="Copy link to this person">
+          <Icon name={copied ? 'check' : 'copy outline'} />
+          {copied ? 'Copied!' : 'Copy link'}
+        </Button>
+      </div>
+    </>
+  );
+}
+
 interface Props {
   gedcom: GedcomData;
   indi: string;
@@ -355,6 +391,11 @@ export function Details(props: Props) {
           ['SOUR'],
           sourceDetails,
         )}
+        <Item>
+          <Item.Content>
+            <CopyLinkSection indi={props.indi} />
+          </Item.Content>
+        </Item>
       </Item.Group>
     </div>
   );

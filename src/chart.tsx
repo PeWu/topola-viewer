@@ -383,6 +383,12 @@ class ChartWrapper {
       startIndi: props.selection.id,
       baseGeneration: props.selection.generation,
     });
+    select('#chart')
+      .selectAll<SVGTextElement, unknown>('text.sex')
+      .each(function () {
+        if (this.textContent === '\u2642') this.textContent = '\u2642\uFE0F';
+        else if (this.textContent === '\u2640') this.textContent = '\u2640\uFE0F';
+      });
     const svg = select('#chartSvg');
     const parent = select('#svgContainer').node() as Element;
     const scale = zoomTransform(parent).k;
