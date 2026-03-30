@@ -10,3 +10,4 @@ cypress/videos
 .claude\settings.local.json
 
 *.ged
+.claude/settings.local.json
