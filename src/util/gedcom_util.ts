@@ -254,6 +254,21 @@ function filterImages(
  * @param images Map from file name to image URL. This is used to pass in
  *   uploaded images.
  */
+/**
+ * Resolves a single note value: if it is a pointer like @N0055@, looks up the
+ * referenced entry in gedcom.other and returns its text lines. Otherwise
+ * returns the inline text as a single-element array. Returns [] if the
+ * pointer cannot be resolved.
+ */
+function resolveNote(note: string, gedcom: GedcomData): string[] {
+  if (note.startsWith('@') && note.endsWith('@')) {
+    const entry = gedcom.other[pointerToId(note)];
+    if (!entry) return [];
+    return getData(entry).filter((line): line is string => !!line);
+  }
+  return [note];
+}
+
 export function convertGedcom(
   gedcom: string,
   images: Map<string, string>,
@@ -270,9 +285,20 @@ export function convertGedcom(
     throw new TopolaError('GEDCOM_READ_FAILED', 'Failed to read GEDCOM file');
   }
 
+  const gedcomData = prepareGedcom(entries);
+
+  // Resolve note pointers (@NXXXX@) to actual text so the chart renderer can
+  // display them directly without access to the raw GedcomData.
+  json.indis.forEach((indi) => {
+    if (indi.notes) {
+      const resolved = indi.notes.flatMap((n) => resolveNote(n, gedcomData));
+      indi.notes = resolved.length ? resolved : undefined;
+    }
+  });
+
   return {
     chartData: filterImages(normalizeGedcom(json), images),
-    gedcom: prepareGedcom(entries),
+    gedcom: gedcomData,
   };
 }
 

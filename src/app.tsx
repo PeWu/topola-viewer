@@ -43,6 +43,7 @@ import {
   configToArgs,
   DEFALUT_CONFIG,
   Ids,
+  Notes,
   Sex,
 } from './sidepanel/config/config';
 import {SidePanel} from './sidepanel/side-panel';
@@ -528,6 +529,7 @@ export function App() {
         colors={config.color}
         hideIds={config.id}
         hideSex={config.sex}
+        showNotes={config.notes}
       />
     );
   }

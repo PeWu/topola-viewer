@@ -20,16 +20,23 @@ export enum Sex {
   SHOW,
 }
 
+export enum Notes {
+  HIDE,
+  SHOW,
+}
+
 export interface Config {
   color: ChartColors;
   id: Ids;
   sex: Sex;
+  notes: Notes;
 }
 
 export const DEFALUT_CONFIG: Config = {
   color: ChartColors.COLOR_BY_GENERATION,
   id: Ids.SHOW,
   sex: Sex.SHOW,
+  notes: Notes.SHOW,
 };
 
 const COLOR_ARG = new Map<string, ChartColors>([
@@ -54,6 +61,13 @@ const SEX_ARG = new Map<string, Sex>([
 const SEX_ARG_INVERSE = new Map<Sex, string>();
 SEX_ARG.forEach((v, k) => SEX_ARG_INVERSE.set(v, k));
 
+const NOTES_ARG = new Map<string, Notes>([
+  ['h', Notes.HIDE],
+  ['s', Notes.SHOW],
+]);
+const NOTES_ARG_INVERSE = new Map<Notes, string>();
+NOTES_ARG.forEach((v, k) => NOTES_ARG_INVERSE.set(v, k));
+
 export function argsToConfig(args: ParsedQuery<any>): Config {
   const getParam = (name: string) => {
     const value = args[name];
@@ -64,6 +78,7 @@ export function argsToConfig(args: ParsedQuery<any>): Config {
     color: COLOR_ARG.get(getParam('c') ?? '') ?? DEFALUT_CONFIG.color,
     id: ID_ARG.get(getParam('i') ?? '') ?? DEFALUT_CONFIG.id,
     sex: SEX_ARG.get(getParam('s') ?? '') ?? DEFALUT_CONFIG.sex,
+    notes: NOTES_ARG.get(getParam('n') ?? '') ?? DEFALUT_CONFIG.notes,
   };
 }
 
@@ -72,6 +87,7 @@ export function configToArgs(config: Config): ParsedQuery<any> {
     c: COLOR_ARG_INVERSE.get(config.color),
     i: ID_ARG_INVERSE.get(config.id),
     s: SEX_ARG_INVERSE.get(config.sex),
+    n: NOTES_ARG_INVERSE.get(config.notes),
   };
 }
 
@@ -228,6 +244,49 @@ export function ConfigPanel(props: {
                 value="show"
                 checked={props.config.sex === Sex.SHOW}
                 onClick={() => props.onChange({...props.config, sex: Sex.SHOW})}
+              />
+            </Form.Field>
+          </Item.Content>
+        </Item>
+        <Item>
+          <Item.Content>
+            <Header sub>
+              <FormattedMessage id="config.notes" defaultMessage="Notes in chart" />
+            </Header>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.notes.HIDE"
+                    defaultMessage="hide"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="hide"
+                checked={props.config.notes === Notes.HIDE}
+                onClick={() =>
+                  props.onChange({...props.config, notes: Notes.HIDE})
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.notes.SHOW"
+                    defaultMessage="show"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="show"
+                checked={props.config.notes === Notes.SHOW}
+                onClick={() =>
+                  props.onChange({...props.config, notes: Notes.SHOW})
+                }
               />
             </Form.Field>
           </Item.Content>

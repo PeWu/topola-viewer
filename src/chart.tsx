@@ -25,7 +25,8 @@ import {
   RelativesChart,
   ChartColors as TopolaChartColors,
 } from 'topola';
-import {ChartColors, Ids, Sex} from './sidepanel/config/config';
+import {NotesDetailedRenderer} from './custom-renderer';
+import {ChartColors, Ids, Notes, Sex} from './sidepanel/config/config';
 import {Media} from './util/media';
 import {usePrevious} from './util/previous-hook';
 
@@ -270,8 +271,7 @@ function getRendererType(chartType: ChartType) {
     case ChartType.Fancy:
       return CircleRenderer;
     default:
-      // Use DetailedRenderer by default.
-      return DetailedRenderer;
+      return NotesDetailedRenderer as unknown as typeof DetailedRenderer;
   }
 }
 
@@ -318,6 +318,7 @@ export interface ChartProps {
   colors?: ChartColors;
   hideIds?: Ids;
   hideSex?: Sex;
+  showNotes?: Notes;
 }
 
 class ChartWrapper {
@@ -362,6 +363,10 @@ class ChartWrapper {
     if (!args.initialRender && props.freezeAnimation) {
       return;
     }
+
+    // Sync the notes-visibility flag before every render so toggling the
+    // setting takes effect without a full chart reconstruction.
+    NotesDetailedRenderer.showNotes = props.showNotes !== Notes.HIDE;
 
     if (args.initialRender) {
       (select('#chart').node() as HTMLElement).innerHTML = '';
@@ -476,7 +481,8 @@ export function Chart(props: ChartProps) {
         props.chartType !== prevProps?.chartType ||
         props.colors !== prevProps?.colors ||
         props.hideIds !== prevProps?.hideIds ||
-        props.hideSex !== prevProps?.hideSex;
+        props.hideSex !== prevProps?.hideSex ||
+        props.showNotes !== prevProps?.showNotes;
       const resetPosition =
         props.chartType !== prevProps?.chartType ||
         props.data !== prevProps.data ||
