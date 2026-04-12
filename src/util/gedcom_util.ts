@@ -340,31 +340,47 @@ export function mapToSource(
   sourceEntryReference: GedcomEntry,
   gedcom: GedcomData,
 ) {
+  // Conbine Source ("Quelle") and source entry reference ("Fundstelle").
   const sourceEntry = dereference(
     sourceEntryReference,
     gedcom,
     (gedcom) => gedcom.other,
   );
 
-  const title = sourceEntry.tree.find((subEntry) => 'TITL' === subEntry.tag);
+  console.log('function mapToSource:',
+    'sourceEntryReference', sourceEntryReference,
+    'sourceEntry', sourceEntry
+  );
 
-  const abbr = sourceEntry.tree.find((subEntry) => 'ABBR' === subEntry.tag);
+  const title = sourceEntry.tree.find(
+    (subEntry) => 'TITL' === subEntry.tag
+  );
 
-  const author = sourceEntry.tree.find((subEntry) => 'AUTH' === subEntry.tag);
+  const abbr = sourceEntry.tree.find(
+    (subEntry) => 'ABBR' === subEntry.tag
+  );
+
+  const author = sourceEntry.tree.find(
+    (subEntry) => 'AUTH' === subEntry.tag
+  );
 
   const publicationInfo = sourceEntry.tree.find(
-    (subEntry) => 'PUBL' === subEntry.tag,
+    (subEntry) => 'PUBL' === subEntry.tag
   );
 
   const page = sourceEntryReference.tree.find(
-    (subEntry) => 'PAGE' === subEntry.tag,
+    (subEntry) => 'PAGE' === subEntry.tag
   );
 
   const sourceData = sourceEntryReference.tree.find(
-    (subEntry) => 'DATA' === subEntry.tag,
+    (subEntry) => 'DATA' === subEntry.tag
   );
 
   const date = sourceData ? resolveDate(sourceData) : undefined;
+
+  // Get OBJE image files referenced in the source entry reference ("Fundstelle").
+
+
 
   return {
     title: title?.data || abbr?.data,

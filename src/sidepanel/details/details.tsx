@@ -118,13 +118,46 @@ function sourceDetails(
   sourceReferenceEntries: GedcomEntry[],
   gedcom: GedcomData,
 ) {
-  const sources = sourceReferenceEntries.map((sourceEntryReference) =>
-    mapToSource(sourceEntryReference, gedcom),
+  /* Example for source references in the gedcom file:
+0 @I0000@ INDI
+1 NAME Maria Klara /Hoffmann/
+.
+1 SOUR @S0073@
+2 PAGE Geburtsurkunde Nr. 124/1936 Maria Klara Hoffmann
+2 DATA
+3 DATE 3 OCT 1936
+2 OBJE @O0109@
+
+0 @S0073@ SOUR
+1 TITL Standesamt Bad Reinerz
+1 CHAN
+2 DATE 10 APR 2026
+3 TIME 21:09:14
+
+0 @O0109@ OBJE
+1 FILE https://dein-sommer.eu/ahnengalerie/medien/Buchholz\1936 Geburtsurkunde Maria.jpg
+2 FORM jpg
+2 TITL 1936-10-03 Geburtsurkunde Maria Klara Hoffmann
+1 CHAN
+2 DATE 10 APR 2026
+3 TIME 21:59:39
+  */
+  const sources = sourceReferenceEntries.map(
+    (sourceEntryReference) => mapToSource(sourceEntryReference, gedcom),
   );
 
   if (!sources.length) {
     return null;
   }
+
+  // Get OBJE image files referenced in the source entry ("Quelle").
+
+
+
+  console.log('function sourceDetails:',
+    'sourceReferenceEntries', sourceReferenceEntries,
+    'sources', sources
+  );
 
   return (
     <>
