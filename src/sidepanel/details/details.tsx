@@ -191,12 +191,19 @@ function noteDetails(noteEntryReference: GedcomEntry, gedcom: GedcomData) {
 
 function nameDetails(entry: GedcomEntry) {
   const prefix = entry.tree.find((entry) => entry.tag === 'NPFX')?.data;
-  const given = entry.tree.find((entry) => entry.tag === 'GIVN')?.data;
-  const rufname = entry.tree.find((entry) => entry.tag === '_RUFNAME')?.data;
+  let given = entry.tree.find((entry) => entry.tag === 'GIVN')?.data;
+  let rufname = entry.tree.find((entry) => entry.tag === '_RUFNAME')?.data;
   const nickname = entry.tree.find((entry) => entry.tag === 'NICK')?.data;
   const surnamePrefix = entry.tree.find((entry) => entry.tag === 'SPFX')?.data;
   const surname = entry.tree.find((entry) => entry.tag === 'SURN')?.data;
   const suffix = entry.tree.find((entry) => entry.tag === 'NSFX')?.data;
+
+  // If _RUFNAME is included in GIVN, then replace this part in GIVN with this part in quotation marks,
+  // so that this name is not shown twice.
+  if (given && rufname && given.includes(rufname)) {
+    given = given.replace(rufname, `"${rufname}"`);
+    rufname = undefined;
+  }
 
   const fullNameParts = [
     prefix,
