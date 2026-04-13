@@ -33,6 +33,7 @@ export interface Source {
   page?: string;
   date?: DateOrRange;
   publicationInfo?: string;
+  images: GedcomEntry[];
 }
 
 /**
@@ -340,6 +341,23 @@ export function mapToSource(
   sourceEntryReference: GedcomEntry,
   gedcom: GedcomData,
 ) {
+  // Get OBJE image files referenced in an entry.
+  function getImages(images: GedcomEntry[], entry: GedcomEntry, gedcom: GedcomData) {  
+    entry.tree
+      .filter((subEntry) => subEntry.tag === 'OBJE')
+      .forEach((objectEntry) => {
+        const imageEntry = dereference(
+          objectEntry,
+          gedcom,
+          (gedcom) => gedcom.other,
+        );
+        const imageFileEntry = getImageFileEntry(imageEntry);
+        if (imageFileEntry) {
+            images.push(imageFileEntry);
+        }
+      });
+  }
+
   // Conbine Source ("Quelle") and source entry reference ("Fundstelle").
   const sourceEntry = dereference(
     sourceEntryReference,
@@ -378,15 +396,19 @@ export function mapToSource(
 
   const date = sourceData ? resolveDate(sourceData) : undefined;
 
-  // Get OBJE image files referenced in the source entry reference ("Fundstelle").
-
-
-
+  // Images of sources
+  const images: GedcomEntry[] = [];
+  // Get images referenced in the source entry ("Quelle").
+  getImages(images, sourceEntry, gedcom);
+  // Get images referenced in the source entry reference ("Fundstelle").
+  getImages(images, sourceEntryReference, gedcom);
+  
   return {
     title: title?.data || abbr?.data,
     author: author?.data,
     page: page?.data,
     date: date ? getDate(date.data) : undefined,
     publicationInfo: publicationInfo?.data,
+    images: images,
   };
 }

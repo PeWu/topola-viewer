@@ -151,7 +151,7 @@ div.zoom {
 }
 
 .details .ui.items .item .content {
-  padding: 0 15px 0 25px;
+  padding: 0 15px 0 15px; /* was 0 15px 0 25px */
 }
 
 .details .item-header {
@@ -170,6 +170,14 @@ div.zoom {
   padding: 0 10px;
 }
 
+.details .source-images {
+  padding: 10px 0px;
+}
+
+.details .source-image {
+  padding: 0px 0px;
+}
+
 .ui.form .field.no-margin {
   margin: 0;
 }
@@ -178,8 +186,12 @@ div.zoom {
   text-transform: uppercase;
 }
 
-.ui.sub.header, .ui.list {
+.ui.sub.header {
   margin-left: 20px;
+}
+
+.ui.list {
+  margin-left: 0px; /* was 20px */
 }
 
 .limit-height {
