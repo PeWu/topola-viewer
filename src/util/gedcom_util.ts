@@ -365,34 +365,17 @@ export function mapToSource(
     (gedcom) => gedcom.other,
   );
 
-  console.log('function mapToSource:',
-    'sourceEntryReference', sourceEntryReference,
-    'sourceEntry', sourceEntry
-  );
+  const title = sourceEntry.tree.find((subEntry) => 'TITL' === subEntry.tag);
 
-  const title = sourceEntry.tree.find(
-    (subEntry) => 'TITL' === subEntry.tag
-  );
+  const abbr = sourceEntry.tree.find((subEntry) => 'ABBR' === subEntry.tag);
 
-  const abbr = sourceEntry.tree.find(
-    (subEntry) => 'ABBR' === subEntry.tag
-  );
+  const author = sourceEntry.tree.find((subEntry) => 'AUTH' === subEntry.tag);
 
-  const author = sourceEntry.tree.find(
-    (subEntry) => 'AUTH' === subEntry.tag
-  );
+  const publicationInfo = sourceEntry.tree.find((subEntry) => 'PUBL' === subEntry.tag);
 
-  const publicationInfo = sourceEntry.tree.find(
-    (subEntry) => 'PUBL' === subEntry.tag
-  );
+  const page = sourceEntryReference.tree.find((subEntry) => 'PAGE' === subEntry.tag);
 
-  const page = sourceEntryReference.tree.find(
-    (subEntry) => 'PAGE' === subEntry.tag
-  );
-
-  const sourceData = sourceEntryReference.tree.find(
-    (subEntry) => 'DATA' === subEntry.tag
-  );
+  const sourceData = sourceEntryReference.tree.find((subEntry) => 'DATA' === subEntry.tag);
 
   const date = sourceData ? resolveDate(sourceData) : undefined;
 

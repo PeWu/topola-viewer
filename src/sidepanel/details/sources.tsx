@@ -14,10 +14,6 @@ export function Sources({sources}: Props) {
 
   if (!sources?.length) return null;
 
-  console.log('function Sources:',
-    'sources', sources
-  );
-
   return (
     <List>
       {sources.map((source, index) => (
