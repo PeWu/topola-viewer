@@ -419,37 +419,34 @@ class ChartWrapper {
           if (ord !== undefined) genOrderText += String.fromCharCode(64 + ord);
         }
 
-        const group = select(this);
-        const idElement = group.select<SVGTextElement>('text.id');
-        const sexElement = group.select<SVGTextElement>('text.sex');
-        let genOrderElement = group.select<SVGTextElement>('text.gen-order');
-        if (genOrderElement.empty()) {
-          genOrderElement = group.append<SVGTextElement>('text').classed('gen-order', true);
+        // Set the text based on what we want to show, with 2 spaces after ID
+        const finalText = baseText ? (suffix ? baseText + '  ' + suffix : baseText) : suffix;
+        this.textContent = finalText;
+      });
+
+    // Make [Gen][Order] bold
+    select('#chart')
+      .selectAll<SVGTextElement, unknown>('text.id')
+      .each(function (d: any) {
+        const indiId: string | undefined = d?.indi?.id;
+        if (!indiId) return;
+        const showGen = props.showGeneration !== Generation.HIDE;
+        const showOrd = props.showSiblingOrder !== SiblingOrder.HIDE;
+        if (!showGen && !showOrd) return;
+        // Find the [Gen][Order] part and wrap in <tspan font-weight="bold">
+        const textNode = this as SVGTextElement;
+        const text = textNode.textContent || '';
+        const match = text.match(/^(.*?)(  )(\w+)$/);
+        if (match) {
+          textNode.textContent = '';
+          const tspanId = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+          tspanId.textContent = match[1] + match[2];
+          textNode.appendChild(tspanId);
+          const tspanBold = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+          tspanBold.textContent = match[3];
+          tspanBold.setAttribute('font-weight', 'bold');
+          textNode.appendChild(tspanBold);
         }
-
-        // Copy styling from ID element
-        const idNode = idElement.node();
-        const sexNode = sexElement.node();
-        if (!idNode || !sexNode) return;
-        genOrderElement
-          .attr('y', idNode.getAttribute('y'))
-          .attr('dy', idNode.getAttribute('dy'))
-          .attr('font-family', idNode.getAttribute('font-family'))
-          .attr('font-size', idNode.getAttribute('font-size'))
-          .attr('text-anchor', 'middle')
-          .text(genOrderText);
-
-        // Find the bounding box of the person box (rect)
-
-        const rect = group.select('rect').node() as SVGRectElement | null;
-        if (!rect) return;
-        const boxX = parseFloat(rect.getAttribute('x') || '0');
-        const boxW = parseFloat(rect.getAttribute('width') || '0');
-
-        // Set x for each text
-        idElement.attr('x', boxX + boxW * 1 / 6);
-        genOrderElement.attr('x', boxX + boxW * 3 / 6);
-        sexElement.attr('x', boxX + boxW * 5 / 6);
       });
 
     const svg = select('#chartSvg');
