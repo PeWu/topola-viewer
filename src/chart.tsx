@@ -399,33 +399,57 @@ class ChartWrapper {
         else if (this.textContent === '\u2640') this.textContent = '\u2640\uFE0F';
       });
 
-    // Update ID text with generation and sibling order suffixes
+
+    // Distribute ID, GenOrder, and Gender horizontally at 1/6, 3/6, and 5/6 of the box width
     select('#chart')
-      .selectAll<SVGTextElement, unknown>('text.id')
+      .selectAll<SVGGElement, unknown>('g')
       .each(function (d: any) {
         const indiId: string | undefined = d?.indi?.id;
         if (!indiId) return;
 
         const showGen = props.showGeneration !== Generation.HIDE;
         const showOrd = props.showSiblingOrder !== SiblingOrder.HIDE;
-
-        // Get the base ID text (respecting hideIds setting)
-        const hideIds = props.hideIds === Ids.HIDE;
-        const baseText = hideIds ? '' : indiId;
-
-        let suffix = '';
+        let genOrderText = '';
         if (showGen) {
           const gen = NotesDetailedRenderer.generationMap.get(indiId);
-          if (gen !== undefined) suffix += String(gen);
+          if (gen !== undefined) genOrderText += String(gen);
         }
         if (showOrd) {
           const ord = NotesDetailedRenderer.siblingOrderMap.get(indiId);
-          if (ord !== undefined) suffix += String.fromCharCode(64 + ord);
+          if (ord !== undefined) genOrderText += String.fromCharCode(64 + ord);
         }
 
-        // Set the text based on what we want to show
-        const finalText = baseText ? (suffix ? baseText + ' ' + suffix : baseText) : suffix;
-        this.textContent = finalText;
+        const group = select(this);
+        const idElement = group.select<SVGTextElement>('text.id');
+        const sexElement = group.select<SVGTextElement>('text.sex');
+        let genOrderElement = group.select<SVGTextElement>('text.gen-order');
+        if (genOrderElement.empty()) {
+          genOrderElement = group.append<SVGTextElement>('text').classed('gen-order', true);
+        }
+
+        // Copy styling from ID element
+        const idNode = idElement.node();
+        const sexNode = sexElement.node();
+        if (!idNode || !sexNode) return;
+        genOrderElement
+          .attr('y', idNode.getAttribute('y'))
+          .attr('dy', idNode.getAttribute('dy'))
+          .attr('font-family', idNode.getAttribute('font-family'))
+          .attr('font-size', idNode.getAttribute('font-size'))
+          .attr('text-anchor', 'middle')
+          .text(genOrderText);
+
+        // Find the bounding box of the person box (rect)
+
+        const rect = group.select('rect').node() as SVGRectElement | null;
+        if (!rect) return;
+        const boxX = parseFloat(rect.getAttribute('x') || '0');
+        const boxW = parseFloat(rect.getAttribute('width') || '0');
+
+        // Set x for each text
+        idElement.attr('x', boxX + boxW * 1 / 6);
+        genOrderElement.attr('x', boxX + boxW * 3 / 6);
+        sexElement.attr('x', boxX + boxW * 5 / 6);
       });
 
     const svg = select('#chartSvg');
