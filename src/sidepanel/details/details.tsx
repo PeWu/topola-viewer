@@ -345,7 +345,7 @@ export function Details(props: Props) {
           imageDetails,
         )}
         <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
-        {props.config.id == Ids.SHOW ? getSectionForId(props.indi) : null}
+        {props.config.id === Ids.SHOW ? getSectionForId(props.indi) : null}
         {getSectionForEachMatchingEntry(
             entries,
             props.gedcom,
