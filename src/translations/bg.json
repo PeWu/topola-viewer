@@ -129,7 +129,7 @@
   "config.sex": "Пол",
   "config.sex.HIDE": "Скриване",
   "config.sex.SHOW": "Показване",
-  "config.notes": "Бележки в диаграмата",
+  "config.notes": "Бележки",
   "config.notes.HIDE": "Скриване",
   "config.notes.SHOW": "Показване",
   "head.source": "Източник на данни",
@@ -138,5 +138,11 @@
   "extras.notes": "Бележки",
   "extras.sources": "Източници",
   "extras.files": "Допълнителни файлове",
-  "details.generation": "Поколение"
+  "details.generation": "Поколение",
+  "config.generation": "Поколение #",
+  "config.generation.HIDE": "Скриване",
+  "config.generation.SHOW": "Показване",
+  "config.siblingOrder": "Ред на децата",
+  "config.siblingOrder.HIDE": "Скриване",
+  "config.siblingOrder.SHOW": "Показване"
 }

@@ -42,14 +42,22 @@ import {
   Config,
   configToArgs,
   DEFALUT_CONFIG,
+  Generation,
   Ids,
   Notes,
   Sex,
+  SiblingOrder,
 } from './sidepanel/config/config';
 import {SidePanel} from './sidepanel/side-panel';
 import {analyticsEvent} from './util/analytics';
 import {getI18nMessage} from './util/error_i18n';
-import {idToIndiMap, TopolaData} from './util/gedcom_util';
+import {NotesDetailedRenderer} from './custom-renderer';
+import {
+  computeGenerations,
+  computeSiblingOrders,
+  idToIndiMap,
+  TopolaData,
+} from './util/gedcom_util';
 
 /**
  * Load GEDCOM URL from VITE_STATIC_URL environment variable.
@@ -272,6 +280,8 @@ export function App() {
       indi.hideId = shouldHideIds;
       indi.hideSex = shouldHideSex;
     });
+    NotesDetailedRenderer.generationMap = computeGenerations(data.chartData);
+    NotesDetailedRenderer.siblingOrderMap = computeSiblingOrders(data.chartData);
   }
 
   function onToggleSidePanel() {
@@ -530,6 +540,8 @@ export function App() {
         hideIds={config.id}
         hideSex={config.sex}
         showNotes={config.notes}
+        showGeneration={config.generation}
+        showSiblingOrder={config.siblingOrder}
       />
     );
   }

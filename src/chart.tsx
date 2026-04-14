@@ -1,6 +1,6 @@
-import {max, min} from 'd3-array';
-import {interpolateNumber} from 'd3-interpolate';
-import {select, Selection} from 'd3-selection';
+import { max, min } from 'd3-array';
+import { interpolateNumber } from 'd3-interpolate';
+import { select, Selection } from 'd3-selection';
 import 'd3-transition';
 import {
   D3ZoomEvent,
@@ -9,9 +9,9 @@ import {
   ZoomedElementBaseType,
   zoomTransform,
 } from 'd3-zoom';
-import {saveAs} from 'file-saver';
-import {useEffect, useRef} from 'react';
-import {IntlShape, useIntl} from 'react-intl';
+import { saveAs } from 'file-saver';
+import { useEffect, useRef } from 'react';
+import { IntlShape, useIntl } from 'react-intl';
 import {
   ChartHandle,
   ChartInfo,
@@ -25,10 +25,10 @@ import {
   RelativesChart,
   ChartColors as TopolaChartColors,
 } from 'topola';
-import {NotesDetailedRenderer} from './custom-renderer';
-import {ChartColors, Ids, Notes, Sex} from './sidepanel/config/config';
-import {Media} from './util/media';
-import {usePrevious} from './util/previous-hook';
+import { NotesDetailedRenderer } from './custom-renderer';
+import { ChartColors, Generation, Ids, Notes, Sex, SiblingOrder } from './sidepanel/config/config';
+import { Media } from './util/media';
+import { usePrevious } from './util/previous-hook';
 
 /** How much to zoom when using the +/- buttons. */
 const ZOOM_FACTOR = 1.3;
@@ -319,6 +319,8 @@ export interface ChartProps {
   hideIds?: Ids;
   hideSex?: Sex;
   showNotes?: Notes;
+  showGeneration?: Generation;
+  showSiblingOrder?: SiblingOrder;
 }
 
 class ChartWrapper {
@@ -364,9 +366,11 @@ class ChartWrapper {
       return;
     }
 
-    // Sync the notes-visibility flag before every render so toggling the
-    // setting takes effect without a full chart reconstruction.
+    // Sync visibility flags before every render so toggling settings takes
+    // effect without a full chart reconstruction (for non-layout changes).
     NotesDetailedRenderer.showNotes = props.showNotes !== Notes.HIDE;
+    NotesDetailedRenderer.showGeneration = props.showGeneration !== Generation.HIDE;
+    NotesDetailedRenderer.showSiblingOrder = props.showSiblingOrder !== SiblingOrder.HIDE;
 
     if (args.initialRender) {
       (select('#chart').node() as HTMLElement).innerHTML = '';
@@ -394,6 +398,36 @@ class ChartWrapper {
         if (this.textContent === '\u2642') this.textContent = '\u2642\uFE0F';
         else if (this.textContent === '\u2640') this.textContent = '\u2640\uFE0F';
       });
+
+    // Update ID text with generation and sibling order suffixes
+    select('#chart')
+      .selectAll<SVGTextElement, unknown>('text.id')
+      .each(function (d: any) {
+        const indiId: string | undefined = d?.indi?.id;
+        if (!indiId) return;
+
+        const showGen = props.showGeneration !== Generation.HIDE;
+        const showOrd = props.showSiblingOrder !== SiblingOrder.HIDE;
+
+        // Get the base ID text (respecting hideIds setting)
+        const hideIds = props.hideIds === Ids.HIDE;
+        const baseText = hideIds ? '' : indiId;
+
+        let suffix = '';
+        if (showGen) {
+          const gen = NotesDetailedRenderer.generationMap.get(indiId);
+          if (gen !== undefined) suffix += String(gen);
+        }
+        if (showOrd) {
+          const ord = NotesDetailedRenderer.siblingOrderMap.get(indiId);
+          if (ord !== undefined) suffix += String.fromCharCode(64 + ord);
+        }
+
+        // Set the text based on what we want to show
+        const finalText = baseText ? (suffix ? baseText + ' ' + suffix : baseText) : suffix;
+        this.textContent = finalText;
+      });
+
     const svg = select('#chartSvg');
     const parent = select('#svgContainer').node() as Element;
     const scale = zoomTransform(parent).k;

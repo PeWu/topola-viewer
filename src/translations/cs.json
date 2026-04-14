@@ -129,7 +129,7 @@
   "config.sex": "Pohlaví",
   "config.sex.HIDE": "skrýt",
   "config.sex.SHOW": "zobrazit",
-  "config.notes": "Poznámky v grafu",
+  "config.notes": "Poznámky",
   "config.notes.HIDE": "skrýt",
   "config.notes.SHOW": "zobrazit",
   "head.source": "Zdroj dat",
@@ -138,5 +138,11 @@
   "extras.notes": "Poznámky",
   "extras.sources": "Zdroje",
   "extras.files": "Další soubory",
-  "details.generation": "Generace"
+  "details.generation": "Generace",
+  "config.generation": "Generace #",
+  "config.generation.HIDE": "skrýt",
+  "config.generation.SHOW": "zobrazit",
+  "config.siblingOrder": "Pořadí sourozenců",
+  "config.siblingOrder.HIDE": "skrýt",
+  "config.siblingOrder.SHOW": "zobrazit"
 }

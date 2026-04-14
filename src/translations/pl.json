@@ -129,7 +129,7 @@
   "config.sex": "Płeć",
   "config.sex.HIDE": "ukryj",
   "config.sex.SHOW": "pokaż",
-  "config.notes": "Notatki na wykresie",
+  "config.notes": "Notatki",
   "config.notes.HIDE": "ukryj",
   "config.notes.SHOW": "pokaż",
   "head.source": "Źródło danych",
@@ -138,5 +138,11 @@
   "extras.notes": "Notatki",
   "extras.sources": "Źródła",
   "extras.files": "Dodatkowe pliki",
-  "details.generation": "Pokolenie"
+  "details.generation": "Pokolenie",
+  "config.generation": "Pokolenie #",
+  "config.generation.HIDE": "ukryj",
+  "config.generation.SHOW": "pokaż",
+  "config.siblingOrder": "Kolejność rodzeństwa",
+  "config.siblingOrder.HIDE": "ukryj",
+  "config.siblingOrder.SHOW": "pokaż"
 }

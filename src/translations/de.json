@@ -129,7 +129,7 @@
   "config.sex": "Geschlecht",
   "config.sex.HIDE": "verbergen",
   "config.sex.SHOW": "anzeigen",
-  "config.notes": "Notizen im Diagramm",
+  "config.notes": "Notizen",
   "config.notes.HIDE": "verbergen",
   "config.notes.SHOW": "anzeigen",
   "head.source": "Datenquelle",
@@ -138,5 +138,11 @@
   "extras.notes": "Notizen",
   "extras.sources": "Quellen",
   "extras.files": "Weitere Dateien",
-  "details.generation": "Generation"
+  "details.generation": "Generation",
+  "config.generation": "Generation #",
+  "config.generation.HIDE": "verbergen",
+  "config.generation.SHOW": "anzeigen",
+  "config.siblingOrder": "Geschwisterreihenfolge",
+  "config.siblingOrder.HIDE": "verbergen",
+  "config.siblingOrder.SHOW": "anzeigen"
 }

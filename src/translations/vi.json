@@ -138,5 +138,11 @@
   "extras.notes": "Ghi chú",
   "extras.sources": "Nguồn",
   "extras.files": "Tệp bổ sung",
-  "details.generation": "Đời"
+  "details.generation": "Đời",
+  "config.generation": "Đời",
+  "config.generation.HIDE": "ẩn",
+  "config.generation.SHOW": "hiện",
+  "config.siblingOrder": "Thứ tự con",
+  "config.siblingOrder.HIDE": "ẩn",
+  "config.siblingOrder.SHOW": "hiện"
 }

@@ -129,6 +129,21 @@ export function computeGenerations(data: JsonGedcomData): Map<string, number> {
   return generations;
 }
 
+/**
+ * Computes 1-based sibling order for all individuals within their parent family.
+ * Children are ordered by birth date (as already sorted by normalizeGedcom).
+ * 1 = first child (→ 'A'), 2 = second (→ 'B'), etc.
+ */
+export function computeSiblingOrders(data: JsonGedcomData): Map<string, number> {
+  const orders = new Map<string, number>();
+  for (const fam of data.fams) {
+    for (let i = 0; i < (fam.children?.length ?? 0); i++) {
+      orders.set(fam.children![i], i + 1);
+    }
+  }
+  return orders;
+}
+
 function prepareGedcom(entries: GedcomEntry[]): GedcomData {
   const head = entries.find((entry) => entry.tag === 'HEAD')!;
   const indis: {[key: string]: GedcomEntry} = {};

@@ -25,11 +25,23 @@ export enum Notes {
   SHOW,
 }
 
+export enum Generation {
+  HIDE,
+  SHOW,
+}
+
+export enum SiblingOrder {
+  HIDE,
+  SHOW,
+}
+
 export interface Config {
   color: ChartColors;
   id: Ids;
   sex: Sex;
   notes: Notes;
+  generation: Generation;
+  siblingOrder: SiblingOrder;
 }
 
 export const DEFALUT_CONFIG: Config = {
@@ -37,6 +49,8 @@ export const DEFALUT_CONFIG: Config = {
   id: Ids.SHOW,
   sex: Sex.SHOW,
   notes: Notes.SHOW,
+  generation: Generation.SHOW,
+  siblingOrder: SiblingOrder.SHOW,
 };
 
 const COLOR_ARG = new Map<string, ChartColors>([
@@ -68,6 +82,20 @@ const NOTES_ARG = new Map<string, Notes>([
 const NOTES_ARG_INVERSE = new Map<Notes, string>();
 NOTES_ARG.forEach((v, k) => NOTES_ARG_INVERSE.set(v, k));
 
+const GENERATION_ARG = new Map<string, Generation>([
+  ['h', Generation.HIDE],
+  ['s', Generation.SHOW],
+]);
+const GENERATION_ARG_INVERSE = new Map<Generation, string>();
+GENERATION_ARG.forEach((v, k) => GENERATION_ARG_INVERSE.set(v, k));
+
+const SIBLING_ORDER_ARG = new Map<string, SiblingOrder>([
+  ['h', SiblingOrder.HIDE],
+  ['s', SiblingOrder.SHOW],
+]);
+const SIBLING_ORDER_ARG_INVERSE = new Map<SiblingOrder, string>();
+SIBLING_ORDER_ARG.forEach((v, k) => SIBLING_ORDER_ARG_INVERSE.set(v, k));
+
 export function argsToConfig(args: ParsedQuery<any>): Config {
   const getParam = (name: string) => {
     const value = args[name];
@@ -79,6 +107,8 @@ export function argsToConfig(args: ParsedQuery<any>): Config {
     id: ID_ARG.get(getParam('i') ?? '') ?? DEFALUT_CONFIG.id,
     sex: SEX_ARG.get(getParam('s') ?? '') ?? DEFALUT_CONFIG.sex,
     notes: NOTES_ARG.get(getParam('n') ?? '') ?? DEFALUT_CONFIG.notes,
+    generation: GENERATION_ARG.get(getParam('g') ?? '') ?? DEFALUT_CONFIG.generation,
+    siblingOrder: SIBLING_ORDER_ARG.get(getParam('o') ?? '') ?? DEFALUT_CONFIG.siblingOrder,
   };
 }
 
@@ -88,6 +118,8 @@ export function configToArgs(config: Config): ParsedQuery<any> {
     i: ID_ARG_INVERSE.get(config.id),
     s: SEX_ARG_INVERSE.get(config.sex),
     n: NOTES_ARG_INVERSE.get(config.notes),
+    g: GENERATION_ARG_INVERSE.get(config.generation),
+    o: SIBLING_ORDER_ARG_INVERSE.get(config.siblingOrder),
   };
 }
 
@@ -251,7 +283,7 @@ export function ConfigPanel(props: {
         <Item>
           <Item.Content>
             <Header sub>
-              <FormattedMessage id="config.notes" defaultMessage="Notes in chart" />
+              <FormattedMessage id="config.notes" defaultMessage="Notes" />
             </Header>
             <Form.Field className="no-margin">
               <Checkbox
@@ -286,6 +318,92 @@ export function ConfigPanel(props: {
                 checked={props.config.notes === Notes.SHOW}
                 onClick={() =>
                   props.onChange({...props.config, notes: Notes.SHOW})
+                }
+              />
+            </Form.Field>
+          </Item.Content>
+        </Item>
+        <Item>
+          <Item.Content>
+            <Header sub>
+              <FormattedMessage id="config.generation" defaultMessage="Generation #" />
+            </Header>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.generation.HIDE"
+                    defaultMessage="hide"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="hide"
+                checked={props.config.generation === Generation.HIDE}
+                onClick={() =>
+                  props.onChange({...props.config, generation: Generation.HIDE})
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.generation.SHOW"
+                    defaultMessage="show"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="show"
+                checked={props.config.generation === Generation.SHOW}
+                onClick={() =>
+                  props.onChange({...props.config, generation: Generation.SHOW})
+                }
+              />
+            </Form.Field>
+          </Item.Content>
+        </Item>
+        <Item>
+          <Item.Content>
+            <Header sub>
+              <FormattedMessage id="config.siblingOrder" defaultMessage="Sibling order" />
+            </Header>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.siblingOrder.HIDE"
+                    defaultMessage="hide"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="hide"
+                checked={props.config.siblingOrder === SiblingOrder.HIDE}
+                onClick={() =>
+                  props.onChange({...props.config, siblingOrder: SiblingOrder.HIDE})
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.siblingOrder.SHOW"
+                    defaultMessage="show"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="show"
+                checked={props.config.siblingOrder === SiblingOrder.SHOW}
+                onClick={() =>
+                  props.onChange({...props.config, siblingOrder: SiblingOrder.SHOW})
                 }
               />
             </Form.Field>
