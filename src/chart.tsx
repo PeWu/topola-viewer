@@ -399,7 +399,8 @@ class ChartWrapper {
         else if (this.textContent === '\u2640') this.textContent = '\u2640\uFE0F';
       });
 
-    // Append gen+order to the ID text on the same line, with gen+order in bold
+    // Place [Generation][Order] as a separate text element centered between
+    // [ID] (left) and [Gender Symbol] (right), which stay in their original positions.
     const showGen = props.showGeneration !== Generation.HIDE;
     const showOrd = props.showSiblingOrder !== SiblingOrder.HIDE;
     select('#chart')
@@ -408,6 +409,10 @@ class ChartWrapper {
         const indiId: string | undefined = d?.indi?.id;
         if (!indiId) return;
 
+        // Reset text.id to plain ID, clearing any stale tspan children.
+        this.textContent = props.hideIds !== Ids.HIDE ? indiId : '';
+
+        // Compute gen+order suffix.
         let suffix = '';
         if (showGen) {
           const gen = NotesDetailedRenderer.generationMap.get(indiId);
@@ -418,30 +423,38 @@ class ChartWrapper {
           // Convert 1-based index to letter: 1→A, 2→B, ...
           if (ord !== undefined) suffix += String.fromCharCode(64 + ord);
         }
-        // Always read the plain ID from the datum (not from textContent, which may
-        // contain stale tspan children from a previous update render).
-        const baseText = props.hideIds !== Ids.HIDE ? indiId : '';
 
-        if (!suffix) {
-          // Reset any stale tspan children left by a previous render.
-          this.textContent = baseText;
-          return;
+        const parent = this.parentElement;
+        if (!parent) return;
+
+        // Find or create the dedicated gen-order element.
+        let goEl = parent.querySelector<SVGTextElement>('text.gen-order');
+        if (!goEl) {
+          goEl = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'text',
+          ) as SVGTextElement;
+          goEl.classList.add('gen-order');
+          goEl.setAttribute('text-anchor', 'middle');
+          goEl.setAttribute('font-size', '10');
+          goEl.setAttribute('font-style', 'italic');
+          goEl.setAttribute('font-weight', 'bold');
+          parent.appendChild(goEl);
         }
 
-        this.textContent = '';
+        goEl.textContent = suffix;
+        if (!suffix) return;
 
-        if (baseText) {
-          const tspanId = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-          tspanId.textContent = baseText + '  ';
-          this.appendChild(tspanId);
-        }
-        const tspanBold = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'tspan',
-        );
-        tspanBold.textContent = suffix;
-        tspanBold.setAttribute('font-weight', 'bold');
-        this.appendChild(tspanBold);
+        // Read position from the datum — reliable immediately after chart.render(),
+        // unlike the transform attribute which may still be mid-transition.
+        const indiHeight = d?.indi?.height as number | undefined;
+        const indiWidth = d?.indi?.width as number | undefined;
+        if (!indiHeight || !indiWidth) return;
+
+        const y = indiHeight - 5;           // same row as text.id and text.sex
+        const centerX = indiWidth / 2;      // horizontal centre of the node
+
+        goEl.setAttribute('transform', `translate(${centerX}, ${y})`);
       });
 
     const svg = select('#chartSvg');
