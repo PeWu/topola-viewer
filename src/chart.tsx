@@ -399,54 +399,49 @@ class ChartWrapper {
         else if (this.textContent === '\u2640') this.textContent = '\u2640\uFE0F';
       });
 
-
-    // Distribute ID, GenOrder, and Gender horizontally at 1/6, 3/6, and 5/6 of the box width
-    select('#chart')
-      .selectAll<SVGGElement, unknown>('g')
-      .each(function (d: any) {
-        const indiId: string | undefined = d?.indi?.id;
-        if (!indiId) return;
-
-        const showGen = props.showGeneration !== Generation.HIDE;
-        const showOrd = props.showSiblingOrder !== SiblingOrder.HIDE;
-        let genOrderText = '';
-        if (showGen) {
-          const gen = NotesDetailedRenderer.generationMap.get(indiId);
-          if (gen !== undefined) genOrderText += String(gen);
-        }
-        if (showOrd) {
-          const ord = NotesDetailedRenderer.siblingOrderMap.get(indiId);
-          if (ord !== undefined) genOrderText += String.fromCharCode(64 + ord);
-        }
-
-        // Set the text based on what we want to show, with 2 spaces after ID
-        const finalText = baseText ? (suffix ? baseText + '  ' + suffix : baseText) : suffix;
-        this.textContent = finalText;
-      });
-
-    // Make [Gen][Order] bold
+    // Append gen+order to the ID text on the same line, with gen+order in bold
+    const showGen = props.showGeneration !== Generation.HIDE;
+    const showOrd = props.showSiblingOrder !== SiblingOrder.HIDE;
     select('#chart')
       .selectAll<SVGTextElement, unknown>('text.id')
       .each(function (d: any) {
         const indiId: string | undefined = d?.indi?.id;
         if (!indiId) return;
-        const showGen = props.showGeneration !== Generation.HIDE;
-        const showOrd = props.showSiblingOrder !== SiblingOrder.HIDE;
-        if (!showGen && !showOrd) return;
-        // Find the [Gen][Order] part and wrap in <tspan font-weight="bold">
-        const textNode = this as SVGTextElement;
-        const text = textNode.textContent || '';
-        const match = text.match(/^(.*?)(  )(\w+)$/);
-        if (match) {
-          textNode.textContent = '';
-          const tspanId = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-          tspanId.textContent = match[1] + match[2];
-          textNode.appendChild(tspanId);
-          const tspanBold = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-          tspanBold.textContent = match[3];
-          tspanBold.setAttribute('font-weight', 'bold');
-          textNode.appendChild(tspanBold);
+
+        let suffix = '';
+        if (showGen) {
+          const gen = NotesDetailedRenderer.generationMap.get(indiId);
+          if (gen !== undefined) suffix += String(gen);
         }
+        if (showOrd) {
+          const ord = NotesDetailedRenderer.siblingOrderMap.get(indiId);
+          // Convert 1-based index to letter: 1→A, 2→B, ...
+          if (ord !== undefined) suffix += String.fromCharCode(64 + ord);
+        }
+        // Always read the plain ID from the datum (not from textContent, which may
+        // contain stale tspan children from a previous update render).
+        const baseText = props.hideIds !== Ids.HIDE ? indiId : '';
+
+        if (!suffix) {
+          // Reset any stale tspan children left by a previous render.
+          this.textContent = baseText;
+          return;
+        }
+
+        this.textContent = '';
+
+        if (baseText) {
+          const tspanId = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+          tspanId.textContent = baseText + '  ';
+          this.appendChild(tspanId);
+        }
+        const tspanBold = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'tspan',
+        );
+        tspanBold.textContent = suffix;
+        tspanBold.setAttribute('font-weight', 'bold');
+        this.appendChild(tspanBold);
       });
 
     const svg = select('#chartSvg');
