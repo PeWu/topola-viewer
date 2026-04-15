@@ -545,7 +545,9 @@ export function Chart(props: ChartProps) {
         props.colors !== prevProps?.colors ||
         props.hideIds !== prevProps?.hideIds ||
         props.hideSex !== prevProps?.hideSex ||
-        props.showNotes !== prevProps?.showNotes;
+        props.showNotes !== prevProps?.showNotes ||
+        props.showGeneration !== prevProps?.showGeneration ||
+        props.showSiblingOrder !== prevProps?.showSiblingOrder;
       const resetPosition =
         props.chartType !== prevProps?.chartType ||
         props.data !== prevProps.data ||
