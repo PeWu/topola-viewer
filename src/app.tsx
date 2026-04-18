@@ -49,6 +49,7 @@ import {SidePanel} from './sidepanel/side-panel';
 import {analyticsEvent} from './util/analytics';
 import {getI18nMessage} from './util/error_i18n';
 import {idToIndiMap, TopolaData} from './util/gedcom_util';
+import {WebMcpBridge} from './webmcp';
 
 /**
  * Load GEDCOM URL from VITE_STATIC_URL environment variable.
@@ -246,6 +247,7 @@ export function App() {
   /** Freeze animations after initial chart render. */
   const [freezeAnimation, setFreezeAnimation] = useState(false);
   const [config, setConfig] = useState(DEFALUT_CONFIG);
+  const [mcpBridge] = useState(() => new WebMcpBridge());
 
   const intl = useIntl();
   const navigate = useNavigate();
@@ -436,6 +438,27 @@ export function App() {
       }
     })();
   });
+
+  useEffect(() => {
+    mcpBridge.registerTools();
+    return () => {
+      mcpBridge.unregisterTools();
+    };
+  }, [mcpBridge]);
+
+  useEffect(() => {
+    mcpBridge.setData(data || null);
+  }, [data, mcpBridge]);
+
+  useEffect(() => {
+    mcpBridge.setDetailIndi(detailIndi || null);
+  }, [detailIndi, mcpBridge]);
+
+  useEffect(() => {
+    mcpBridge.setSetSelectionCallback((id: string) => {
+      onSelection({id, generation: 0});
+    });
+  }, [mcpBridge]);
 
   function updateUrl(args: queryString.ParsedQuery<any>) {
     const search = queryString.parse(location.search);

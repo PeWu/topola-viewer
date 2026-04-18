@@ -139,3 +139,51 @@ describe('getName()', () => {
     expect(getName(person)).toBe('Only Name');
   });
 });
+
+import {
+  findRelationshipPath,
+  getAncestors,
+  getDescendants,
+  idToFamMap,
+  idToIndiMap,
+} from './gedcom_util';
+
+describe('Relationship algorithms', () => {
+  const sampleData = {
+    indis: [
+      {id: 'I1', fams: ['F1']},
+      {id: 'I2', fams: ['F1'], famc: 'F2'},
+      {id: 'I3', famc: 'F1'},
+      {id: 'I4', famc: 'F2'},
+    ],
+    fams: [
+      {id: 'F1', husb: 'I1', wife: 'I2', children: ['I3']},
+      {id: 'F2', children: ['I2', 'I4']},
+    ],
+  } as any;
+
+  const indiMap = idToIndiMap(sampleData);
+  const famMap = idToFamMap(sampleData);
+
+  it('findRelationshipPath finds direct paths', () => {
+    const path = findRelationshipPath('I1', 'I3', indiMap, famMap);
+    expect(path).toEqual(['I1', 'I3']);
+  });
+
+  it('findRelationshipPath finds sibling paths', () => {
+    const path = findRelationshipPath('I2', 'I4', indiMap, famMap);
+    expect(path).toEqual(['I2', 'I4']);
+  });
+
+  it('getAncestors respects generations bounds', () => {
+    const ancestors = getAncestors('I3', 1, indiMap, famMap);
+    expect(ancestors).toContain('I1');
+    expect(ancestors).toContain('I2');
+    expect(ancestors).not.toContain('I4');
+  });
+
+  it('getDescendants respects generations bounds', () => {
+    const descendants = getDescendants('I2', 1, indiMap, famMap);
+    expect(descendants).toContain('I3');
+  });
+});
