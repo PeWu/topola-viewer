@@ -314,6 +314,7 @@ export interface ChartProps {
   selection: IndiInfo;
   chartType: ChartType;
   onSelection: (indiInfo: IndiInfo) => void;
+  onDetailSelection: (indiInfo: IndiInfo) => void;
   freezeAnimation?: boolean;
   colors?: ChartColors;
   hideIds?: Ids;
@@ -370,7 +371,16 @@ class ChartWrapper {
         chartType: getChartType(props.chartType),
         renderer: getRendererType(props.chartType),
         svgSelector: '#chart',
-        indiCallback: (info) => props.onSelection(info),
+        indiCallback: (info) => { // ths is called when an individual is selected in the chart
+            if (info.modifiers?.shiftKey) {
+              // If the shift key is pressed, we just update the details tab without changing the selection in the chart. 
+              // This allows users to quickly view details of multiple individuals without losing their place in the chart.
+              props.onDetailSelection(info)
+            } else {
+              // If the shift key is not pressed, we update the selection in the chart as usual.
+              props.onSelection(info)
+            }
+        },
         colors: chartColors.get(props.colors!),
         animate: true,
         updateSvgSize: false,
@@ -474,7 +484,11 @@ export function Chart(props: ChartProps) {
       const resetPosition =
         props.chartType !== prevProps?.chartType ||
         props.data !== prevProps.data ||
-        props.selection !== prevProps.selection;
+        // This does not work as the objects are always different instances. 
+        //props.selection !== prevProps.selection; 
+        // Therefore, compare id and generation instead.
+        props.selection.id !== prevProps.selection.id ||
+        props.selection.generation !== prevProps.selection.generation; 
       chartWrapper.current.renderChart(props, intl, {
         initialRender,
         resetPosition,
