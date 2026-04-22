@@ -224,6 +224,8 @@ export function App() {
   const [data, setData] = useState<TopolaData>();
   /** Selected individual. */
   const [selection, setSelection] = useState<IndiInfo>();
+  /** Selected individual which should be displayed in the details pane. */
+  const [detailIndi, setDetailIndi] = useState<string>();
   /** Error to display. */
   const [error, setError] = useState<string>();
   /** Whether the side panel is shown. */
@@ -257,6 +259,7 @@ export function App() {
       selection!.generation !== newSelection.generation
     ) {
       setSelection(newSelection);
+      setDetailIndi(newSelection.id);
     }
   }
 
@@ -380,6 +383,7 @@ export function App() {
         // Set state from URL parameters.
         setSourceSpec(args.sourceSpec);
         setSelection(args.selection);
+        setDetailIndi(args.selection?.id);
         setStandalone(args.standalone);
         setShowWikiTreeMenus(args.showWikiTreeMenus);
         setChartType(args.chartType);
@@ -414,6 +418,7 @@ export function App() {
             const newSelection = getSelection(data.chartData, args.selection);
             setData(data);
             setSelection(newSelection);
+            setDetailIndi(newSelection.id);
             setState(AppState.SHOWING_CHART);
           } catch (error: any) {
             setState(AppState.SHOWING_CHART);
@@ -455,6 +460,13 @@ export function App() {
       indi: selection.id,
       gen: selection.generation,
     });
+  }
+  /**
+   * Called when the user shift+clicks an individual box in the chart.
+   * Shows the individual in the details pane.
+   */
+  function onDetailSelection(selection: IndiInfo) {
+    setDetailIndi(selection.id);
   }
 
   function onPrint() {
@@ -524,6 +536,7 @@ export function App() {
         selection={selection}
         chartType={chartType}
         onSelection={onSelection}
+        onDetailSelection={onDetailSelection}
         freezeAnimation={freezeAnimation}
         colors={config.color}
         hideIds={config.id}
@@ -550,7 +563,7 @@ export function App() {
             <SidebarPushable>
               <SidePanel
                 data={data!}
-                selectedIndiId={updatedSelection.id}
+                selectedIndiId={detailIndi || updatedSelection.id}
                 config={config}
                 expanded={showSidePanel}
                 onToggle={onToggleSidePanel}
