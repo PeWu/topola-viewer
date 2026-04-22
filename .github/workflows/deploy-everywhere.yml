@@ -8,3 +8,4 @@ jobs:
   
   deploy-wikitree-apps:
     uses: ./.github/workflows/deploy-wikitree-apps.yml
+    secrets: inherit

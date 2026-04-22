@@ -17,6 +17,7 @@ import {MultilineText} from './multiline-text';
 import {Sources} from './sources';
 import {TranslatedTag} from './translated-tag';
 import {WrappedImage} from './wrapped-image';
+import {Config, Ids} from '../config/config';
 
 const EXCLUDED_TAGS = [
   ...ALL_SUPPORTED_EVENT_TYPES,
@@ -313,9 +314,23 @@ function getOtherSections(entries: GedcomEntry[], gedcom: GedcomData) {
     ));
 }
 
+function getSectionForId(indi: string) : React.ReactNode {
+  return (
+    <Item>
+      <Item.Content>
+        <Header sub>
+          <FormattedMessage id="config.ids" defaultMessage="Identification" />
+        </Header>
+        <div><i>{indi}</i></div>
+      </Item.Content>
+    </Item>
+  );
+}
+
 interface Props {
   gedcom: GedcomData;
   indi: string;
+  config: Config;
 }
 
 export function Details(props: Props) {
@@ -337,6 +352,7 @@ export function Details(props: Props) {
           imageDetails,
         )}
         <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
+        {props.config.id === Ids.SHOW ? getSectionForId(props.indi) : null}
         {getSectionForEachMatchingEntry(
             entries,
             props.gedcom,
