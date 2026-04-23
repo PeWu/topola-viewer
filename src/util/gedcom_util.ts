@@ -10,6 +10,8 @@ import {
 } from 'topola';
 import {compareDates} from './date_util';
 import {TopolaError} from './error';
+import {Image} from '../sidepanel/details/event-extras';
+import {eventImages, eventNotes} from '../sidepanel/details/events';
 
 export interface GedcomData {
   /** The HEAD entry. */
@@ -33,7 +35,9 @@ export interface Source {
   page?: string;
   date?: DateOrRange;
   publicationInfo?: string;
-  images: GedcomEntry[];
+  images?: Image[];
+  notes?: string[][];
+  id: string;
 }
 
 /**
@@ -341,23 +345,6 @@ export function mapToSource(
   sourceEntryReference: GedcomEntry,
   gedcom: GedcomData,
 ) {
-  // Get OBJE image files referenced in an entry.
-  function getImages(images: GedcomEntry[], entry: GedcomEntry, gedcom: GedcomData) {  
-    entry.tree
-      .filter((subEntry) => subEntry.tag === 'OBJE')
-      .forEach((objectEntry) => {
-        const imageEntry = dereference(
-          objectEntry,
-          gedcom,
-          (gedcom) => gedcom.other,
-        );
-        const imageFileEntry = getImageFileEntry(imageEntry);
-        if (imageFileEntry) {
-            images.push(imageFileEntry);
-        }
-      });
-  }
-
   // Conbine Source ("Quelle") and source entry reference ("Fundstelle").
   const sourceEntry = dereference(
     sourceEntryReference,
@@ -380,11 +367,18 @@ export function mapToSource(
   const date = sourceData ? resolveDate(sourceData) : undefined;
 
   // Images of sources
-  const images: GedcomEntry[] = [];
   // Get images referenced in the source entry ("Quelle").
-  getImages(images, sourceEntry, gedcom);
-  // Get images referenced in the source entry reference ("Fundstelle").
-  getImages(images, sourceEntryReference, gedcom);
+  const images = eventImages(sourceEntry, gedcom);  
+  // Add images referenced in the source entry reference ("Fundstelle").
+  images.push(...eventImages(sourceEntryReference, gedcom));
+
+  // Notes of sources
+  // Get notes referenced in the source entry ("Quelle").
+  const notes = eventNotes(sourceEntry, gedcom);
+  // Add notes referenced in the source entry reference ("Fundstelle").
+  notes.push(...eventNotes(sourceEntryReference, gedcom));
+
+  const id = 'dummy';//pointerToId(sourceEntryReference.pointer); // using the pointer as id causes too many re-renders in React, probably because the pointer is not stable across renders. Using a dummy id for now, but this should be fixed properly in the future.
   
   return {
     title: title?.data || abbr?.data,
@@ -393,5 +387,7 @@ export function mapToSource(
     date: date ? getDate(date.data) : undefined,
     publicationInfo: publicationInfo?.data,
     images: images,
+    notes: notes,
+    id: id,
   };
 }

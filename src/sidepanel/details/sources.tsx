@@ -2,8 +2,8 @@ import {useIntl} from 'react-intl';
 import Linkify from 'react-linkify';
 import {List} from 'semantic-ui-react';
 import {formatDateOrRange} from '../../util/date_util';
-import {Source, getFileName} from '../../util/gedcom_util';
-import {WrappedImage} from './wrapped-image';
+import {pointerToId, Source} from '../../util/gedcom_util';
+import {EventExtras} from './event-extras';
 
 interface Props {
   sources?: Source[];
@@ -18,7 +18,7 @@ export function Sources({sources}: Props) {
     <List>
       {sources.map((source, index) => (
         <List.Item key={index}>
-          <List.Icon verticalAlign="top" name="circle" size="tiny"/>
+          <List.Icon verticalAlign="middle" name="circle" size="tiny" />
           <List.Content>
             <List.Header>
               <Linkify properties={{target: '_blank'}}>
@@ -30,18 +30,13 @@ export function Sources({sources}: Props) {
             <List.Description>
               <Linkify properties={{target: '_blank'}}>{source.page}</Linkify>
               {source.date && ` [${formatDateOrRange(source.date, intl)}]`}
-              {source.images?.length ? (
-                <div className="source-images">
-                  {source.images.map((image, imageIndex) => (
-                    <div key={imageIndex} className="source-image">
-                      <WrappedImage
-                        url={image.data}
-                        filename={getFileName(image) || ''}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : null}
+              <EventExtras
+                images={source.images}
+                notes={source.notes}
+                //sources={props.event.sources}
+                indi={source.id}
+                //files={props.event.files}
+              />
             </List.Description>
           </List.Content>
         </List.Item>
