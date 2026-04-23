@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-04-20
+
+- Shift-click to show a person's details without rearranging the tree (by FrankBuchholz)
+
 ## 2026-02-21
 
 - Improved saving PDF files. Decreased file size and increased chart size that can be saved as PDF.
