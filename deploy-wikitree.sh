@@ -2,7 +2,7 @@
 set -e
 
 echo Copying files...
-lftp --env-password sftp://wiech13@apps.wikitree.com << EOF
+lftp --env-password sftp://wiech13@apps-sftp.wikitree.com << EOF
   mkdir www/topola-viewer.new
   mirror -R -p dist/ www/topola-viewer.new/
   rm -r www/topola-viewer.old

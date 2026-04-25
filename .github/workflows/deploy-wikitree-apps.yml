@@ -24,7 +24,7 @@ jobs:
     - name: Set up ssh
       run: |
         mkdir ~/.ssh
-        echo 'apps.wikitree.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEvmLzMlPTrjXGh2Bw/8AF4L9tQob3YaheCA63Mrt6v5OWVYeKQpE2TnM7MNJeMZrVvTOuDlhKXM1ojlVeDwyQ4=' >> ~/.ssh/known_hosts
+        echo 'apps-sftp.wikitree.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFr/n45SqtcLL2xou61C6UdmSeCYrQ01UlvS7ZzleFOD' >> ~/.ssh/known_hosts
     - run: npm run deploy-wikitree
       env:
         LFTP_PASSWORD: ${{ secrets.WIKITREE_PASSWORD }}
