@@ -11,13 +11,13 @@ import {
   getNonImageFileEntry,
   mapToSource,
 } from '../../util/gedcom_util';
-import {FileEntry, AdditionalFiles} from './additional-files';
+import {Config, Ids} from '../config/config';
+import {AdditionalFiles, FileEntry} from './additional-files';
 import {ALL_SUPPORTED_EVENT_TYPES, Events} from './events';
 import {MultilineText} from './multiline-text';
 import {Sources} from './sources';
 import {TranslatedTag} from './translated-tag';
 import {WrappedImage} from './wrapped-image';
-import {Config, Ids} from '../config/config';
 
 const EXCLUDED_TAGS = [
   ...ALL_SUPPORTED_EVENT_TYPES,
@@ -61,32 +61,30 @@ function attributeDetails(entry: GedcomEntry) {
   }
 
   const attributeName = entry.tree
-      .filter((subentry) => subentry.tag === 'TYPE')
-      .flatMap((type) => getData(type))
-      .join()
-      .trim();
+    .filter((subentry) => subentry.tag === 'TYPE')
+    .flatMap((type) => getData(type))
+    .join()
+    .trim();
 
   const attributeValue = getData(entry).join(' ').trim();
-  if(attributeName) {
+  if (attributeName) {
     return (
-        <>
-          <Header sub>
-            <TranslatedTag tag={entry.tag}/>
-          </Header>
-          <div>
-            <b>{attributeName}</b>: {attributeValue}
-          </div>
-        </>
+      <>
+        <Header sub>
+          <TranslatedTag tag={entry.tag} />
+        </Header>
+        <div>
+          <b>{attributeName}</b>: {attributeValue}
+        </div>
+      </>
     );
   } else {
     return (
       <>
         <Header sub>
-          <TranslatedTag tag={entry.tag}/>
+          <TranslatedTag tag={entry.tag} />
         </Header>
-        <div>
-          {attributeValue}
-        </div>
+        <div>{attributeValue}</div>
       </>
     );
   }
@@ -142,7 +140,9 @@ function sourceDetails(
 function fileDetails(objectEntries: GedcomEntry[], gedcom: GedcomData) {
   const files: FileEntry[] = [];
   objectEntries
-    .map((objectEntry) => dereference(objectEntry, gedcom, (gedcom) => gedcom.other))
+    .map((objectEntry) =>
+      dereference(objectEntry, gedcom, (gedcom) => gedcom.other),
+    )
     .forEach((objectEntry) => {
       const fileEntry = getNonImageFileEntry(objectEntry);
       if (fileEntry) {
@@ -150,7 +150,7 @@ function fileDetails(objectEntries: GedcomEntry[], gedcom: GedcomData) {
           url: fileEntry.data,
           filename: getFileName(fileEntry),
           titl: objectEntry.tree.find((entry) => entry.tag === 'TITL')?.data,
-        })
+        });
       }
     });
 
@@ -314,14 +314,16 @@ function getOtherSections(entries: GedcomEntry[], gedcom: GedcomData) {
     ));
 }
 
-function getSectionForId(indi: string) : React.ReactNode {
+function getSectionForId(indi: string): React.ReactNode {
   return (
     <Item>
       <Item.Content>
         <Header sub>
           <FormattedMessage id="config.ids" defaultMessage="Identification" />
         </Header>
-        <div><i>{indi}</i></div>
+        <div>
+          <i>{indi}</i>
+        </div>
       </Item.Content>
     </Item>
   );
@@ -354,10 +356,10 @@ export function Details(props: Props) {
         <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
         {props.config.id === Ids.SHOW ? getSectionForId(props.indi) : null}
         {getSectionForEachMatchingEntry(
-            entries,
-            props.gedcom,
-            ['FACT'],
-            attributeDetails,
+          entries,
+          props.gedcom,
+          ['FACT'],
+          attributeDetails,
         )}
         {getOtherSections(entries, props.gedcom)}
         {getSectionForEachMatchingEntry(

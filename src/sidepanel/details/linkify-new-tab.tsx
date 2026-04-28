@@ -11,8 +11,17 @@ interface Props {
 export function LinkifyNewTab({children}: Props) {
   return (
     <Linkify
-      componentDecorator={(decoratedHref: string, decoratedText: string, key: number) => (
-        <a href={decoratedHref} key={key} target="_blank" rel="noopener noreferrer">
+      componentDecorator={(
+        decoratedHref: string,
+        decoratedText: string,
+        key: number,
+      ) => (
+        <a
+          href={decoratedHref}
+          key={key}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {decoratedText}
         </a>
       )}
