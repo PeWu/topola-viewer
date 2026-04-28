@@ -54,7 +54,7 @@ async function loadGedzip(
 
   let gedcom = undefined;
   const images = new Map<string, string>();
-  for (let fileName of Object.keys(unzipped)) {
+  for (const fileName of Object.keys(unzipped)) {
     if (fileName.endsWith('.ged')) {
       if (gedcom) {
         console.warn('Multiple GEDCOM files found in zip archive.');

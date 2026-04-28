@@ -25,8 +25,6 @@ module.exports = {
     'plugin:react/recommended',
   ],
   rules: {
-    'no-var': 'off',
-    'prefer-const': 'off',
     'no-case-declarations': 'off',
     'prefer-spread': 'off',
     'no-extra-boolean-cast': 'off',

@@ -60,13 +60,13 @@ function attributeDetails(entry: GedcomEntry) {
     return null;
   }
 
-  let attributeName = entry.tree
+  const attributeName = entry.tree
       .filter((subentry) => subentry.tag === 'TYPE')
       .flatMap((type) => getData(type))
       .join()
       .trim();
 
-  let attributeValue = getData(entry).join(' ').trim();
+  const attributeValue = getData(entry).join(' ').trim();
   if(attributeName) {
     return (
         <>

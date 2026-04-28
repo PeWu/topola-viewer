@@ -150,7 +150,7 @@ function getArguments(location: H.Location<any>): Arguments {
   const hash = getParam('file');
   const url = getParam('url');
   const embedded = getParam('embedded') === 'true'; // False by default.
-  var sourceSpec: DataSourceSpec | undefined = undefined;
+  let sourceSpec: DataSourceSpec | undefined = undefined;
   if (staticUrl) {
     sourceSpec = {
       source: DataSourceEnum.GEDCOM_URL,
@@ -267,9 +267,9 @@ export function App() {
     if (data === undefined) {
       return;
     }
-    let shouldHideIds = config.id === Ids.HIDE;
-    let shouldHideSex = config.sex === Sex.HIDE;
-    let indiMap = idToIndiMap(data.chartData);
+    const shouldHideIds = config.id === Ids.HIDE;
+    const shouldHideSex = config.sex === Sex.HIDE;
+    const indiMap = idToIndiMap(data.chartData);
     indiMap.forEach((indi) => {
       indi.hideId = shouldHideIds;
       indi.hideSex = shouldHideSex;
