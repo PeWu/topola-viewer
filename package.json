@@ -62,10 +62,13 @@
     "@types/md5": "^2.3.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.0",
-    "@typescript-eslint/eslint-plugin": "^4.19.0",
-    "@typescript-eslint/parser": "^4.19.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "@vitejs/plugin-react": "^4.3.4",
     "cypress": "^13.17.0",
+    "eslint": "^7.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "gh-pages": "^6.3.0",
     "jest": "^29.7.0",
     "jsdom": "^26.0.0",
@@ -75,7 +78,6 @@
     "start-server-and-test": "^2.0.9",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
-    "tslint-config-prettier": "^1.18.0",
     "typescript": "^5.7.3",
     "vite": "^6.4.2",
     "vite-tsconfig-paths": "^5.1.4"
@@ -89,6 +91,7 @@
     "build:windows": "powershell -Command \"Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser; tsc; if ($?) { $env:GENERATE_SOURCEMAP='false'; $env:VITE_CHANGELOG = Get-Content -Path \"CHANGELOG.md\" -Raw; $env:VITE_GIT_SHA=$(git rev-parse --short HEAD); $env:VITE_GIT_TIME=$(git log -1 --format='%ci'); vite build }",
     "test": "jest",
     "prettier": "prettier --write src/**/*.{ts,tsx,json} && prettier --write src/*.{ts,tsx,json}",
+    "lint": "eslint src --ext .ts,.tsx",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "predeploy-wikitree": "npm run build",
@@ -104,11 +107,5 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ],
-  "eslintConfig": {
-    "rules": {
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-use-before-define": "off"
-    }
-  }
+  ]
 }
