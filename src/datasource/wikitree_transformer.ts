@@ -1,11 +1,5 @@
 import {IntlShape} from 'react-intl';
-import {
-  DateOrRange,
-  JsonEvent,
-  JsonFam,
-  JsonImage,
-  JsonIndi,
-} from 'topola';
+import {DateOrRange, JsonEvent, JsonFam, JsonImage, JsonIndi} from 'topola';
 import {StringUtils} from 'turbocommons-ts';
 import {Person} from 'wikitree-js';
 import {PRIVATE_ID_PREFIX} from './wikitree_api';
@@ -81,7 +75,7 @@ function getSpouses(people: Person[]) {
 
 /**
  * Converts a list of WikiTree Person records into Topola individual records.
- * 
+ *
  * @param people List of Person records to convert.
  * @param intl Intl shape for localization.
  * @returns List of JsonIndi objects.
@@ -97,7 +91,7 @@ export function convertIndis(people: Person[], intl: IntlShape): JsonIndi[] {
 
 /**
  * Converts relationships of a list of WikiTree Person records into Topola family records.
- * 
+ *
  * @param people List of Person records to convert.
  * @returns List of JsonFam objects.
  */
@@ -251,13 +245,15 @@ function getMarriedName(person: Person) {
 
 /**
  * Resolves the birth, married, and aka names of a WikiTree Person.
- * 
+ *
  * @param person The WikiTree Person to resolve names for.
  * @returns Object containing birth, married, and aka names.
  */
-export function convertPersonNames(
-  person: Person,
-): {birth?: string; married?: string; aka?: string} {
+export function convertPersonNames(person: Person): {
+  birth?: string;
+  married?: string;
+  aka?: string;
+} {
   const birth =
     person.LastNameAtBirth !== 'Unknown' ? person.LastNameAtBirth : undefined;
   const married = getMarriedName(person);
@@ -270,10 +266,7 @@ export function convertPersonNames(
   return {birth, married, aka};
 }
 
-function parseDate(
-  date: string,
-  dataStatus?: string,
-): DateOrRange | undefined {
+function parseDate(date: string, dataStatus?: string): DateOrRange | undefined {
   if (!date) {
     return undefined;
   }

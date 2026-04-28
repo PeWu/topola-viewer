@@ -3,15 +3,19 @@ import {analyticsEvent} from '../util/analytics';
 import {TopolaError} from '../util/error';
 import {normalizeGedcom, TopolaData} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
-import {loadData, PRIVATE_ID_PREFIX} from './wikitree_api';
-import {convertFams, convertIndis, convertPersonNames} from './wikitree_transformer';
 import {buildGedcom} from './gedcom_generator';
+import {loadData, PRIVATE_ID_PREFIX} from './wikitree_api';
+import {
+  convertFams,
+  convertIndis,
+  convertPersonNames,
+} from './wikitree_transformer';
 
 export {PRIVATE_ID_PREFIX};
 
 /**
  * Main entrypoint for loading data from WikiTree and transforming it to Topola format.
- * 
+ *
  * @param key The person key to load.
  * @param intl Intl shape for localization.
  * @param authcode Optional authentication code.

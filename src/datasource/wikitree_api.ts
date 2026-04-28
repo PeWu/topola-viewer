@@ -221,12 +221,15 @@ async function getAllDescendants(key: string, handleCors: boolean) {
 
 /**
  * Loads data from the WikiTree API for a given person key.
- * 
+ *
  * @param key The WikiTree profile ID to load.
  * @param authcode Optional authentication code.
  * @returns A unique list of WikiTree `Person` records.
  */
-export async function loadData(key: string, authcode?: string): Promise<Person[]> {
+export async function loadData(
+  key: string,
+  authcode?: string,
+): Promise<Person[]> {
   // Work around CORS if not in apps.wikitree.com domain.
   const handleCors = window.location.hostname !== 'apps.wikitree.com';
 
