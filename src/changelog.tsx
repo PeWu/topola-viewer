@@ -5,6 +5,7 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import {Button, Header, Modal} from 'semantic-ui-react';
 import {unified} from 'unified';
+import changelog from '../CHANGELOG.md?raw';
 
 const LAST_SEEN_VERSION_KEY = 'last_seen_version';
 
@@ -19,7 +20,6 @@ export async function getChangelog(maxVersions: number, seenVersion?: string) {
     ? Date.parse(seenVersion.slice(0, 10))
     : 0;
 
-  const changelog = import.meta.env.VITE_CHANGELOG as string;
   const changes =
     changelog
       .split('##')
