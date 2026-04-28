@@ -1,4 +1,4 @@
-import Linkify from 'react-linkify';
+import {LinkifyNewTab} from './linkify-new-tab';
 
 interface Props {
   lines: (React.ReactNode | string)[];
@@ -9,7 +9,7 @@ export function MultilineText(props: Props) {
     <>
       {props.lines.map((line, index) => (
         <div key={index}>
-          <Linkify properties={{target: '_blank'}}>{line}</Linkify>
+          <LinkifyNewTab>{line}</LinkifyNewTab>
           <br />
         </div>
       ))}
