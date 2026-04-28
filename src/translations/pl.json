@@ -123,7 +123,7 @@
   "config.colors.NO_COLOR": "brak",
   "config.colors.COLOR_BY_GENERATION": "według pokolenia",
   "config.colors.COLOR_BY_SEX": "według płci",
-  "config.ids": "Identyfikacja",
+  "config.ids": "Identyfikator",
   "config.ids.HIDE": "ukryj",
   "config.ids.SHOW": "pokaż",
   "config.sex": "Płeć",
