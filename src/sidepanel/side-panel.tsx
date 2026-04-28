@@ -30,7 +30,9 @@ export function SidePanel({
         id: 'tab.info',
         defaultMessage: 'Info',
       }),
-      render: () => <Details gedcom={data.gedcom} indi={selectedIndiId} config={config} />,
+      render: () => (
+        <Details gedcom={data.gedcom} indi={selectedIndiId} config={config} />
+      ),
     },
     {
       menuItem: intl.formatMessage({
