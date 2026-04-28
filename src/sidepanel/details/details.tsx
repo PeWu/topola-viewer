@@ -145,7 +145,7 @@ function fileDetails(objectEntries: GedcomEntry[], gedcom: GedcomData) {
     .map((objectEntry) => dereference(objectEntry, gedcom, (gedcom) => gedcom.other))
     .forEach((objectEntry) => {
       const fileEntry = getNonImageFileEntry(objectEntry);
-      if (!!fileEntry) {
+      if (fileEntry) {
         files.push({
           url: fileEntry.data,
           filename: getFileName(fileEntry),

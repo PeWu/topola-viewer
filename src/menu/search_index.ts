@@ -45,7 +45,7 @@ function compare(a: lunr.Index.Result, b: lunr.Index.Result) {
 /** Returns all last names of all husbands as a space-separated string. */
 function getHusbandLastName(
   indi: JsonIndi,
-  indiMap: Map<String, JsonIndi>,
+  indiMap: Map<string, JsonIndi>,
   famMap: Map<string, JsonFam>,
 ): string {
   return (indi.fams || [])
@@ -67,6 +67,7 @@ class LunrSearchIndex implements SearchIndex {
   }
 
   initialize() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this.index = lunr(function () {
       //Trimmer will break non-latin characters, so custom multilingual implementation must be used
@@ -110,6 +111,7 @@ class LunrSearchIndex implements SearchIndex {
     const pipelineFunctions: PipelineFunction[] = [];
     const searchPipelineFunctions: PipelineFunction[] = [];
     languages.forEach((language) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const lunrLanguage = lunr[language];
       if (language === 'en') {
@@ -129,14 +131,11 @@ class LunrSearchIndex implements SearchIndex {
       }
     });
     lunrInstance.pipeline.reset();
-    lunrInstance.pipeline.add.apply(lunrInstance.pipeline, pipelineFunctions);
+    lunrInstance.pipeline.add(...pipelineFunctions);
 
     if (lunrInstance.searchPipeline) {
       lunrInstance.searchPipeline.reset();
-      lunrInstance.searchPipeline.add.apply(
-        lunrInstance.searchPipeline,
-        searchPipelineFunctions,
-      );
+      lunrInstance.searchPipeline.add(...searchPipelineFunctions);
     }
   }
 

@@ -548,7 +548,7 @@ export function App() {
   function renderMainArea() {
     switch (state) {
       case AppState.SHOWING_CHART:
-      case AppState.LOADING_MORE:
+      case AppState.LOADING_MORE: {
         const updatedSelection = getSelection(data!.chartData, selection);
         return (
           <div id="content">
@@ -577,6 +577,7 @@ export function App() {
             </SidebarPushable>
           </div>
         );
+      }
 
       case AppState.ERROR:
         return <ErrorMessage message={error!} />;

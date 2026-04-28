@@ -224,7 +224,7 @@ export function TopBar(props: Props) {
     }
 
     switch (screenSize) {
-      case ScreenSize.LARGE:
+      case ScreenSize.LARGE: {
         // Show dropdown if chart is shown, otherwise show individual menu
         // items.
         const menus = props.showingChart ? (
@@ -251,6 +251,7 @@ export function TopBar(props: Props) {
           </>
         );
         return menus;
+      }
 
       case ScreenSize.SMALL:
         return (
