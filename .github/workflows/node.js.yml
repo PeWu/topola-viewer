@@ -27,6 +27,10 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci
+    - name: Prettier Format Check
+      run: |
+        npm run prettier
+        git diff --exit-code
     - run: npm run lint
     - run: npm run build
     - run: npm test
