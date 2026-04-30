@@ -227,7 +227,7 @@ export function TopBar(props: Props) {
       case ScreenSize.LARGE:
         // Show dropdown if chart is shown, otherwise show individual menu
         // items.
-        const menus = props.showingChart ? (
+        return props.showingChart ? (
           <Dropdown
             trigger={
               <div>
@@ -250,7 +250,6 @@ export function TopBar(props: Props) {
             <WikiTreeMenu menuType={MenuType.Menu} {...props} />
           </>
         );
-        return menus;
 
       case ScreenSize.SMALL:
         return (
