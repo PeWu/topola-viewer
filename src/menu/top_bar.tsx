@@ -224,10 +224,10 @@ export function TopBar(props: Props) {
     }
 
     switch (screenSize) {
-      case ScreenSize.LARGE: {
+      case ScreenSize.LARGE:
         // Show dropdown if chart is shown, otherwise show individual menu
         // items.
-        const menus = props.showingChart ? (
+        return props.showingChart ? (
           <Dropdown
             trigger={
               <div>
@@ -250,8 +250,6 @@ export function TopBar(props: Props) {
             <WikiTreeMenu menuType={MenuType.Menu} {...props} />
           </>
         );
-        return menus;
-      }
 
       case ScreenSize.SMALL:
         return (
@@ -311,7 +309,16 @@ export function TopBar(props: Props) {
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
-        {props.standalone ? <Link to="/">{title()}</Link> : title()}
+        <div className="topbar--title">
+          {props.standalone ? <Link to="/">{title()}</Link> : title()}
+        </div>
+        {props.showingChart && (
+          <SearchBar
+            data={props.data!}
+            onSelection={props.eventHandlers.onSelection}
+            {...props}
+          />
+        )}
       </>
     );
   }
