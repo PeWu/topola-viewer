@@ -166,8 +166,6 @@ export class WebMcpBridge {
     return toMcpResponse(basicIndis);
   }
 
-
-
   /** Updates the currently selected individual in focus. */
   public setDetailIndi(newDetailIndi: string | null): void {
     this.detailIndi = newDetailIndi;

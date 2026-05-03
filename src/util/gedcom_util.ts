@@ -397,7 +397,7 @@ export function findRelationshipPath(
     if (!indi) {
       return [];
     }
-    
+
     const neighbors: string[] = [];
     if (indi.famc) {
       const fam = famMap.get(indi.famc);

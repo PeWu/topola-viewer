@@ -9,7 +9,8 @@ export const WEBMCP_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'search_indi',
-    description: 'Searches the genealogy index for individuals by name. Returns up to 10 results starting with the ones that match the best.',
+    description:
+      'Searches the genealogy index for individuals by name. Returns up to 10 results starting with the ones that match the best.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -57,7 +58,8 @@ export const WEBMCP_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_ancestors',
-    description: 'Returns ancestors of a specific individual up to a maximum depth of 5 generations.',
+    description:
+      'Returns ancestors of a specific individual up to a maximum depth of 5 generations.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -75,7 +77,8 @@ export const WEBMCP_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_descendants',
-    description: 'Returns descendants of a specific individual up to a maximum depth of 5 generations.',
+    description:
+      'Returns descendants of a specific individual up to a maximum depth of 5 generations.',
     inputSchema: {
       type: 'object',
       properties: {
