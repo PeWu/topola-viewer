@@ -65,11 +65,7 @@ function getStaticUrl(): string | undefined {
   const metaTag = document.querySelector('meta[name="topola-static-url"]');
   const metaUrl = metaTag?.getAttribute('content');
   // Safely ignore if it is empty, the raw caddy template expression, or Vite's raw template placeholder
-  if (
-    metaUrl &&
-    !metaUrl.startsWith("__") &&
-    !metaUrl.includes("{{ env")
-  ) {
+  if (metaUrl && !metaUrl.startsWith('__') && !metaUrl.includes('{{ env')) {
     return metaUrl;
   }
 
