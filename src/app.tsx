@@ -52,12 +52,31 @@ import {idToIndiMap, TopolaData} from './util/gedcom_util';
 import {WebMcpBridge} from './webmcp';
 
 /**
- * Load GEDCOM URL from VITE_STATIC_URL environment variable.
+ * Load GEDCOM URL from environment variable (Vite VITE_STATIC_URL or dynamically
+ * injected via a meta tag from Caddy server).
  *
- * If this environment variable is provided, the viewer is switched to
+ * If this static URL is provided, the viewer is switched to
  * single-tree mode without the option to load other data.
  */
-const staticUrl = import.meta.env.VITE_STATIC_URL;
+function getStaticUrl(): string | undefined {
+  const envUrl = import.meta.env.VITE_STATIC_URL;
+  if (envUrl) return envUrl;
+
+  const metaTag = document.querySelector('meta[name="topola-static-url"]');
+  const metaUrl = metaTag?.getAttribute('content');
+  // Safely ignore if it is empty, the raw caddy template expression, or Vite's raw template placeholder
+  if (
+    metaUrl &&
+    !metaUrl.startsWith("__") &&
+    !metaUrl.includes("{{ env")
+  ) {
+    return metaUrl;
+  }
+
+  return undefined;
+}
+
+const staticUrl = getStaticUrl();
 
 /** Shows an error message in the middle of the screen. */
 function ErrorMessage(props: {message?: string}) {

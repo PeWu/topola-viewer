@@ -9,3 +9,7 @@ jobs:
   deploy-wikitree-apps:
     uses: ./.github/workflows/deploy-wikitree-apps.yml
     secrets: inherit
+
+  deploy-docker:
+    uses: ./.github/workflows/deploy-docker.yml
+    secrets: inherit

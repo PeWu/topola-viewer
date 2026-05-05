@@ -1,0 +1,41 @@
+{
+    # Disable administrative API to prevent permission errors in read-only environments
+    admin off
+}
+
+:8080 {
+    root * /app/public
+    
+    # Compress static assets (HTML, JS, CSS, GEDCOM text files)
+    encode gzip zstd
+    
+    file_server
+
+    # Robust Security Headers
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    }
+
+    # Cache Control: Long-lived cache ONLY for immutable hashed build assets
+    @immutable_assets {
+        path /assets/*
+    }
+    header @immutable_assets Cache-Control "public, max-age=31536000, immutable"
+
+    # Cache Control: Immediate revalidation for all mutable assets (HTML, mounted dynamic family trees/photos)
+    @mutable_assets {
+        not {
+            path /assets/*
+        }
+    }
+    header @mutable_assets Cache-Control "public, max-age=0, must-revalidate"
+
+    templates {
+        mime text/html
+    }
+
+    try_files {path} /index.html
+}
