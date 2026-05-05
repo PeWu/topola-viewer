@@ -158,6 +158,38 @@ This may be combined with the other build environment variables described above.
 
 The [topola-webpack](https://github.com/develancer/topola-webpack) tool can build a Topola Genealogy Viewer package bundled together with a GEDCOM file.
 
+## Docker Container Deployment
+
+Topola Viewer can be run locally or deployed to standard cloud environments using Docker.
+
+### Running Topola Viewer
+To pull and run Topola Viewer:
+```bash
+docker run -d -p 8080:8080 ghcr.io/pewu/topola-viewer:latest
+```
+Open your web browser and go to `http://localhost:8080` to upload your family tree files locally.
+
+### Running with Your Own Data (Zero-Build Run)
+You can serve a standalone, pre-loaded family tree with zero compilation by mounting your family tree data (a `.ged` file or a zipped `.gdz` archive containing photos) directly into the running container:
+```bash
+docker run -d -p 8080:8080 \
+  -e STATIC_URL=my_family.gdz \
+  -v ./my_family.gdz:/app/public/my_family.gdz \
+  ghcr.io/pewu/topola-viewer:latest
+```
+
+### Building the Base Image Locally
+To build the base image from source:
+```bash
+docker build -t topola-viewer -f docker/Dockerfile .
+```
+
+### Ready-To-Use Standalone Templates
+For creating completely self-contained Docker images that bundle your genealogy data and serve it instantly, see these pre-configured examples:
+
+1. **[Simple Standalone Tree](docker/examples/simple/)**: Demonstrates how to package and pre-load a `.ged` file directly inside a custom image.
+2. **[Standalone Tree with Photos](docker/examples/photos/)**: Packages your family tree and a `photos/` folder into a valid `.gdz` archive on-the-fly.
+
 ## Additional options
 
 ### `handleCors`
