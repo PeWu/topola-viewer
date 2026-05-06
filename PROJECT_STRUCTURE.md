@@ -4,7 +4,7 @@ This directory is the root directory of the **Topola Genealogy Viewer** project.
 
 ## Purpose of this Directory
 
-The root directory orchestrates the project. It contains configuration files for various tools (Vite, ESLint, Jest, Cypress, TypeScript), metadata about dependencies (`package.json`), and scripts for common tasks. It glues together the source code in `src`, the static assets in `public`, and the tests in `cypress`.
+The root directory orchestrates the project. It contains configuration files for various tools (Vite, ESLint, Jest, Playwright, TypeScript), metadata about dependencies (`package.json`), and scripts for common tasks. It glues together the source code in `src`, the static assets in `public`, and the tests in `tests`.
 
 ## Files in this Directory (Categorized by Role)
 
@@ -29,7 +29,7 @@ Here is an enumeration of the files in this directory, categorized by their role
 *   **[tsconfig.json](tsconfig.json)**: Configuration file for the TypeScript compiler.
 
 ### Testing
-*   **[cypress.config.ts](cypress.config.ts)**: Configuration file for Cypress end-to-end testing framework.
+*   **[playwright.config.ts](playwright.config.ts)**: Configuration file for Playwright end-to-end testing framework.
 *   **[jest.config.ts](jest.config.ts)**: Configuration file for the Jest testing framework used for unit tests.
 
 ### Documentation & Assets
@@ -49,4 +49,4 @@ Based on the documentation in the subdirectories, here is a high-level overview 
     *   **[translations](src/translations)**: Holds localization JSON files.
     *   **[util](src/util)**: Common utilities for dates, analytics, and data processing.
 *   **[public](public)**: Contains static assets (like the favicon) served directly at the root path.
-*   **[cypress](cypress)**: Contains end-to-end tests in the `e2e` folder.
+*   **[tests](tests)**: Contains end-to-end tests.

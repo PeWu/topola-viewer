@@ -473,7 +473,7 @@ export function App() {
     mcpBridge.setSetSelectionCallback((id: string) => {
       onSelection({id, generation: 0});
     });
-  }, [mcpBridge]);
+  }, [mcpBridge, location]);
 
   function updateUrl(args: queryString.ParsedQuery<any>) {
     const search = queryString.parse(location.search);

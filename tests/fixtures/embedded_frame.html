@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Embedded Frame Test Wrapper</title>
+    <script>
+      var gedcom = null;
+      var ready = false;
+      var topolaFrameId = 'topolaFrame';
+      var gedcomUrl =
+        'https://raw.githubusercontent.com/PeWu/topola/master/demo/data/family.ged';
+
+      function maybeSendData() {
+        if (!ready || !gedcom) return;
+        var frame = document.getElementById(topolaFrameId);
+        frame.contentWindow.postMessage({message: 'gedcom', gedcom});
+      }
+
+      window.addEventListener('message', function (message) {
+        if (
+          message.data &&
+          message.data.message === 'ready'
+        ) {
+          ready = true;
+          maybeSendData();
+        }
+      });
+
+      window
+        .fetch(gedcomUrl)
+        .then((response) => response.text())
+        .then((data) => {
+          gedcom = data;
+          maybeSendData();
+        });
+    </script>
+  </head>
+  <body>
+    <iframe
+      id="topolaFrame"
+      src="/#/view?embedded=true&handleCors=false"
+      style="width: 100%; height: 800px; border: none"
+    ></iframe>
+  </body>
+</html>

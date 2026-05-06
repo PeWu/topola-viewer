@@ -1,8 +1,8 @@
 dist
 node_modules
 src/react-app-env.d.ts
-cypress/fixtures/example.json
-cypress/screenshots
-cypress/videos
+playwright-report/
+test-results/
+.playwright/
 .idea
 .vscode
