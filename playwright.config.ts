@@ -12,11 +12,27 @@ export default defineConfig({
     locale: 'en-US', // Forces consistent translation keys across locales for robust placeholder selectors
     trace: 'on-first-retry',
   },
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.05,
+      threshold: 0.2,
+      animations: 'disabled',
+    },
+  },
   projects: [
     {
-      name: 'chromium',
+      name: 'e2e',
+      testIgnore: '*_visual.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
+      },
+    },
+    {
+      name: 'visual',
+      testMatch: '*_visual.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: {width: 1280, height: 720},
       },
     },
   ],

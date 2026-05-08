@@ -4,7 +4,7 @@ import {setupGedcomRoute} from './helpers';
 test.describe('Chart view', () => {
   test.beforeEach(async ({page, context}) => {
     await setupGedcomRoute(context);
-    await page.goto('/#/view?url=https%3A%2F%2Fexample.org%2Ffamily.ged');
+    await page.goto('/#/view?url=https://example.org/family.ged');
   });
 
   test('loads data from URL', async ({page}) => {

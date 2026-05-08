@@ -55,7 +55,14 @@ jobs:
       run: npx playwright install chromium
 
     - name: Run E2E Tests
+      env:
+        PLAYWRIGHT_HTML_REPORT: playwright-report/e2e
       run: npm run test:e2e
+
+    - name: Run Visual Tests
+      env:
+        PLAYWRIGHT_HTML_REPORT: playwright-report/visual
+      run: npm run test:visual
 
     - name: Upload Playwright report
       if: always()

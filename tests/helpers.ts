@@ -11,6 +11,23 @@ export async function blockTracking(context: BrowserContext): Promise<void> {
 }
 
 /**
+ * Mocks the endpoint for GEDCOM file requests using the provided GEDCOM content string.
+ */
+export async function mockGedcomResponse(
+  context: BrowserContext,
+  gedcomContent: string,
+): Promise<void> {
+  await context.route('**/family.ged', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/plain',
+      headers: {'Access-Control-Allow-Origin': '*'},
+      body: gedcomContent,
+    });
+  });
+}
+
+/**
  * Sets up interception for raw GEDCOM requests, fulfills them with cached test data
  * and sets up CORS proxy checks and analytics blocking.
  */
@@ -20,14 +37,6 @@ export async function setupGedcomRoute(context: BrowserContext): Promise<void> {
     'utf-8',
   );
 
-  await context.route('**/family.ged', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'text/plain',
-      headers: {'Access-Control-Allow-Origin': '*'},
-      body: gedcomContent,
-    });
-  });
-
+  await mockGedcomResponse(context, gedcomContent);
   await blockTracking(context);
 }

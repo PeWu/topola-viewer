@@ -32,7 +32,7 @@ test.describe('WebMCP Integration', () => {
   });
 
   test('registers tools to standard modelContext', async ({page}) => {
-    await page.goto('/#/view?url=https%3A%2F%2Fexample.org%2Ffamily.ged');
+    await page.goto('/#/view?url=https://example.org/family.ged');
 
     // Polling assertion to avoid React useEffect registration race condition.
     await page.waitForFunction(
@@ -49,7 +49,7 @@ test.describe('WebMCP Integration', () => {
   });
 
   test('allows running focus_indi tool', async ({page}) => {
-    await page.goto('/#/view?url=https%3A%2F%2Fexample.org%2Ffamily.ged');
+    await page.goto('/#/view?url=https://example.org/family.ged');
     await page.waitForFunction(
       (expectedCount) => window.__registeredTools?.length === expectedCount,
       EXPECTED_TOOL_NAMES.length,

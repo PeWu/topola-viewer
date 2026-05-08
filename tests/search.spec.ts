@@ -7,7 +7,7 @@ test.describe('Search functionality', () => {
   });
 
   test('Search works', async ({page}) => {
-    await page.goto('/#/view?url=https%3A%2F%2Fexample.org%2Ffamily.ged');
+    await page.goto('/#/view?url=https://example.org/family.ged');
     await expect(page.locator('#content')).not.toContainText('Chike');
 
     const searchInput = page.getByPlaceholder('Search for people');
