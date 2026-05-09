@@ -35,6 +35,7 @@ Here is an enumeration of the files in this directory, categorized by their role
 ### Documentation & Assets
 *   **[README.md](README.md)**: The main project documentation, covering features, examples, and usage instructions.
 *   **[CHANGELOG.md](CHANGELOG.md)**: Records a log of notable changes made to the project over time.
+*   **[docs/README.md](docs/README.md)**: Registry for system design files describing containerization, AI protocol interfaces, Playwright integration, and screenshot testing.
 *   **[LICENSE](LICENSE)**: The license file for the project (Apache License 2.0).
 *   **[screenshot.png](screenshot.png)**: An image showing a screenshot of the application, used in the README.md.
 
@@ -42,6 +43,7 @@ Here is an enumeration of the files in this directory, categorized by their role
 
 Based on the documentation in the subdirectories, here is a high-level overview of the project's structure:
 
+*   **[docs](docs)**: High-level technical and architectural design documents.
 *   **[src](src)**: The core of the application.
     *   **[datasource](src/datasource)**: Handles loading and transforming genealogical data from various sources (files, URLs, WikiTree).
     *   **[menu](src/menu)**: Contains navigation and menu components.

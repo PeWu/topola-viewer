@@ -18,6 +18,9 @@ This directory contains the main source code for the Topola Viewer application. 
 *   **[donatso-chart.tsx](donatso-chart.tsx)**: An alternative chart view utilizing the `family-chart` library.
 *   **[index.tsx](index.tsx)**: The entry point of the application. It sets up polyfills, internationalization, and renders the app root.
 *   **[intro.tsx](intro.tsx)**: The landing page component shown when no data is loaded. It provides instructions, examples, and privacy information.
+*   **[webmcp.ts](webmcp.ts)**: Model Context Protocol (MCP) implementation to expose viewer state and action handlers for dynamic AI model interactions and tool definitions.
+*   **[webmcp_definitions.ts](webmcp_definitions.ts)**: Defines custom schemas and descriptions for various registration tools (such as person search, ancestry detail fetch, navigation triggers, etc.) exposed through the WebMCP protocol.
+*   **[webmcp_types.ts](webmcp_types.ts)**: Common TypeScript type annotations and structures used within the WebMCP engine layer.
 
 ## Assets
 

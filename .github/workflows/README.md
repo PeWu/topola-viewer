@@ -5,6 +5,7 @@ This directory contains GitHub Actions workflow files that automate various task
 ## Files
 
 - [codeql-analysis.yml](file:///home/pwiech/personal/github/topola-viewer/.github/workflows/codeql-analysis.yml): Performs CodeQL security analysis on the codebase to identify potential vulnerabilities.
+- [deploy-docker.yml](file:///home/pwiech/personal/github/topola-viewer/.github/workflows/deploy-docker.yml): Automatically builds and publishes the lightweight Caddy-based Docker image of the application to GitHub Container Registry (GHCR).
 - [deploy-everywhere.yml](file:///home/pwiech/personal/github/topola-viewer/.github/workflows/deploy-everywhere.yml): A manually triggered workflow that initiates deployment to both GitHub Pages and WikiTree Apps by calling their respective workflow files.
 - [deploy-gh-pages.yml](file:///home/pwiech/personal/github/topola-viewer/.github/workflows/deploy-gh-pages.yml): Handles the deployment of the application to GitHub Pages.
 - [deploy-wikitree-apps.yml](file:///home/pwiech/personal/github/topola-viewer/.github/workflows/deploy-wikitree-apps.yml): Manages the deployment of the application to WikiTree Apps using SFTP.
