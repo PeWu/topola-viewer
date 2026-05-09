@@ -118,9 +118,9 @@ This section defines the granular step-by-step instructions and enumerates **eve
 *   **[.github/workflows/node.js.yml](../.github/workflows/node.js.yml)**
     *   *Rationale:* Replace `npm run cy:start-and-run` with cached Playwright execution. E2E tests are executed across all matrix Node environments to maximize testing coverage and parity across runtimes.
 *   **[.github/workflows/deploy-gh-pages.yml](../.github/workflows/deploy-gh-pages.yml)**
-    *   *Rationale:* Replace `npm run cy:start-and-run` with cached Playwright execution. Critically, the production build step does NOT use `VITE_GOOGLE_ANALYTICS: "false"` so that Google Analytics is preserved on the deployed live site. Instead, we rely entirely on Playwright's network-level interception to block all tracking requests during E2E testing.
+    *   *Rationale:* Remove testing and browser-setup steps entirely to speed up the deployment flow and separate deploy actions from regular test gating.
 *   **[.github/workflows/deploy-wikitree-apps.yml](../.github/workflows/deploy-wikitree-apps.yml)**
-    *   *Rationale:* Replace `npm run cy:start-and-run` with cached Playwright execution, ensuring Google Analytics is NOT stripped from the deployed production bundle. Playwright's network interception handles all traffic isolation safely during E2E tests.
+    *   *Rationale:* Remove testing and browser-setup steps entirely to speed up the deployment flow and separate deploy actions from regular test gating.
 
 #### 3. Files to [NEW]
 
@@ -249,8 +249,7 @@ Modify the GitHub Actions YAML scripts in `.github/workflows/` to replace all le
 * **Artifact Storage**: Archive the resulting `playwright-report/` directory on failure or completion using `actions/upload-artifact@v4` with a 30-day retention period.
 
 ##### 2. Key Steps for `deploy-gh-pages.yml` & `deploy-wikitree-apps.yml`
-* Integrate identical caching, dependency installation, execution (`npm run test:e2e`), and artifact storage steps to gate staging/production deployments.
-* Crucially, do **NOT** disable Google Analytics during the app building phase (`VITE_GOOGLE_ANALYTICS` should not be modified), since Playwright's built-in network router handles isolating tracking traffic securely during testing.
+* No testing steps are run within the deploy workflows. They are fully streamlined to execute checkouts, build production assets, and deploy immediately, leaving gating assertions to the primary merge-to-master CI loop (`node.js.yml`).
 
 ## 5. Future Considerations
 
