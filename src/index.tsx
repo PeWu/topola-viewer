@@ -28,8 +28,9 @@ const language = navigator.language && navigator.language.split(/[-_]/)[0];
 
 const browser = detect();
 
-const container = document.getElementById('root');
-const root = createRoot(container!);
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const container = document.getElementById('root')!;
+const root = createRoot(container);
 
 if (browser && browser.name === 'ie') {
   root.render(

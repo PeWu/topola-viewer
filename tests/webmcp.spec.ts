@@ -1,4 +1,5 @@
 import {expect, test} from '@playwright/test';
+import {ToolDefinition} from '../src/webmcp_types';
 import {setupGedcomRoute} from './helpers';
 
 const EXPECTED_TOOL_NAMES = [
@@ -17,10 +18,10 @@ test.describe('WebMCP Integration', () => {
 
     // Add init script to expose modelContext mock BEFORE application boots.
     await page.addInitScript(() => {
-      const registeredTools: any[] = [];
+      const registeredTools: ToolDefinition[] = [];
       window.__registeredTools = registeredTools;
       window.navigator.modelContext = {
-        registerTool: (tool: any) => {
+        registerTool: (tool: ToolDefinition) => {
           registeredTools.push(tool);
         },
         unregisterTool: (name: string) => {
@@ -42,7 +43,7 @@ test.describe('WebMCP Integration', () => {
 
     const toolNames = await page.evaluate(() =>
       window.__registeredTools
-        ? window.__registeredTools.map((t: any) => t.name)
+        ? window.__registeredTools.map((t) => t.name)
         : [],
     );
     expect(toolNames.sort()).toEqual([...EXPECTED_TOOL_NAMES].sort());
@@ -61,7 +62,7 @@ test.describe('WebMCP Integration', () => {
     // Execute the non-serializable callback inside the browser environment.
     await page.evaluate(async () => {
       const focusTool = window.__registeredTools
-        ? window.__registeredTools.find((t: any) => t.name === 'focus_indi')
+        ? window.__registeredTools.find((t) => t.name === 'focus_indi')
         : null;
       if (!focusTool) throw new Error('focus_indi tool not found');
       await focusTool.execute({id: 'I21'}); // Shifts view focus to Chike.

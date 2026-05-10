@@ -42,6 +42,7 @@ export async function loadWikiTree(
       .filter((person) => person.PhotoData?.path)
       .map((person) => [
         person.Name,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         `https://www.wikitree.com${person.PhotoData!.path}`,
       ]),
   );

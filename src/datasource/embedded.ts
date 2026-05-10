@@ -33,9 +33,9 @@ export interface EmbeddedSourceSpec {
 /** GEDCOM file received from outside of the iframe. */
 export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
   isNewData(
-    newSource: SourceSelection<EmbeddedSourceSpec>,
-    oldSource: SourceSelection<EmbeddedSourceSpec>,
-    data?: TopolaData,
+    _newSource: SourceSelection<EmbeddedSourceSpec>,
+    _oldSource: SourceSelection<EmbeddedSourceSpec>,
+    _data?: TopolaData,
   ): boolean {
     // Never reload data.
     return false;
@@ -44,7 +44,7 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
   private async onMessage(
     message: EmbeddedMessage,
     resolve: (value: TopolaData) => void,
-    reject: (reason: any) => void,
+    reject: (reason: unknown) => void,
   ) {
     if (message.message === EmbeddedMessageType.PARENT_READY) {
       // Parent didn't receive the first 'ready' message, so we need to send it again.
@@ -69,7 +69,7 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
   }
 
   async loadData(
-    source: SourceSelection<EmbeddedSourceSpec>,
+    _source: SourceSelection<EmbeddedSourceSpec>,
   ): Promise<TopolaData> {
     // Notify the parent window that we are ready.
     return new Promise<TopolaData>((resolve, reject) => {

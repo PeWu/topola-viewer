@@ -23,7 +23,7 @@ export function WikiTreeMenu(props: Props) {
   useEffect(() => {
     if (dialogOpen) {
       setWikiTreeId('');
-      inputRef.current!.focus();
+      inputRef.current?.focus();
     }
   }, [dialogOpen]);
 
@@ -50,7 +50,7 @@ export function WikiTreeMenu(props: Props) {
   function enterId(event: React.MouseEvent, id: string) {
     event.preventDefault(); // Do not follow link in href.
     setWikiTreeId(id);
-    inputRef.current!.focus();
+    inputRef.current?.focus();
   }
 
   function wikiTreeIdModal() {

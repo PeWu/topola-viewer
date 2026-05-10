@@ -27,7 +27,8 @@ const MONTHS = new Map<number, string>([
 ]);
 
 function dateToGedcom(date: Date): string {
-  return [date.qualifier, date.day, MONTHS.get(date.month!), date.year]
+  const month = (date.month && MONTHS.get(date.month)) || undefined;
+  return [date.qualifier, date.day, month, date.year]
     .filter((x) => x !== undefined)
     .join(' ');
 }

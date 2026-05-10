@@ -20,7 +20,7 @@ export function UrlMenu(props: Props) {
   useEffect(() => {
     if (dialogOpen) {
       setUrl('');
-      inputRef.current!.focus();
+      inputRef.current?.focus();
     }
   }, [dialogOpen]);
 

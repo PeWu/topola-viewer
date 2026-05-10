@@ -54,7 +54,7 @@ const SEX_ARG = new Map<string, Sex>([
 const SEX_ARG_INVERSE = new Map<Sex, string>();
 SEX_ARG.forEach((v, k) => SEX_ARG_INVERSE.set(v, k));
 
-export function argsToConfig(args: ParsedQuery<any>): Config {
+export function argsToConfig(args: ParsedQuery<unknown>): Config {
   const getParam = (name: string) => {
     const value = args[name];
     return typeof value === 'string' ? value : undefined;
@@ -67,12 +67,21 @@ export function argsToConfig(args: ParsedQuery<any>): Config {
   };
 }
 
-export function configToArgs(config: Config): ParsedQuery<any> {
-  return {
-    c: COLOR_ARG_INVERSE.get(config.color),
-    i: ID_ARG_INVERSE.get(config.id),
-    s: SEX_ARG_INVERSE.get(config.sex),
-  };
+export function configToArgs(config: Config): ParsedQuery {
+  const result: ParsedQuery = {};
+  const color = COLOR_ARG_INVERSE.get(config.color);
+  if (color){
+    result.c = color;
+  }
+  const id = ID_ARG_INVERSE.get(config.id);
+  if (id) {
+    result.i = id;
+  }
+  const sex = SEX_ARG_INVERSE.get(config.sex);
+  if (sex) {
+    result.s = sex;
+  }
+  return result;
 }
 
 export function ConfigPanel(props: {

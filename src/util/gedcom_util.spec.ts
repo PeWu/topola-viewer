@@ -1,5 +1,14 @@
 import {describe, expect, it} from '@jest/globals';
-import {getName, normalizeGedcom} from './gedcom_util';
+import {JsonGedcomData} from 'topola';
+import {
+  findRelationshipPath,
+  getAncestors,
+  getDescendants,
+  getName,
+  idToFamMap,
+  idToIndiMap,
+  normalizeGedcom,
+} from './gedcom_util';
 
 describe('normalizeGedcom()', () => {
   it('sorts children', () => {
@@ -62,7 +71,7 @@ describe('normalizeGedcom()', () => {
       ],
     };
     const normalized = normalizeGedcom(data);
-    expect(normalized.indis.find((i) => i.id === 'I4')!.fams).toEqual([
+    expect(normalized.indis.find((i) => i.id === 'I4')?.fams).toEqual([
       'F3',
       'F2',
       'F1',
@@ -140,16 +149,8 @@ describe('getName()', () => {
   });
 });
 
-import {
-  findRelationshipPath,
-  getAncestors,
-  getDescendants,
-  idToFamMap,
-  idToIndiMap,
-} from './gedcom_util';
-
 describe('Relationship algorithms', () => {
-  const sampleData = {
+  const sampleData: JsonGedcomData = {
     indis: [
       {id: 'I1', fams: ['F1']},
       {id: 'I2', fams: ['F1'], famc: 'F2'},
@@ -160,7 +161,7 @@ describe('Relationship algorithms', () => {
       {id: 'F1', husb: 'I1', wife: 'I2', children: ['I3']},
       {id: 'F2', children: ['I2', 'I4']},
     ],
-  } as any;
+  };
 
   const indiMap = idToIndiMap(sampleData);
   const famMap = idToFamMap(sampleData);

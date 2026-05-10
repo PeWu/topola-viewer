@@ -2,7 +2,7 @@ import {expect, test} from '@playwright/test';
 import {setupGedcomRoute} from './helpers';
 
 test.describe('Core SVG Canvas Layouts @visual', () => {
-  test.beforeEach(async ({page, context}) => {
+  test.beforeEach(async ({context}) => {
     await setupGedcomRoute(context);
   });
 

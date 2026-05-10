@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Data type definitions for the family-chart library.
 declare module 'family-chart' {
   export function createStore(args: any): any;

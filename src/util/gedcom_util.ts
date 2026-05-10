@@ -13,7 +13,7 @@ import {TopolaError} from './error';
 
 export interface GedcomData {
   /** The HEAD entry. */
-  head: GedcomEntry;
+  head?: GedcomEntry;
   /** INDI entries mapped by id. */
   indis: {[key: string]: GedcomEntry};
   /** FAM entries mapped by id. */
@@ -62,7 +62,7 @@ export function idToFamMap(data: JsonGedcomData): Map<string, JsonFam> {
 }
 
 function prepareGedcom(entries: GedcomEntry[]): GedcomData {
-  const head = entries.find((entry) => entry.tag === 'HEAD')!;
+  const head = entries.find((entry) => entry.tag === 'HEAD');
   const indis: {[key: string]: GedcomEntry} = {};
   const fams: {[key: string]: GedcomEntry} = {};
   const other: {[key: string]: GedcomEntry} = {};
@@ -223,12 +223,13 @@ function filterImage(indi: JsonIndi, images: Map<string, string>): JsonIndi {
   const newImages: JsonImage[] = [];
   indi.images.forEach((image) => {
     const filePath = image.url.replaceAll('\\', '/');
-    const fileName = filePath.match(/[^/]*$/)![0];
-    // If the image file has been loaded into memory, use it.
-    if (images.has(filePath)) {
-      newImages.push({url: images.get(filePath)!, title: image.title});
-    } else if (images.has(fileName)) {
-      newImages.push({url: images.get(fileName)!, title: image.title});
+    const fileName = filePath.split('/').pop() || '';
+    const fileUrl = images.get(filePath);
+    const nameUrl = images.get(fileName);
+    if (fileUrl) {
+      newImages.push({url: fileUrl, title: image.title});
+    } else if (nameUrl) {
+      newImages.push({url: nameUrl, title: image.title});
     } else if (image.url.startsWith('http') && isImageFile(image.url)) {
       newImages.push(image);
     }
@@ -279,7 +280,7 @@ export function convertGedcom(
 }
 
 /** Returns the name of the software used to generate the GEDCOM file, if available. */
-export function getSoftware(head: GedcomEntry): string | null {
+export function getSoftware(head?: GedcomEntry): string | null {
   const sour =
     head && head.tree && head.tree.find((entry) => entry.tag === 'SOUR');
   const name =
@@ -443,6 +444,7 @@ export function findRelationshipPath(
   visited.set(indiId1, null);
 
   while (queue.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const current = queue.shift()!;
     if (current === indiId2) {
       const path: string[] = [];
@@ -479,6 +481,7 @@ export function getAncestors(
   visited.add(indiId);
 
   while (queue.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const {id, gen} = queue.shift()!;
     if (id !== indiId && !id.startsWith('private_')) {
       result.push(id);
@@ -518,6 +521,7 @@ export function getDescendants(
   visited.add(indiId);
 
   while (queue.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const {id, gen} = queue.shift()!;
     if (id !== indiId && !id.startsWith('private_')) {
       result.push(id);

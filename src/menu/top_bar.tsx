@@ -51,7 +51,7 @@ export function TopBar(props: Props) {
   }
 
   function chartMenus(screenSize: ScreenSize) {
-    if (!props.showingChart) {
+    if (!props.showingChart || !props.data) {
       return null;
     }
     const chartTypeItems = (
@@ -147,7 +147,7 @@ export function TopBar(props: Props) {
               <Dropdown.Menu>{chartTypeItems}</Dropdown.Menu>
             </Dropdown>
             <SearchBar
-              data={props.data!}
+              data={props.data}
               onSelection={props.eventHandlers.onSelection}
               {...props}
             />
@@ -312,9 +312,9 @@ export function TopBar(props: Props) {
         <div className="topbar--title">
           {props.standalone ? <Link to="/">{title()}</Link> : title()}
         </div>
-        {props.showingChart && (
+        {props.showingChart && props.data && (
           <SearchBar
-            data={props.data!}
+            data={props.data}
             onSelection={props.eventHandlers.onSelection}
             {...props}
           />

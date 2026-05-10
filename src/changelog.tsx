@@ -42,7 +42,9 @@ export async function getChangelog(maxVersions: number, seenVersion?: string) {
 
 /** Stores in local storage the current app version as the last seen version. */
 export function updateSeenVersion() {
-  localStorage.setItem(LAST_SEEN_VERSION_KEY, import.meta.env.VITE_GIT_TIME!);
+  if (import.meta.env.VITE_GIT_TIME) {
+    localStorage.setItem(LAST_SEEN_VERSION_KEY, import.meta.env.VITE_GIT_TIME);
+  }
 }
 
 /**
@@ -56,8 +58,8 @@ export function Changelog() {
   useEffect(() => {
     (async () => {
       const seenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
-      const currentVersion = import.meta.env.VITE_GIT_TIME!;
-      if (!seenVersion || seenVersion === currentVersion) {
+      const currentVersion = import.meta.env.VITE_GIT_TIME;
+      if (!seenVersion || !currentVersion || seenVersion === currentVersion) {
         return;
       }
 

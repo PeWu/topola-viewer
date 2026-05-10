@@ -53,11 +53,11 @@ export function SearchBar(props: Props) {
 
   /** On search input change. */
   function handleSearch(input: string | undefined) {
-    if (!input) {
+    if (!input || !searchIndex.current) {
       return;
     }
-    const results = searchIndex
-      .current!.search(input)
+    const results = searchIndex.current
+      .search(input)
       .map((result) => displaySearchResult(result));
     setSearchResults(results);
   }
@@ -71,9 +71,9 @@ export function SearchBar(props: Props) {
   }
 
   /** On search string changed. */
-  function onChange(value: string) {
+  function onChange(value: string | undefined) {
     debouncedHandleSearch.current(value);
-    setSearchString(value);
+    setSearchString(value || '');
   }
 
   // Initialize the search index.
@@ -83,7 +83,7 @@ export function SearchBar(props: Props) {
 
   return (
     <Search
-      onSearchChange={(_, data) => onChange(data.value!)}
+      onSearchChange={(_, data) => onChange(data.value)}
       onResultSelect={(_, data) => handleResultSelect(data.result.id)}
       results={searchResults}
       noResultsMessage={intl.formatMessage({

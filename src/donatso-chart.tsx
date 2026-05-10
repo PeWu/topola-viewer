@@ -19,7 +19,7 @@ function convertData(data: JsonGedcomData, intl: IntlShape) {
   const famMap = new Map<string, JsonFam>();
   data.fams.forEach((fam) => famMap.set(fam.id, fam));
   return data.indis.map((indi) => {
-    const famc = famMap.get(indi.famc!);
+    const famc = (indi.famc && famMap.get(indi.famc)) || undefined;
     const fams = (indi.fams || [])
       .map((fam) => famMap.get(fam))
       .filter((fam): fam is JsonFam => fam !== undefined);

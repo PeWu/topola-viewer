@@ -8,9 +8,16 @@ import {
   idToIndiMap,
   TopolaData,
 } from './util/gedcom_util';
-import {WEBMCP_TOOLS} from './webmcp_definitions';
-
-import './webmcp_types';
+import {
+  FIND_RELATIONSHIP_PATH,
+  FOCUS_INDI,
+  GET_ANCESTORS,
+  GET_DESCENDANTS,
+  GET_SELECTED_PERSON,
+  INSPECT_INDI,
+  SEARCH_INDI,
+} from './webmcp_definitions';
+import {WebMcpTool} from './webmcp_types';
 
 // Maximum generational lookup depth exposed to the assistant to maintain response latency.
 const MAX_GENERATIONS = 5;
@@ -323,6 +330,50 @@ export class WebMcpBridge {
     };
   }
 
+  /** Returns the list of all WebMCP tools with their respective execution handlers. */
+  public getTools(): WebMcpTool[] {
+    return [
+      {
+        ...GET_SELECTED_PERSON,
+        execute: () => this.handleGetSelectedPerson(),
+      },
+      {
+        ...SEARCH_INDI,
+        execute: (params: Record<string, unknown>) =>
+          this.handleSearchIndi(params as {query: string}),
+      },
+      {
+        ...INSPECT_INDI,
+        execute: (params: Record<string, unknown>) =>
+          this.handleInspectIndi(params as {id: string}),
+      },
+      {
+        ...FOCUS_INDI,
+        execute: (params: Record<string, unknown>) =>
+          this.handleFocusIndi(params as {id: string}),
+      },
+      {
+        ...FIND_RELATIONSHIP_PATH,
+        execute: (params: Record<string, unknown>) =>
+          this.handleFindRelationshipPath(
+            params as {source: string; target: string},
+          ),
+      },
+      {
+        ...GET_ANCESTORS,
+        execute: (params: Record<string, unknown>) =>
+          this.handleGetAncestors(params as {id: string; generations: number}),
+      },
+      {
+        ...GET_DESCENDANTS,
+        execute: (params: Record<string, unknown>) =>
+          this.handleGetDescendants(
+            params as {id: string; generations: number},
+          ),
+      },
+    ];
+  }
+
   /** Registers standard tools for the LLM research copilot features. */
   public registerTools(): void {
     if (this.toolsRegistered || !navigator.modelContext) {
@@ -331,31 +382,8 @@ export class WebMcpBridge {
 
     const modelContext = navigator.modelContext;
 
-    const implementations = {
-      get_selected_person: () => this.handleGetSelectedPerson(),
-      search_indi: (params: {query: string}) => this.handleSearchIndi(params),
-      inspect_indi: (params: {id: string}) => this.handleInspectIndi(params),
-      focus_indi: (params: {id: string}) => this.handleFocusIndi(params),
-      find_relationship_path: (params: {source: string; target: string}) =>
-        this.handleFindRelationshipPath(params),
-      get_ancestors: (params: {id: string; generations: number}) =>
-        this.handleGetAncestors(params),
-      get_descendants: (params: {id: string; generations: number}) =>
-        this.handleGetDescendants(params),
-    };
-
-    WEBMCP_TOOLS.forEach((toolDef) => {
-      const execute = (
-        implementations as Record<string, (p: any) => Promise<unknown>>
-      )[toolDef.name];
-      if (execute) {
-        modelContext.registerTool({
-          ...toolDef,
-          execute: execute as (
-            params: Record<string, unknown>,
-          ) => Promise<unknown>,
-        });
-      }
+    this.getTools().forEach((tool) => {
+      modelContext.registerTool(tool);
     });
     this.toolsRegistered = true;
   }
@@ -368,9 +396,9 @@ export class WebMcpBridge {
     const modelContext = navigator.modelContext;
     const unregister = modelContext.unregisterTool;
     if (typeof unregister === 'function') {
-      WEBMCP_TOOLS.forEach((toolDef) => {
+      this.getTools().forEach((tool) => {
         try {
-          unregister(toolDef.name);
+          unregister(tool.name);
         } catch (e) {
           /* ignore */
         }

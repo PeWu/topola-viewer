@@ -25,6 +25,7 @@ import {
   GedcomUrlDataSource,
   getSelection,
   UploadedDataSource,
+  UploadLocationState,
   UploadSourceSpec,
   UrlSourceSpec,
 } from './datasource/load_data';
@@ -142,7 +143,7 @@ interface Arguments {
 
 function getParamFromSearch(
   name: string,
-  search: queryString.ParsedQuery<string>,
+  search: queryString.ParsedQuery,
 ) {
   const value = search[name];
   return typeof value === 'string' ? value : undefined;
@@ -152,7 +153,7 @@ function getParamFromSearch(
  * Retrieve arguments passed into the application through the URL and uploaded
  * data.
  */
-function getArguments(location: H.Location<any>): Arguments {
+function getArguments(location: H.Location<UploadLocationState>): Arguments {
   const search = queryString.parse(location.search);
   const getParam = (name: string) => getParamFromSearch(name, search);
 
@@ -273,7 +274,7 @@ export function App() {
     if (
       !selection ||
       selection.id !== newSelection.id ||
-      selection!.generation !== newSelection.generation
+      selection.generation !== newSelection.generation
     ) {
       setSelection(newSelection);
       setDetailIndi(newSelection.id);
@@ -413,8 +414,8 @@ export function App() {
           updateChartWithConfig(args.config, data);
           setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
-        } catch (error: any) {
-          setErrorMessage(getI18nMessage(error, intl));
+        } catch (error: unknown) {
+          setErrorMessage(getI18nMessage(error as Error, intl));
         }
       } else if (
         state === AppState.SHOWING_CHART ||
@@ -428,9 +429,11 @@ export function App() {
         setState(
           loadMoreFromWikitree ? AppState.LOADING_MORE : AppState.SHOWING_CHART,
         );
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         updateDisplay(getSelection(data!.chartData, args.selection));
         if (loadMoreFromWikitree) {
           try {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const data = await loadWikiTree(args.selection!.id, intl);
             const newSelection = getSelection(data.chartData, args.selection);
             setData(data);
@@ -475,7 +478,7 @@ export function App() {
     });
   }, [mcpBridge, location]);
 
-  function updateUrl(args: queryString.ParsedQuery<any>) {
+  function updateUrl(args: queryString.ParsedQuery<string>) {
     const search = queryString.parse(location.search);
     for (const key in args) {
       search[key] = args[key];
@@ -496,7 +499,7 @@ export function App() {
     analyticsEvent('selection_changed');
     updateUrl({
       indi: selection.id,
-      gen: selection.generation,
+      gen: String(selection.generation),
     });
   }
   /**
@@ -559,10 +562,13 @@ export function App() {
   }
 
   function renderChart(selection: IndiInfo) {
+    if (!data) {
+      return null;
+    }
     if (chartType === ChartType.Donatso) {
       return (
         <DonatsoChart
-          data={data!.chartData}
+          data={data.chartData}
           selection={selection}
           onSelection={onSelection}
         />
@@ -570,7 +576,7 @@ export function App() {
     }
     return (
       <Chart
-        data={data!.chartData}
+        data={data.chartData}
         selection={selection}
         chartType={chartType}
         onSelection={onSelection}
@@ -587,7 +593,10 @@ export function App() {
     switch (state) {
       case AppState.SHOWING_CHART:
       case AppState.LOADING_MORE: {
-        const updatedSelection = getSelection(data!.chartData, selection);
+        if (!data) {
+          return null;
+        }
+        const updatedSelection = getSelection(data.chartData, selection);
         return (
           <div id="content">
             <ErrorPopup
@@ -600,7 +609,7 @@ export function App() {
             ) : null}
             <SidebarPushable>
               <SidePanel
-                data={data!}
+                data={data}
                 selectedIndiId={detailIndi || updatedSelection.id}
                 config={config}
                 expanded={showSidePanel}
@@ -618,7 +627,7 @@ export function App() {
       }
 
       case AppState.ERROR:
-        return <ErrorMessage message={error!} />;
+        return <ErrorMessage message={error || 'Unknown error'} />;
 
       case AppState.INITIAL:
       case AppState.LOADING:
