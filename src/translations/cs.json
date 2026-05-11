@@ -134,5 +134,14 @@
   "extras.images": "Obrázky",
   "extras.notes": "Poznámky",
   "extras.sources": "Zdroje",
-  "extras.files": "Další soubory"
+  "extras.files": "Další soubory",
+  "family.immediate_family": "Nejbližší rodina",
+  "family.parents": "Rodiče",
+  "family.father": "Otec",
+  "family.mother": "Matka",
+  "family.husband": "Manžel",
+  "family.wife": "Manželka",
+  "family.unknown_spouse": "Neznámý manžel/ka",
+  "family.children": "Děti",
+  "family.child": "Dítě"
 }

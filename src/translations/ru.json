@@ -134,5 +134,14 @@
   "extras.images": "Картинки",
   "extras.notes": "Примечание",
   "extras.sources": "Источники",
-  "extras.files": "Дополнительные файлы"
+  "extras.files": "Дополнительные файлы",
+  "family.immediate_family": "Ближайшие родственники",
+  "family.parents": "Родители",
+  "family.father": "Отец",
+  "family.mother": "Мать",
+  "family.husband": "Муж",
+  "family.wife": "Жена",
+  "family.unknown_spouse": "Неизвестный супруг(а)",
+  "family.children": "Дети",
+  "family.child": "Ребёнок"
 }

@@ -135,4 +135,70 @@ test.describe('Details panel visual validation @visual', () => {
     await sidebar.waitFor();
     await expect(sidebar).toHaveScreenshot('details-events-sources.png');
   });
+
+  test('Immediate Family Rendering Test', async ({page, context}) => {
+    const immediateFamilyGedcom = dedent`
+      0 HEAD
+      1 GEDC
+      2 VERS 5.5.1
+      2 FORM Lineage-Linked
+      1 CHAR UTF-8
+      0 @I1@ INDI
+      1 NAME Focus /Person/
+      1 SEX M
+      1 FAMC @F1@
+      1 FAMS @F2@
+      1 FAMS @F3@
+      0 @I2@ INDI
+      1 NAME Father /Person/
+      1 SEX M
+      1 FAMS @F1@
+      0 @I3@ INDI
+      1 NAME Mother /Person/
+      1 SEX F
+      1 FAMS @F1@
+      0 @I4@ INDI
+      1 NAME Spouse /Person/
+      1 SEX F
+      1 FAMS @F2@
+      0 @I5@ INDI
+      1 NAME Older /Child/
+      1 SEX M
+      1 BIRT
+      2 DATE 1 JAN 2000
+      1 FAMC @F2@
+      0 @I6@ INDI
+      1 NAME Younger /Child/
+      1 SEX F
+      1 BIRT
+      2 DATE 1 JAN 2005
+      1 FAMC @F2@
+      0 @I7@ INDI
+      1 NAME Half /Child/
+      1 SEX M
+      1 BIRT
+      2 DATE 1 JAN 2010
+      1 FAMC @F3@
+      0 @F1@ FAM
+      1 HUSB @I2@
+      1 WIFE @I3@
+      1 CHIL @I1@
+      0 @F2@ FAM
+      1 HUSB @I1@
+      1 WIFE @I4@
+      1 CHIL @I5@
+      1 CHIL @I6@
+      0 @F3@ FAM
+      1 HUSB @I1@
+      1 CHIL @I7@
+      0 TRLR
+    `;
+
+    await mockGedcomResponse(context, immediateFamilyGedcom);
+
+    await page.goto('/#/view?url=https://example.org/family.ged');
+    const sidebar = page.locator('#sidebar');
+    await sidebar.waitFor();
+    await expect(sidebar).toHaveScreenshot('details-immediate-family.png');
+  });
 });

@@ -134,5 +134,14 @@
   "extras.images": "Immagini",
   "extras.notes": "Appunti",
   "extras.sources": "Fonti",
-  "extras.files": "File aggiuntivi"
+  "extras.files": "File aggiuntivi",
+  "family.immediate_family": "Famiglia stretta",
+  "family.parents": "Genitori",
+  "family.father": "Padre",
+  "family.mother": "Madre",
+  "family.husband": "Marito",
+  "family.wife": "Moglie",
+  "family.unknown_spouse": "Coniuge sconosciuto",
+  "family.children": "Figli",
+  "family.child": "Figlio"
 }

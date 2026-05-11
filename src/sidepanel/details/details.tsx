@@ -14,6 +14,7 @@ import {
 import {Config, Ids} from '../config/config';
 import {AdditionalFiles, FileEntry} from './additional-files';
 import {ALL_SUPPORTED_EVENT_TYPES, Events} from './events';
+import {ImmediateFamily} from './immediate-family';
 import {MultilineText} from './multiline-text';
 import {Sources} from './sources';
 import {TranslatedTag} from './translated-tag';
@@ -353,6 +354,7 @@ export function Details(props: Props) {
           ['OBJE'],
           imageDetails,
         )}
+        <ImmediateFamily gedcom={props.gedcom} indi={props.indi} />
         <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
         {props.config.id === Ids.SHOW ? getSectionForId(props.indi) : null}
         {getSectionForEachMatchingEntry(

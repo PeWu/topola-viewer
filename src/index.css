@@ -162,7 +162,7 @@ div.zoom {
 
 .details .item-header .header {
   text-transform: uppercase;
-  margin: 0;
+  margin: 0 0 8px 0;
   min-width: 40%;
 }
 
@@ -333,6 +333,14 @@ div.zoom {
   font-size: 1.2rem;
   font-weight: bold;
   white-space: pre;
+}
+
+.parents-block {
+  margin-bottom: 7px;
+}
+
+.children-block {
+  display: flex;
 }
 
 @media (max-width: 450px) {

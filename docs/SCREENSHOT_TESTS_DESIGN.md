@@ -106,6 +106,10 @@ This section defines the granular, step-by-step implementation steps and enumera
      * Mock `**/family.ged` containing complex nested fact (`FACT`), source (`SOUR`), and note (`NOTE`) trees.
      * Select the individual and wait for `#sidebar` to load.
      * Assert sidebar visual representation: `expect(page.locator('#sidebar')).toHaveScreenshot('details-events-sources.png')`.
+   * **Immediate Family Rendering Test:**
+     * Mock `**/family.ged` containing an individual with explicit parental links (`FAMC`) and multi-partner spousal families (`FAMS`) to display biological parents, spouses, and chronologically sorted children blocks.
+     * Select the individual and wait for `#sidebar` to load.
+     * Assert sidebar visual representation: `expect(page.locator('#sidebar')).toHaveScreenshot('details-immediate-family.png')`.
 
 #### Step 5: Configurations Integration Spec (`tests/config_visual.spec.ts`)
 1. Define a test block tagged `@visual` with a locked browser window viewport size of `1280x720` via `playwright.config.ts`.
