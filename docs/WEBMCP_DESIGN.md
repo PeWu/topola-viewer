@@ -236,7 +236,7 @@ Traverses downwards up to bounded ceiling generations.
 ## Detailed Implementation Plan
 This section lists the exact files to be created or modified to execute this design successfully.
 
-#### 1. [Modify] [webmcp.ts](file:///home/pwiech/personal/github/topola-viewer/src/webmcp.ts)
+#### 1. [Modify] [webmcp.ts](../src/webmcp.ts)
 * **Rationale:** Serves as the core integration plug for the experimental WebMCP browser assistant setup and standard operational in-memory state cache. 
 * **Action steps:**
   * Define isolated state stores for current `selection`, `detailIndi`, and `loadedGedcomData`.
@@ -244,32 +244,32 @@ This section lists the exact files to be created or modified to execute this des
   * Expose default standard state setters for Topola view adapter.
   * Implement conversion and response helpers (`toMcpResponse`, `textMcpResponse`, `toBasicIndi`, `toFullIndi`) to standardise in-transit JSON streams.
 
-### 2. [NEW] [webmcp_definitions.ts](file:///home/pwiech/personal/github/topola-viewer/src/webmcp_definitions.ts)
+### 2. [NEW] [webmcp_definitions.ts](../src/webmcp_definitions.ts)
 * **Rationale:** Keeps standard LLM tool definition blueprints separate from the execution bridge to avoid bloat and single interface monolithic designs.
 
-### 3. [NEW] [webmcp_types.ts](file:///home/pwiech/personal/github/topola-viewer/src/webmcp_types.ts)
+### 3. [NEW] [webmcp_types.ts](../src/webmcp_types.ts)
 * **Rationale:** Defines ambient `navigator.modelContext` parameters and concrete structural bridge types cleanly.
 
-### 4. [Modify] [app.tsx](file:///home/pwiech/personal/github/topola-viewer/src/app.tsx)
+### 4. [Modify] [app.tsx](../src/app.tsx)
 * **Rationale:** The top-level state component for Topola Viewer. It holds the interactive chart state and needs standard side effect hooks to update the WebMCP context on active selections.
 * **Action steps:**
   * Initialize WebMCP Bridge securely using `useState(() => new WebMcpBridge())` avoiding loose disconnected singleton memory leaks.
   * Add standard `React.useEffect` hook to monitor active viewport selection changes and feed them into the WebMCP in-transit state.
   * Expose selection and inspection callbacks handlers to the bridge hook preset.
 
-### 5. [Modify] [gedcom_util.ts](file:///home/pwiech/personal/github/topola-viewer/src/util/gedcom_util.ts)
+### 5. [Modify] [gedcom_util.ts](../src/util/gedcom_util.ts)
 * **Rationale:** Handles core conversion formulas from raw gedcom pointers to JSON objects. Houses newly proposed BFS algorithms avoiding visual rendering components dependency.
 * **Action steps:**
   * Implement standard Breadth-First Search (BFS) method for isolated `find_relationship_path` relative footprint.
   * Draft flat array collection algorithms (bounded up to preset depth ceiling) for ancestors and descendants generation list.
 
-### 6. [Modify] [gedcom_util.spec.ts](file:///home/pwiech/personal/github/topola-viewer/src/util/gedcom_util.spec.ts)
+### 6. [Modify] [gedcom_util.spec.ts](../src/util/gedcom_util.spec.ts)
 * **Rationale:** Standard isolated unit test suite. It must accommodate boundary tests for newly added generic algorithms.
 * **Action steps:**
   * Add unit test cases for `find_relationship_path` with disconnected and connected multi relationships.
   * Add test vectors for `get_ancestors` boundary ceilings (e.g., 5 generations) and cycles control.
 
-### 7. [New] [webmcp.cy.js](file:///home/pwiech/personal/github/topola-viewer/cypress/e2e/webmcp.cy.js)
+### 7. [New] [webmcp.cy.js](../cypress/e2e/webmcp.cy.js)
 * **Rationale:** Formatted test files acting as automated integration coverage. Leverages Cypress stubs for isolated web tools inspection.
 * **Action steps:**
   * Mock `navigator.modelContext` using `cy.visit` on before preset lifecycle hooks.
@@ -300,9 +300,9 @@ To ensure the robustness and correctness of the WebMCP integration, we will empl
 * Because interactive tools are bound to the experimental WebMCP protocol, manual verification can be accelerated using the **Model Context Tool Inspector Chrome Extension**. This grants operational developers a dashboard panel to trigger and fire tools independently inside standard dev viewports.
 
 ### Files Created or Modified for Testing
-* **[Modify] [gedcom_util.spec.ts](file:///home/pwiech/personal/github/topola-viewer/src/util/gedcom_util.spec.ts)**
+* **[Modify] [gedcom_util.spec.ts](../src/util/gedcom_util.spec.ts)**
   * **Rationale:** Contains existing unit tests for GEDCOM data structures. It will be extended to verify the newly introduced relationship finding and bounded graph traversal algorithms without visual overhead.
-* **[New] [webmcp.cy.js](file:///home/pwiech/personal/github/topola-viewer/cypress/e2e/webmcp.cy.js)**
+* **[New] [webmcp.cy.js](../cypress/e2e/webmcp.cy.js)**
   * **Rationale:** Will act as the dedicated automated integration suite for the WebMCP feature. It will stub `navigator.modelContext` to verify correct tool registration and that standard execution callbacks successfully sync back layout and selection changes inside the Topola visual DOM.
 
 ## Future Considerations

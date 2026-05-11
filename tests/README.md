@@ -5,8 +5,8 @@ This directory houses all automated test specifications and validation fixtures 
 ## Test Design Reference Documents
 
 Before writing new or adjusting existing tests, developers should review their corresponding systems design guidelines under the `docs/` directory to align with established conventions and paradigms:
-*   **[PLAYWRIGHT_DESIGN.md](file:///home/pwiech/personal/github/topola-viewer/docs/PLAYWRIGHT_DESIGN.md)**: Explains overall Playwright orchestration, server hooks, mock GEDCOM network intercept routines, tracking blockages, and in-memory iframe environments.
-*   **[SCREENSHOT_TESTS_DESIGN.md](file:///home/pwiech/personal/github/topola-viewer/docs/SCREENSHOT_TESTS_DESIGN.md)**: Outlines visual testing strategies, viewport locks, dynamic footer/changelog sanitization overrides in virtual DOMs, threshold sensitivities, and local baseline update policies.
+*   **[PLAYWRIGHT_DESIGN.md](../docs/PLAYWRIGHT_DESIGN.md)**: Explains overall Playwright orchestration, server hooks, mock GEDCOM network intercept routines, tracking blockages, and in-memory iframe environments.
+*   **[SCREENSHOT_TESTS_DESIGN.md](../docs/SCREENSHOT_TESTS_DESIGN.md)**: Outlines visual testing strategies, viewport locks, dynamic footer/changelog sanitization overrides in virtual DOMs, threshold sensitivities, and local baseline update policies.
 
 ---
 

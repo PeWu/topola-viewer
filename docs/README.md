@@ -8,7 +8,7 @@ While new features *may* follow this methodology to ensure robust design validat
 
 ## Design Documents Registry
 
-* **[DOCKER_DESIGN.md](file:///home/pwiech/personal/github/topola-viewer/docs/DOCKER_DESIGN.md)**: Docker container packaging, lightweight Caddy web server configuration, and GitHub Actions publishing pipelines.
-* **[PLAYWRIGHT_DESIGN.md](file:///home/pwiech/personal/github/topola-viewer/docs/PLAYWRIGHT_DESIGN.md)**: Playwright E2E testing architecture, Vite development/preview server lifecycle integration, tracking blocker interceptors, and embedded iframe communication.
-* **[SCREENSHOT_TESTS_DESIGN.md](file:///home/pwiech/personal/github/topola-viewer/docs/SCREENSHOT_TESTS_DESIGN.md)**: Pixel-perfect visual regression testing infrastructure, animation stabilization, sandbox environment/DOM sanitization, and isolated Playwright projects.
-* **[WEBMCP_DESIGN.md](file:///home/pwiech/personal/github/topola-viewer/docs/WEBMCP_DESIGN.md)**: Model Context Protocol (MCP) bridge and TS tool registration for AI agent interaction.
+* **[DOCKER_DESIGN.md](DOCKER_DESIGN.md)**: Docker container packaging, lightweight Caddy web server configuration, and GitHub Actions publishing pipelines.
+* **[PLAYWRIGHT_DESIGN.md](PLAYWRIGHT_DESIGN.md)**: Playwright E2E testing architecture, Vite development/preview server lifecycle integration, tracking blocker interceptors, and embedded iframe communication.
+* **[SCREENSHOT_TESTS_DESIGN.md](SCREENSHOT_TESTS_DESIGN.md)**: Pixel-perfect visual regression testing infrastructure, animation stabilization, sandbox environment/DOM sanitization, and isolated Playwright projects.
+* **[WEBMCP_DESIGN.md](WEBMCP_DESIGN.md)**: Model Context Protocol (MCP) bridge and TS tool registration for AI agent interaction.
