@@ -141,10 +141,7 @@ interface Arguments {
   config: Config;
 }
 
-function getParamFromSearch(
-  name: string,
-  search: queryString.ParsedQuery,
-) {
+function getParamFromSearch(name: string, search: queryString.ParsedQuery) {
   const value = search[name];
   return typeof value === 'string' ? value : undefined;
 }

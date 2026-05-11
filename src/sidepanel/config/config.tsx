@@ -70,7 +70,7 @@ export function argsToConfig(args: ParsedQuery<unknown>): Config {
 export function configToArgs(config: Config): ParsedQuery {
   const result: ParsedQuery = {};
   const color = COLOR_ARG_INVERSE.get(config.color);
-  if (color){
+  if (color) {
     result.c = color;
   }
   const id = ID_ARG_INVERSE.get(config.id);
