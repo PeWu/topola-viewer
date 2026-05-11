@@ -119,9 +119,9 @@ export function convertFams(people: Person[]): JsonFam[] {
     if (husband) {
       fam.husb = husband;
     }
-    fam.children = Array.from(getSet(children, key)).map(
-      (child) => idToName.get(child)!,
-    );
+    fam.children = Array.from(getSet(children, key))
+      .map((child) => idToName.get(child))
+      .filter((x) => !!x) as string[];
     if (
       value.spouse &&
       ((value.spouse.marriage_date &&

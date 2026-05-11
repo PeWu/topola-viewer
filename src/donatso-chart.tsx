@@ -1,4 +1,12 @@
-import f3 from 'family-chart';
+import {
+  Datum,
+  Store,
+  TreeDatum,
+  createStore,
+  createSvg,
+  elements,
+  view,
+} from 'family-chart';
 import {useEffect, useRef} from 'react';
 import {IntlShape, useIntl} from 'react-intl';
 import {IndiInfo, JsonFam, JsonGedcomData} from 'topola';
@@ -15,7 +23,7 @@ function getOtherSpouse(fam: JsonFam, indi: string) {
   return fam.husb === indi ? fam.wife : fam.husb;
 }
 
-function convertData(data: JsonGedcomData, intl: IntlShape) {
+function convertData(data: JsonGedcomData, intl: IntlShape): Datum[] {
   const famMap = new Map<string, JsonFam>();
   data.fams.forEach((fam) => famMap.set(fam.id, fam));
   return data.indis.map((indi) => {
@@ -25,6 +33,7 @@ function convertData(data: JsonGedcomData, intl: IntlShape) {
       .filter((fam): fam is JsonFam => fam !== undefined);
     const father = famc?.husb;
     const mother = famc?.wife;
+    const parents = [father, mother].filter((x) => !!x);
     const spouses = fams
       .map((fam) => getOtherSpouse(fam, indi.id))
       .filter((indi): indi is string => indi !== undefined);
@@ -40,40 +49,51 @@ function convertData(data: JsonGedcomData, intl: IntlShape) {
         gender: indi.sex,
       },
       rels: {
-        father,
-        mother,
+        parents,
         spouses,
         children,
       },
-    };
+    } as Datum;
   });
 }
 
 class ChartWrapper {
-  private store?: any;
+  private store!: Store;
 
   initializeChart(props: DonatsoChartProps, intl: IntlShape) {
     const data = convertData(props.data, intl);
-    this.store = f3.createStore({
+    this.store = createStore({
       data,
       main_id: props.selection.id,
     });
-    const svg = f3.createSvg(document.querySelector('#dotatsoSvgContainer'));
-    const card = f3.elements.Card({
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const svg = createSvg(document.querySelector('#dotatsoSvgContainer')!);
+    const card = elements.CardSvg({
       store: this.store,
       svg,
       card_display: [
-        (i: any) =>
+        (i: Datum) =>
           `${i.data['first name'] || ''} ${i.data['last name'] || ''}`,
-        (i: any) => `${i.data.birthday || ''}`,
-      ],
+        (i: Datum) => `${i.data.birthday || ''}`,
+      ] as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       mini_tree: true,
       link_break: false,
-      onCardClick: (e: any, d: any) =>
+      onCardClick: (e: MouseEvent, d: TreeDatum) =>
         props.onSelection({id: d.data.id, generation: 0}),
+      card_dim: {
+        w: 220,
+        h: 70,
+        text_x: 75,
+        text_y: 15,
+        img_w: 60,
+        img_h: 60,
+        img_x: 5,
+        img_y: 5,
+      },
     });
-    this.store.setOnUpdate((props: any) => {
-      f3.view(this.store.getTree(), svg, card, props || {});
+    this.store.setOnUpdate((props: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      view(this.store.getTree()!, svg, card, props || {});
     });
     this.store.updateTree({initial: true});
   }

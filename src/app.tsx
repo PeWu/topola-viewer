@@ -437,6 +437,7 @@ export function App() {
             setSelection(newSelection);
             setDetailIndi(newSelection.id);
             setState(AppState.SHOWING_CHART);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (error: any) {
             setState(AppState.SHOWING_CHART);
             displayErrorPopup(
