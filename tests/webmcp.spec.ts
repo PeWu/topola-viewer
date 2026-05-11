@@ -1,5 +1,5 @@
 import {expect, test} from '@playwright/test';
-import {ToolDefinition} from '../src/webmcp_types';
+import {WebMcpTool} from '../src/webmcp_types';
 import {setupGedcomRoute} from './helpers';
 
 const EXPECTED_TOOL_NAMES = [
@@ -18,10 +18,10 @@ test.describe('WebMCP Integration', () => {
 
     // Add init script to expose modelContext mock BEFORE application boots.
     await page.addInitScript(() => {
-      const registeredTools: ToolDefinition[] = [];
+      const registeredTools: WebMcpTool[] = [];
       window.__registeredTools = registeredTools;
       window.navigator.modelContext = {
-        registerTool: (tool: ToolDefinition) => {
+        registerTool: (tool: WebMcpTool) => {
           registeredTools.push(tool);
         },
         unregisterTool: (name: string) => {
