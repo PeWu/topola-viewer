@@ -122,7 +122,7 @@ export function compareTopolaDates(
     return date1.month - date2.month;
   }
   if (date1.day && date2.day && date1.day !== date2.day) {
-    return date1.month - date2.month;
+    return date1.day - date2.day;
   }
   return 0;
 }
