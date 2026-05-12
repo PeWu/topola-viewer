@@ -1,11 +1,13 @@
 import {expect, test} from '@playwright/test';
 import dedent from 'dedent';
 import * as fs from 'fs';
-import {blockTracking, mockGedcomResponse} from './helpers';
+import {blockTracking, mockGedcomResponse, waitForFonts} from './helpers';
 
 test.describe('Details panel visual validation @visual', () => {
-  test.beforeEach(async ({context}) => {
+  test.beforeEach(async ({page, context}) => {
     await blockTracking(context);
+    await page.goto('/');
+    await waitForFonts(page);
   });
 
   test('Complex Names Test', async ({page, context}) => {

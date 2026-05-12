@@ -1,10 +1,11 @@
 import {expect, test} from '@playwright/test';
-import {blockTracking} from './helpers';
+import {blockTracking, waitForFonts} from './helpers';
 
 test.describe('Intro page visual validation @visual', () => {
   test.beforeEach(async ({page, context}) => {
     await blockTracking(context);
     await page.goto('/');
+    await waitForFonts(page);
   });
 
   test('intro-page', async ({page}) => {

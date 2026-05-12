@@ -1,4 +1,4 @@
-import {BrowserContext} from '@playwright/test';
+import {BrowserContext, Page} from '@playwright/test';
 import * as fs from 'fs';
 
 /**
@@ -39,4 +39,11 @@ export async function setupGedcomRoute(context: BrowserContext): Promise<void> {
 
   await mockGedcomResponse(context, gedcomContent);
   await blockTracking(context);
+}
+
+/**
+ * Ensures all custom web fonts are fully loaded and rendered.
+ */
+export async function waitForFonts(page: Page): Promise<void> {
+  await page.evaluate(() => document.fonts.ready);
 }

@@ -1,9 +1,12 @@
 import {expect, test} from '@playwright/test';
-import {setupGedcomRoute} from './helpers';
+import {setupGedcomRoute, waitForFonts} from './helpers';
 
 test.describe('Configurations Integration @visual', () => {
   test.beforeEach(async ({page, context}) => {
     await setupGedcomRoute(context);
+    await page.goto('/');
+    await waitForFonts(page);
+
     await page.goto('/#/view?url=https://example.org/family.ged');
 
     // Wait for the sidebar and the main content container to be visible.

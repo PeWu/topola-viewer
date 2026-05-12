@@ -1,9 +1,11 @@
 import {expect, test} from '@playwright/test';
-import {setupGedcomRoute} from './helpers';
+import {setupGedcomRoute, waitForFonts} from './helpers';
 
 test.describe('Core SVG Canvas Layouts @visual', () => {
-  test.beforeEach(async ({context}) => {
+  test.beforeEach(async ({page, context}) => {
     await setupGedcomRoute(context);
+    await page.goto('/');
+    await waitForFonts(page);
   });
 
   const layouts = [
