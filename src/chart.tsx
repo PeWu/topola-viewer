@@ -393,7 +393,10 @@ class ChartWrapper {
             props.onSelection(info);
           }
         },
-        colors: (props.colors && chartColors.get(props.colors)) || undefined,
+        colors:
+          props.colors !== undefined
+            ? chartColors.get(props.colors)
+            : undefined,
         animate: true,
         updateSvgSize: false,
         locale: intl.locale,
