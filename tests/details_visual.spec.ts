@@ -1,13 +1,11 @@
 import {expect, test} from '@playwright/test';
 import dedent from 'dedent';
 import * as fs from 'fs';
-import {mockGedcomResponse, setupHermeticEnvironment, waitForFonts} from './helpers';
+import {mockGedcomResponse, setupHermeticEnvironment} from './helpers';
 
 test.describe('Details panel visual validation @visual', () => {
-  test.beforeEach(async ({page, context}) => {
+  test.beforeEach(async ({context}) => {
     await setupHermeticEnvironment(context);
-    await page.goto('/');
-    await waitForFonts(page);
   });
 
   test('Complex Names Test', async ({page, context}) => {

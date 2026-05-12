@@ -1,11 +1,10 @@
 import {expect, test} from '@playwright/test';
-import {setupHermeticEnvironment, waitForFonts} from './helpers';
+import {setupHermeticEnvironment} from './helpers';
 
 test.describe('Intro page visual validation @visual', () => {
   test.beforeEach(async ({page, context}) => {
     await setupHermeticEnvironment(context);
     await page.goto('/');
-    await waitForFonts(page);
   });
 
   test('intro-page', async ({page}) => {
