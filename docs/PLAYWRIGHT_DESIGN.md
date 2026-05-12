@@ -131,7 +131,7 @@ This section defines the granular step-by-step instructions and enumerates **eve
 *   **`tests/global.d.ts`**
     *   *Rationale:* Custom global type declaration file for E2E tests to safely declare `__registeredTools` on the `Window` interface without TypeScript compiler warnings. Redundant overrides for `Navigator` are omitted because the test suite inherits it from the application's core WebMCP declarations.
 *   **`tests/helpers.ts`**
-    *   *Rationale:* Shared test utilities to encapsulate wildcard route mocking for family tree fetching (`setupGedcomRoute`) and tracking interception (`blockTracking`). This avoids code duplication across spec files.
+    *   *Rationale:* Shared test utilities to encapsulate wildcard route mocking for family tree fetching (`setupGedcomRoute`) and hermetic context routing (`setupHermeticEnvironment`). This avoids code duplication across spec files.
 *   **`tests/fixtures/embedded_frame.html`**
     *   *Rationale:* Physical template wrapper file defining the iframe and message-passing structure for embedded view E2E verification.
 *   **`src/datasource/testdata/test.ged`**
@@ -190,7 +190,7 @@ This section defines the granular step-by-step instructions and enumerates **eve
 3. Author `tests/global.d.ts` to provide TypeScript type definitions for mocked window objects:
    * **Type Extension**: Declares `__registeredTools?` on the global `Window` interface to prevent TypeScript compilation errors during WebMCP mocks.
 4. Author `tests/helpers.ts` to provide reusable mock setups and routing interceptions:
-   * **Tracking Blockers**: Implements a `blockTracking(context)` helper that intercepts and aborts requests targeting Google Analytics and Tag Manager (`**/*google-analytics.com/**`, `**/*googletagmanager.com/**`) to guarantee hermetic and fast test execution.
+   * **Hermetic Routing**: Implements a `setupHermeticEnvironment(context)` helper that intercepts tracking services (`**/*google-analytics.com/**`, `**/*googletagmanager.com/**`) and embeds baseline web fonts to guarantee deterministic and fast test execution.
    * **GEDCOM Mocks**: Implements a `setupGedcomRoute(context)` helper that reads the version-controlled local dataset (`src/datasource/testdata/test.ged`) and routes all requests matching `**/family.ged` to be fulfilled with it, serving a `200 OK` response with CORS enablement headers (`Access-Control-Allow-Origin: *`).
 5. Author the physical template wrapper file `tests/fixtures/embedded_frame.html` for testing embedded iframe communications:
    * **Structure**: Defines a standard wrapper document housing an iframe that points to the app's embedded route: `/#/view?embedded=true&handleCors=false`.
@@ -200,7 +200,7 @@ This section defines the granular step-by-step instructions and enumerates **eve
 
 ##### 1. Intro Test (`tests/intro.spec.ts`)
 Checks the landing page layout, menu items, and basic static DOM presence:
-* **Setup**: Leverages `beforeEach` to block analytics and tracking servers using the `blockTracking` helper, then loads the index page (`/`).
+* **Setup**: Leverages `beforeEach` to configure hermetic routes using the `setupHermeticEnvironment` helper, then loads the index page (`/`).
 * **Assertions**:
   * Verifies that the main intro landing text content (specifically checking for the presence of `'Examples'`) is visible on the page.
   * Asserts that core action buttons in the menu (exact text `'Open file'` and `'Load from URL'`) are properly rendered and visible to the user.

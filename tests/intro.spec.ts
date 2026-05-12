@@ -1,9 +1,9 @@
 import {expect, test} from '@playwright/test';
-import {blockTracking} from './helpers';
+import {setupHermeticEnvironment} from './helpers';
 
 test.describe('Intro page', () => {
   test.beforeEach(async ({page, context}) => {
-    await blockTracking(context);
+    await setupHermeticEnvironment(context);
     await page.goto('/');
   });
 

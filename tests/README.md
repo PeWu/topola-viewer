@@ -38,7 +38,7 @@ To enable lightweight, reproducible, and offline executions, tests rely on the f
 *   **[fixtures/embedded_frame.html](fixtures/embedded_frame.html)**: HTML template for serving cross-origin iframe wrapper mockups virtually to the browser container.
 *   **[global.d.ts](global.d.ts)**: TypeScript declarations defining window overrides (like AI registration pointers `window.__registeredTools`) to bypass compiler warnings.
 *   **[helpers.ts](helpers.ts)**: Unified routing utilities:
-    *   `blockTracking()`: Intercepts and halts metrics and analytical HTTP queries during spec executions.
+    *   `setupHermeticEnvironment()`: Intercepts and halts metrics/analytical queries and embeds local baseline fonts during spec executions.
     *   `setupGedcomRoute()`: Re-routes standard genealogy payload network paths directly to load standard local datasets on-the-fly (`src/datasource/testdata/test.ged`).
 *   **[tsconfig.json](tsconfig.json)**: Typecheck preferences custom to the Playwright runner environment to avoid compilation type collisions.
 *   **`[spec_name]-snapshots/`**: Directory structure containing expected baseline references and image comparison files.

@@ -51,7 +51,7 @@ This section defines the granular, step-by-step implementation steps and enumera
 #### 2. Files to [NEW]
 
 *   **`tests/helpers.ts`**
-    *   *Rationale:* Provide shared E2E/visual testing helper utilities. Features `blockTracking()` to abort external Google Analytics and Google Tag Manager network requests (ensuring offline hermetic execution) and `setupGedcomRoute()` to serve a standard mock `.ged` dataset.
+    *   *Rationale:* Provide shared E2E/visual testing helper utilities. Features `setupHermeticEnvironment()` to abort external tracking requests and embed local fonts (ensuring offline hermetic execution) and `setupGedcomRoute()` to serve a standard mock `.ged` dataset.
 *   **`tests/intro_visual.spec.ts`**
     *   *Rationale:* Verify the landing page layout, copy block positions, and logo alignments. Employs an in-browser DOM script to overwrite dynamic footer versioning and dynamic changelog blocks prior to capture, ensuring baseline immunity.
 *   **`tests/charts_visual.spec.ts`**
@@ -74,7 +74,7 @@ This section defines the granular, step-by-step implementation steps and enumera
    * `"test:visual:update": "playwright test --project=visual --update-snapshots"` to automatically regenerate baseline reference files.
 
 #### Step 2: Landing Page Visual Validation Spec (`tests/intro_visual.spec.ts`)
-1. Define a test block marked with the `@visual` tag, utilizing `blockTracking` helper in `beforeEach`.
+1. Define a test block marked with the `@visual` tag, utilizing `setupHermeticEnvironment` helper in `beforeEach`.
 2. Instruct the browser to navigate to the root path `/`.
 3. Right before assertion, trigger `page.evaluate` to clean dynamic elements:
    * Target the `.version` class element and set `.innerText = "version: 2026-01-01 00:00 (testcommit)"`.
@@ -91,7 +91,7 @@ This section defines the granular, step-by-step implementation steps and enumera
    * Capture the isolated canvas screenshot: `expect(container).toHaveScreenshot('chart-[type].png')`.
 
 #### Step 4: Details Panel Layouts Spec (`tests/details_visual.spec.ts`)
-1. Set up a `beforeEach` block to block analytics via `blockTracking(context)`.
+1. Set up a `beforeEach` block to establish hermetic routes via `setupHermeticEnvironment(context)`.
 2. Define isolated test blocks with the `@visual` tag, each loading its own dedicated inline micro-GEDCOM dataset:
    * **Complex Names Test:**
      * Mock `**/family.ged` with a GEDCOM string containing prefix/suffix/rufname tags.
