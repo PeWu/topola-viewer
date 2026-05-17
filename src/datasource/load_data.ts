@@ -29,13 +29,39 @@ function prepareData(
   images?: Map<string, string>,
 ): TopolaData {
   const data = convertGedcom(gedcom, images || new Map());
-  const serializedData = JSON.stringify(data);
-  try {
-    sessionStorage.setItem(cacheId, serializedData);
-  } catch (e) {
-    console.warn('Failed to store data in session storage: ' + e);
+  if (!images || images.size === 0) {
+    const dataToSerialize = {...data};
+    delete dataToSerialize.images;
+    const serializedData = JSON.stringify(dataToSerialize);
+    try {
+      sessionStorage.setItem(cacheId, serializedData);
+    } catch (e) {
+      console.warn('Failed to store data in session storage: ' + e);
+    }
   }
   return data;
+}
+
+/**
+ * Revokes browser-created Object URLs (blob URLs) from a map or list of images
+ * to free up memory and prevent resource leaks.
+ */
+export function revokeObjectUrls(
+  images?: Map<string, string> | Iterable<string>,
+): void {
+  if (!images) {
+    return;
+  }
+  const urls = images instanceof Map ? images.values() : images;
+  for (const url of urls) {
+    if (url.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        // Ignore.
+      }
+    }
+  }
 }
 
 async function loadGedzip(
@@ -54,20 +80,29 @@ async function loadGedzip(
 
   let gedcom = undefined;
   const images = new Map<string, string>();
-  for (const fileName of Object.keys(unzipped)) {
-    if (fileName.endsWith('.ged')) {
-      if (gedcom) {
-        console.warn('Multiple GEDCOM files found in zip archive.');
+  try {
+    for (const fileName of Object.keys(unzipped)) {
+      if (fileName.endsWith('.ged')) {
+        if (gedcom) {
+          console.warn('Multiple GEDCOM files found in zip archive.');
+        } else {
+          gedcom = strFromU8(unzipped[fileName]);
+        }
       } else {
-        gedcom = strFromU8(unzipped[fileName]);
+        // Save image for later.
+        const normalizedKey = fileName.replace(/\\/g, '/').toLowerCase();
+        images.set(
+          normalizedKey,
+          URL.createObjectURL(new Blob([unzipped[fileName]])),
+        );
       }
-    } else {
-      // Save image for later.
-      images.set(fileName, URL.createObjectURL(new Blob([unzipped[fileName]])));
     }
-  }
-  if (!gedcom) {
-    throw new Error('GEDCOM file not found in zip archive.');
+    if (!gedcom) {
+      throw new Error('GEDCOM file not found in zip archive.');
+    }
+  } catch (error) {
+    revokeObjectUrls(images);
+    throw error;
   }
   return {gedcom, images};
 }
@@ -117,7 +152,12 @@ export async function loadFromUrl(
   }
 
   const {gedcom, images} = await loadFile(await response.blob());
-  return prepareData(gedcom, url, images);
+  try {
+    return prepareData(gedcom, url, images);
+  } catch (error) {
+    revokeObjectUrls(images);
+    throw error;
+  }
 }
 
 /** Loads data from the given GEDCOM file contents. */
@@ -140,7 +180,12 @@ export async function loadGedcom(
       'Error loading data. Please upload your file again.',
     );
   }
-  return prepareData(gedcom, hash, images);
+  try {
+    return prepareData(gedcom, hash, images);
+  } catch (error) {
+    revokeObjectUrls(images);
+    throw error;
+  }
 }
 
 export interface UploadSourceSpec {

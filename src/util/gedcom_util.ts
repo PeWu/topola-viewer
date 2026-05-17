@@ -25,6 +25,7 @@ export interface GedcomData {
 export interface TopolaData {
   chartData: JsonGedcomData;
   gedcom: GedcomData;
+  images?: Map<string, string>;
 }
 
 export interface Source {
@@ -204,11 +205,12 @@ export function normalizeGedcom(gedcom: JsonGedcomData): JsonGedcomData {
   return sortSpouses(sortChildren(gedcom));
 }
 
-const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif'];
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
 /** Returns true if the given file name has a known image extension. */
 export function isImageFile(fileName: string): boolean {
-  const lowerName = fileName.toLowerCase();
+  const cleanName = fileName.split(/[?#]/)[0];
+  const lowerName = cleanName.toLowerCase();
   return IMAGE_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
 }
 
@@ -216,22 +218,41 @@ export function isImageFile(fileName: string): boolean {
  * Removes images that are not HTTP links or do not have known image extensions.
  * Does not modify the input object.
  */
+export function isBrowserLoadable(url: string): boolean {
+  return /^(https?:|blob:|data:|\/\/)/i.test(url);
+}
+
+export function resolveFileUrl(
+  url: string,
+  images?: Map<string, string>,
+): string {
+  if (isBrowserLoadable(url)) {
+    return url;
+  }
+  const normalizedUrl = url.replace(/\\/g, '/');
+  if (images instanceof Map) {
+    const lowercasePath = normalizedUrl.toLowerCase();
+    const mappedUrl = images.get(lowercasePath);
+    if (mappedUrl) {
+      return mappedUrl;
+    }
+  }
+  return normalizedUrl;
+}
+
 function filterImage(indi: JsonIndi, images: Map<string, string>): JsonIndi {
   if (!indi.images || indi.images.length === 0) {
     return indi;
   }
   const newImages: JsonImage[] = [];
   indi.images.forEach((image) => {
-    const filePath = image.url.replaceAll('\\', '/');
-    const fileName = filePath.split('/').pop() || '';
-    const fileUrl = images.get(filePath);
-    const nameUrl = images.get(fileName);
-    if (fileUrl) {
-      newImages.push({url: fileUrl, title: image.title});
-    } else if (nameUrl) {
-      newImages.push({url: nameUrl, title: image.title});
-    } else if (image.url.startsWith('http') && isImageFile(image.url)) {
-      newImages.push(image);
+    const resolvedUrl = resolveFileUrl(image.url, images);
+    const normalizedUrl = image.url.replace(/\\/g, '/');
+    if (
+      resolvedUrl !== normalizedUrl ||
+      (isBrowserLoadable(resolvedUrl) && isImageFile(resolvedUrl))
+    ) {
+      newImages.push({url: resolvedUrl, title: image.title});
     }
   });
   return Object.assign({}, indi, {images: newImages});
@@ -276,6 +297,7 @@ export function convertGedcom(
   return {
     chartData: filterImages(normalizeGedcom(json), images),
     gedcom: prepareGedcom(entries),
+    images,
   };
 }
 
@@ -309,7 +331,17 @@ export function getFileName(fileEntry: GedcomEntry): string | undefined {
     (entry) => entry.tag === 'FORM',
   )?.data;
 
-  return fileTitle && fileExtension && fileTitle + '.' + fileExtension;
+  if (fileTitle && fileExtension) {
+    return fileTitle + '.' + fileExtension;
+  }
+
+  if (fileEntry && fileEntry.data) {
+    const path = fileEntry.data.replace(/\\/g, '/');
+    const cleanPath = path.split(/[?#]/)[0];
+    return cleanPath.split('/').pop();
+  }
+
+  return undefined;
 }
 
 function findFileEntry(
@@ -317,8 +349,7 @@ function findFileEntry(
   predicate: (entry: GedcomEntry) => boolean,
 ): GedcomEntry | undefined {
   return objectEntry.tree.find(
-    (entry) =>
-      entry.tag === 'FILE' && entry.data.startsWith('http') && predicate(entry),
+    (entry) => entry.tag === 'FILE' && entry.data && predicate(entry),
   );
 }
 

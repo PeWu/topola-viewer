@@ -24,6 +24,7 @@ import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
 import {
   GedcomUrlDataSource,
   getSelection,
+  revokeObjectUrls,
   UploadedDataSource,
   UploadLocationState,
   UploadSourceSpec,
@@ -379,6 +380,7 @@ export function App() {
         if (state !== AppState.INITIAL) {
           setState(AppState.INITIAL);
         }
+        setData(undefined);
         return;
       }
 
@@ -461,6 +463,14 @@ export function App() {
       mcpBridge.unregisterTools();
     };
   }, [mcpBridge]);
+
+  // Clean up object URLs created for uploaded images/files when the dataset
+  // changes or the app unmounts to prevent memory leaks.
+  useEffect(() => {
+    return () => {
+      revokeObjectUrls(data?.images);
+    };
+  }, [data]);
 
   useEffect(() => {
     mcpBridge.setData(data || null);

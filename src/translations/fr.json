@@ -143,5 +143,6 @@
   "family.wife": "Femme",
   "family.unknown_spouse": "Conjoint inconnu",
   "family.children": "Enfants",
-  "family.child": "Enfant"
+  "family.child": "Enfant",
+  "media.not_uploaded": "Fichier non téléversé"
 }

@@ -138,7 +138,7 @@ export function EventExtras(props: Props) {
           content={
             <FormattedMessage
               id="extras.files"
-              defaultMessage="Additonal files"
+              defaultMessage="Additional files"
             />
           }
           size="mini"

@@ -31,7 +31,12 @@ export function SidePanel({
         defaultMessage: 'Info',
       }),
       render: () => (
-        <Details gedcom={data.gedcom} indi={selectedIndiId} config={config} />
+        <Details
+          gedcom={data.gedcom}
+          indi={selectedIndiId}
+          config={config}
+          images={data.images}
+        />
       ),
     },
     {

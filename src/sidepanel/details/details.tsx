@@ -10,6 +10,7 @@ import {
   getImageFileEntry,
   getNonImageFileEntry,
   mapToSource,
+  resolveFileUrl,
 } from '../../util/gedcom_util';
 import {Config, Ids} from '../config/config';
 import {AdditionalFiles, FileEntry} from './additional-files';
@@ -91,7 +92,11 @@ function attributeDetails(entry: GedcomEntry) {
   }
 }
 
-function imageDetails(objectEntryReference: GedcomEntry, gedcom: GedcomData) {
+function imageDetails(
+  objectEntryReference: GedcomEntry,
+  gedcom: GedcomData,
+  images?: Map<string, string>,
+) {
   const imageEntry = dereference(
     objectEntryReference,
     gedcom,
@@ -107,7 +112,7 @@ function imageDetails(objectEntryReference: GedcomEntry, gedcom: GedcomData) {
   return (
     <div className="person-image">
       <WrappedImage
-        url={imageFileEntry.data}
+        url={resolveFileUrl(imageFileEntry.data, images)}
         filename={getFileName(imageFileEntry) || ''}
       />
     </div>
@@ -138,7 +143,11 @@ function sourceDetails(
   );
 }
 
-function fileDetails(objectEntries: GedcomEntry[], gedcom: GedcomData) {
+function fileDetails(
+  objectEntries: GedcomEntry[],
+  gedcom: GedcomData,
+  images?: Map<string, string>,
+) {
   const files: FileEntry[] = [];
   objectEntries
     .map((objectEntry) =>
@@ -148,7 +157,7 @@ function fileDetails(objectEntries: GedcomEntry[], gedcom: GedcomData) {
       const fileEntry = getNonImageFileEntry(objectEntry);
       if (fileEntry) {
         files.push({
-          url: fileEntry.data,
+          url: resolveFileUrl(fileEntry.data, images),
           filename: getFileName(fileEntry),
           titl: objectEntry.tree.find((entry) => entry.tag === 'TITL')?.data,
         });
@@ -249,12 +258,14 @@ function getSectionForEachMatchingEntry(
   detailsFunction: (
     entry: GedcomEntry,
     gedcom: GedcomData,
+    images?: Map<string, string>,
   ) => React.ReactNode | null,
+  images?: Map<string, string>,
 ): React.ReactNode[] {
   return flatMap(tags, (tag) =>
     entries
       .filter((entry) => entry.tag === tag)
-      .map((entry) => detailsFunction(entry, gedcom)),
+      .map((entry) => detailsFunction(entry, gedcom, images)),
   )
     .filter((element) => element !== null)
     .map((element, index) => (
@@ -271,14 +282,16 @@ function combineAllMatchingEntriesIntoSingleSection(
   detailsFunction: (
     entries: GedcomEntry[],
     gedcom: GedcomData,
+    images?: Map<string, string>,
   ) => React.ReactNode | null,
+  images?: Map<string, string>,
 ): React.ReactNode {
   const entriesWithMatchingTag = flatMap(tags, (tag) =>
     entries.filter((entry) => entry.tag === tag),
   ).filter((element) => element !== null);
 
   const sectionWithDetails = entriesWithMatchingTag.length
-    ? detailsFunction(entriesWithMatchingTag, gedcom)
+    ? detailsFunction(entriesWithMatchingTag, gedcom, images)
     : null;
 
   if (!sectionWithDetails) {
@@ -334,6 +347,7 @@ interface Props {
   gedcom: GedcomData;
   indi: string;
   config: Config;
+  images?: Map<string, string>;
 }
 
 export function Details(props: Props) {
@@ -353,9 +367,15 @@ export function Details(props: Props) {
           props.gedcom,
           ['OBJE'],
           imageDetails,
+          props.images,
         )}
         <ImmediateFamily gedcom={props.gedcom} indi={props.indi} />
-        <Events gedcom={props.gedcom} entries={entries} indi={props.indi} />
+        <Events
+          gedcom={props.gedcom}
+          entries={entries}
+          indi={props.indi}
+          images={props.images}
+        />
         {props.config.id === Ids.SHOW ? getSectionForId(props.indi) : null}
         {getSectionForEachMatchingEntry(
           entries,
@@ -375,6 +395,7 @@ export function Details(props: Props) {
           props.gedcom,
           ['OBJE'],
           fileDetails,
+          props.images,
         )}
         {combineAllMatchingEntriesIntoSingleSection(
           entries,

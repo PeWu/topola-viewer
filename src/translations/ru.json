@@ -143,5 +143,6 @@
   "family.wife": "Жена",
   "family.unknown_spouse": "Неизвестный супруг(а)",
   "family.children": "Дети",
-  "family.child": "Ребёнок"
+  "family.child": "Ребёнок",
+  "media.not_uploaded": "Файл не загружен"
 }

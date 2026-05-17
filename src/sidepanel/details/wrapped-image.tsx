@@ -1,6 +1,7 @@
 import {SyntheticEvent, useState} from 'react';
 import {FormattedMessage} from 'react-intl';
 import {
+  Card,
   Container,
   Icon,
   Image,
@@ -9,6 +10,7 @@ import {
   Modal,
   Placeholder,
 } from 'semantic-ui-react';
+import {isBrowserLoadable} from '../../util/gedcom_util';
 
 interface Props {
   url: string;
@@ -21,6 +23,33 @@ export function WrappedImage(props: Props) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [imageSrc, setImageSrc] = useState('');
+
+  if (!isBrowserLoadable(props.url)) {
+    return (
+      <Card
+        centered
+        style={{width: '100%', maxWidth: '290px', margin: '0 auto 14px'}}
+      >
+        <Card.Content textAlign="center" style={{backgroundColor: '#f9f9f9'}}>
+          <Icon
+            name="image"
+            size="huge"
+            color="grey"
+            style={{marginBottom: '10px', opacity: 0.6}}
+          />
+          <Card.Header style={{fontSize: '14px', wordBreak: 'break-all'}}>
+            {props.title || props.filename}
+          </Card.Header>
+          <Card.Meta style={{marginTop: '5px', fontStyle: 'italic'}}>
+            <FormattedMessage
+              id="media.not_uploaded"
+              defaultMessage="File not uploaded"
+            />
+          </Card.Meta>
+        </Card.Content>
+      </Card>
+    );
+  }
 
   if (imageLoaded && imageSrc !== props.url) {
     setImageLoaded(false);

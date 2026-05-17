@@ -6,12 +6,8 @@ import {useLocation, useNavigate} from 'react-router';
 import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {loadFile} from '../datasource/load_data';
 import {analyticsEvent} from '../util/analytics';
+import {isImageFile} from '../util/gedcom_util';
 import {MenuType} from './menu_item';
-
-function isImageFileName(fileName: string) {
-  const lower = fileName.toLowerCase();
-  return lower.endsWith('.jpg') || lower.endsWith('.png');
-}
 
 interface Props {
   menuType: MenuType;
@@ -42,10 +38,10 @@ export function UploadMenu(props: Props) {
 
     // Convert uploaded images to object URLs.
     filesArray
-      .filter(
-        (file) => file.name !== gedcomFile.name && isImageFileName(file.name),
-      )
-      .forEach((file) => images.set(file.name, URL.createObjectURL(file)));
+      .filter((file) => file.name !== gedcomFile.name && isImageFile(file.name))
+      .forEach((file) =>
+        images.set(file.name.toLowerCase(), URL.createObjectURL(file)),
+      );
 
     // Hash GEDCOM contents with uploaded image file names.
     const imageFileNames = Array.from(images.keys()).sort().join('|');
@@ -88,7 +84,7 @@ export function UploadMenu(props: Props) {
       <input
         className="hidden"
         type="file"
-        accept=".ged,.gdz,.gedzip,.zip,image/*"
+        accept=".ged,.gdz,.gedzip,.zip,.webp,image/*"
         id="fileInput"
         multiple
         onChange={handleUpload}

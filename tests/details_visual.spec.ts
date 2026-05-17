@@ -201,4 +201,40 @@ test.describe('Details panel visual validation @visual', () => {
     await sidebar.waitFor();
     await expect(sidebar).toHaveScreenshot('details-immediate-family.png');
   });
+
+  test('Media Fallback Rendering Test', async ({page, context}) => {
+    const fallbackGedcom = dedent`
+      0 HEAD
+      1 GEDC
+      2 VERS 5.5.1
+      2 FORM Lineage-Linked
+      1 CHAR UTF-8
+      0 @I1@ INDI
+      1 NAME Bonifacy /Gibbs/
+      1 SEX M
+      1 FAMS @F1@
+      1 OBJE @O1@
+      0 @O1@ OBJE
+      1 FILE photos/not_uploaded_image.jpg
+      2 FORM jpeg
+      2 TITL A Not Uploaded Image
+      0 @F1@ FAM
+      1 HUSB @I1@
+      0 TRLR
+    `;
+
+    await mockGedcomResponse(context, fallbackGedcom);
+
+    await page.goto('/#/view?url=https://example.org/family.ged');
+    const sidebar = page.locator('#sidebar');
+    await sidebar.waitFor();
+
+    // Verify fallback placeholder text is present
+    await expect(sidebar.getByText('File not uploaded').first()).toBeVisible();
+    await expect(
+      sidebar.getByText('A Not Uploaded Image').first(),
+    ).toBeVisible();
+
+    await expect(sidebar).toHaveScreenshot('details-media-fallback.png');
+  });
 });

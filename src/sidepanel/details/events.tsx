@@ -14,6 +14,7 @@ import {
   getNonImageFileEntry,
   mapToSource,
   resolveDate,
+  resolveFileUrl,
   resolveType,
   Source,
 } from '../../util/gedcom_util';
@@ -26,6 +27,7 @@ interface Props {
   gedcom: GedcomData;
   indi: string;
   entries: GedcomEntry[];
+  images?: Map<string, string>;
 }
 
 interface EventData {
@@ -164,42 +166,55 @@ function eventPlace(entry: GedcomEntry) {
   return place?.data ? getData(place) : undefined;
 }
 
-function eventImages(entry: GedcomEntry, gedcom: GedcomData): Image[] {
-  return entry.tree
+function eventImages(
+  entry: GedcomEntry,
+  gedcom: GedcomData,
+  images?: Map<string, string>,
+): Image[] {
+  const result: Image[] = [];
+  entry.tree
     .filter((subEntry) => 'OBJE' === subEntry.tag)
-    .map((objectEntry) =>
-      dereference(objectEntry, gedcom, (gedcom) => gedcom.other),
-    )
-    .map((objectEntry) => getImageFileEntry(objectEntry))
-    .flatMap((imageFileEntry) =>
-      imageFileEntry
-        ? [
-            {
-              url: imageFileEntry?.data || '',
-              filename: getFileName(imageFileEntry) || '',
-            },
-          ]
-        : [],
-    );
+    .forEach((objectEntryReference) => {
+      const objectEntry = dereference(
+        objectEntryReference,
+        gedcom,
+        (gedcom) => gedcom.other,
+      );
+      const fileEntry = getImageFileEntry(objectEntry);
+      if (fileEntry) {
+        result.push({
+          url: resolveFileUrl(fileEntry.data, images),
+          filename: getFileName(fileEntry) || '',
+        });
+      }
+    });
+  return result;
 }
 
-function eventFiles(entry: GedcomEntry, gedcom: GedcomData): Image[] {
-  return entry.tree
+function eventFiles(
+  entry: GedcomEntry,
+  gedcom: GedcomData,
+  images?: Map<string, string>,
+): FileEntry[] {
+  const result: FileEntry[] = [];
+  entry.tree
     .filter((subEntry) => 'OBJE' === subEntry.tag)
-    .map((objectEntry) =>
-      dereference(objectEntry, gedcom, (gedcom) => gedcom.other),
-    )
-    .map((objectEntry) => getNonImageFileEntry(objectEntry))
-    .flatMap((fileEntry) =>
-      fileEntry
-        ? [
-            {
-              url: fileEntry?.data || '',
-              filename: getFileName(fileEntry) || '',
-            },
-          ]
-        : [],
-    );
+    .forEach((objectEntryReference) => {
+      const objectEntry = dereference(
+        objectEntryReference,
+        gedcom,
+        (gedcom) => gedcom.other,
+      );
+      const fileEntry = getNonImageFileEntry(objectEntry);
+      if (fileEntry) {
+        result.push({
+          url: resolveFileUrl(fileEntry.data, images),
+          filename: getFileName(fileEntry),
+          titl: objectEntry.tree.find((entry) => entry.tag === 'TITL')?.data,
+        });
+      }
+    });
+  return result;
 }
 
 function eventSources(entry: GedcomEntry, gedcom: GedcomData): Source[] {
@@ -235,11 +250,12 @@ function toEvent(
   gedcom: GedcomData,
   indi: string,
   intl: IntlShape,
+  images?: Map<string, string>,
 ): EventData[] {
   if (entry.tag === 'FAMS') {
-    return toFamilyEvents(entry, gedcom, indi);
+    return toFamilyEvents(entry, gedcom, indi, images);
   }
-  return toIndiEvent(entry, gedcom, indi, intl);
+  return toIndiEvent(entry, gedcom, indi, intl, images);
 }
 
 function toIndiEvent(
@@ -247,6 +263,7 @@ function toIndiEvent(
   gedcom: GedcomData,
   indi: string,
   intl: IntlShape,
+  images?: Map<string, string>,
 ): EventData[] {
   const date = resolveDate(entry) || null;
   return [
@@ -256,8 +273,8 @@ function toIndiEvent(
       type: resolveType(entry),
       age: getAge(entry, indi, gedcom, intl),
       place: eventPlace(entry),
-      images: eventImages(entry, gedcom),
-      files: eventFiles(entry, gedcom),
+      images: eventImages(entry, gedcom, images),
+      files: eventFiles(entry, gedcom, images),
       notes: eventNotes(entry, gedcom),
       sources: eventSources(entry, gedcom),
       indi: indi,
@@ -269,6 +286,7 @@ function toFamilyEvents(
   entry: GedcomEntry,
   gedcom: GedcomData,
   indi: string,
+  images?: Map<string, string>,
 ): EventData[] {
   const family = dereference(entry, gedcom, (gedcom) => gedcom.fams);
   return flatMap(FAMILY_EVENT_TAGS, (tag) =>
@@ -281,8 +299,8 @@ function toFamilyEvents(
       type: resolveType(familyEvent),
       personLink: getSpouse(indi, family, gedcom),
       place: eventPlace(familyEvent),
-      images: eventImages(familyEvent, gedcom),
-      files: eventFiles(familyEvent, gedcom),
+      images: eventImages(familyEvent, gedcom, images),
+      files: eventFiles(familyEvent, gedcom, images),
       notes: eventNotes(familyEvent, gedcom),
       sources: eventSources(familyEvent, gedcom),
       indi: indi,
@@ -320,7 +338,9 @@ export function Events(props: Props) {
   const events = flatMap(SORTED_EVENT_TYPE_GROUPS, (eventTypeGroup) =>
     props.entries
       .filter((entry) => eventTypeGroup.includes(entry.tag))
-      .map((eventEntry) => toEvent(eventEntry, props.gedcom, props.indi, intl))
+      .map((eventEntry) =>
+        toEvent(eventEntry, props.gedcom, props.indi, intl, props.images),
+      )
       .flatMap((events) => events)
       .sort((event1, event2) => compareDates(event1.date, event2.date)),
   );

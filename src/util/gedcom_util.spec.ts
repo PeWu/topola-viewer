@@ -4,10 +4,16 @@ import {
   findRelationshipPath,
   getAncestors,
   getDescendants,
+  getFileName,
+  getImageFileEntry,
   getName,
+  getNonImageFileEntry,
   idToFamMap,
   idToIndiMap,
+  isBrowserLoadable,
+  isImageFile,
   normalizeGedcom,
+  resolveFileUrl,
 } from './gedcom_util';
 
 describe('normalizeGedcom()', () => {
@@ -186,5 +192,124 @@ describe('Relationship algorithms', () => {
   it('getDescendants respects generations bounds', () => {
     const descendants = getDescendants('I2', 1, indiMap, famMap);
     expect(descendants).toContain('I3');
+  });
+});
+
+describe('Media Resolution and Utilities', () => {
+  describe('isImageFile()', () => {
+    it('returns true for common images', () => {
+      expect(isImageFile('test.jpg')).toBe(true);
+      expect(isImageFile('test.png')).toBe(true);
+      expect(isImageFile('test.gif')).toBe(true);
+      expect(isImageFile('test.webp')).toBe(true);
+    });
+
+    it('returns false for non-images', () => {
+      expect(isImageFile('test.pdf')).toBe(false);
+      expect(isImageFile('test.txt')).toBe(false);
+    });
+
+    it('ignores query parameters and hashes', () => {
+      expect(isImageFile('test.jpg?version=123')).toBe(true);
+      expect(isImageFile('test.png#anchor')).toBe(true);
+      expect(isImageFile('test.webp?a=1&b=2#h')).toBe(true);
+      expect(isImageFile('test.pdf?img=test.jpg')).toBe(false);
+    });
+  });
+
+  describe('isBrowserLoadable()', () => {
+    it('returns true for browser loadable protocols', () => {
+      expect(isBrowserLoadable('http://example.com/a.jpg')).toBe(true);
+      expect(isBrowserLoadable('https://example.com/a.jpg')).toBe(true);
+      expect(isBrowserLoadable('blob:http://localhost:3000/uuid')).toBe(true);
+      expect(isBrowserLoadable('data:image/png;base64,abc')).toBe(true);
+      expect(isBrowserLoadable('//example.com/a.jpg')).toBe(true);
+    });
+
+    it('returns false for relative local paths', () => {
+      expect(isBrowserLoadable('photos/a.jpg')).toBe(false);
+      expect(isBrowserLoadable('C:\\Users\\a.jpg')).toBe(false);
+    });
+  });
+
+  describe('getFileName()', () => {
+    it('prefers TITL and FORM if present', () => {
+      const entry = {
+        level: 2,
+        pointer: '',
+        tag: 'FILE',
+        data: 'photos/ignored.jpg',
+        tree: [
+          {level: 3, pointer: '', tag: 'TITL', data: 'myphoto', tree: []},
+          {level: 3, pointer: '', tag: 'FORM', data: 'png', tree: []},
+        ],
+      };
+      expect(getFileName(entry)).toBe('myphoto.png');
+    });
+
+    it('falls back to data path name if TITL/FORM is missing', () => {
+      const entry = {
+        level: 2,
+        pointer: '',
+        tag: 'FILE',
+        data: 'photos/realname.jpg?width=100',
+        tree: [],
+      };
+      expect(getFileName(entry)).toBe('realname.jpg');
+    });
+  });
+
+  describe('resolveFileUrl()', () => {
+    it('passes through browser loadable URLs', () => {
+      expect(resolveFileUrl('https://example.com/img.jpg')).toBe(
+        'https://example.com/img.jpg',
+      );
+      expect(resolveFileUrl('blob:uuid')).toBe('blob:uuid');
+    });
+
+    it('matches path case-insensitively from images map', () => {
+      const images = new Map([['photos/img.jpg', 'blob:resolved']]);
+      expect(resolveFileUrl('photos/img.jpg', images)).toBe('blob:resolved');
+      expect(resolveFileUrl('PHOTOS\\IMG.JPG', images)).toBe('blob:resolved');
+    });
+
+    it('does not match base filename from images map', () => {
+      const images = new Map([['img.jpg', 'blob:resolved-base']]);
+      expect(resolveFileUrl('photos/IMG.JPG', images)).toBe('photos/IMG.JPG');
+    });
+
+    it('falls back to normalized path if no match found', () => {
+      expect(resolveFileUrl('photos\\img.jpg')).toBe('photos/img.jpg');
+    });
+  });
+
+  describe('findFileEntries() via getters', () => {
+    const objectEntry = {
+      level: 1,
+      pointer: '@O1@',
+      tag: 'OBJE',
+      data: '',
+      tree: [
+        {level: 2, pointer: '', tag: 'FILE', data: 'photos/a.jpg', tree: []},
+        {level: 2, pointer: '', tag: 'FILE', data: 'documents/b.pdf', tree: []},
+        {
+          level: 2,
+          pointer: '',
+          tag: 'FILE',
+          data: 'https://example.com/c.png',
+          tree: [],
+        },
+      ],
+    };
+
+    it('extracts images including relative and web URLs', () => {
+      const image = getImageFileEntry(objectEntry);
+      expect(image?.data).toBe('photos/a.jpg');
+    });
+
+    it('extracts non-images', () => {
+      const nonImage = getNonImageFileEntry(objectEntry);
+      expect(nonImage?.data).toBe('documents/b.pdf');
+    });
   });
 });

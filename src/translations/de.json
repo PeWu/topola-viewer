@@ -143,5 +143,6 @@
   "family.wife": "Ehefrau",
   "family.unknown_spouse": "Unbekannter Ehepartner",
   "family.children": "Kinder",
-  "family.child": "Kind"
+  "family.child": "Kind",
+  "media.not_uploaded": "Datei nicht hochgeladen"
 }
