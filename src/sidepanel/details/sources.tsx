@@ -1,7 +1,8 @@
 import {useIntl} from 'react-intl';
 import {List} from 'semantic-ui-react';
 import {formatDateOrRange} from '../../util/date_util';
-import {Source} from '../../util/gedcom_util';
+import {pointerToId, Source} from '../../util/gedcom_util';
+import {EventExtras} from './event-extras';
 import {LinkifyNewTab} from './linkify-new-tab';
 
 interface Props {
@@ -29,6 +30,14 @@ export function Sources({sources}: Props) {
             <List.Description>
               <LinkifyNewTab>{source.page}</LinkifyNewTab>
               {source.date && ` [${formatDateOrRange(source.date, intl)}]`}
+              <EventExtras
+                images={source.images}
+                notes={source.notes}
+                //sources={props.event.sources}
+                indi={source.id}
+                //files={props.event.files}
+              />
+              {source.images && source.images.length > 0 && ` [${source.images.join(', ')}]`}
             </List.Description>
           </List.Content>
         </List.Item>

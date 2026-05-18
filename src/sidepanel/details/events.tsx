@@ -164,7 +164,7 @@ function eventPlace(entry: GedcomEntry) {
   return place?.data ? getData(place) : undefined;
 }
 
-function eventImages(entry: GedcomEntry, gedcom: GedcomData): Image[] {
+export function eventImages(entry: GedcomEntry, gedcom: GedcomData): Image[] {
   return entry.tree
     .filter((subEntry) => 'OBJE' === subEntry.tag)
     .map((objectEntry) =>
@@ -208,7 +208,7 @@ function eventSources(entry: GedcomEntry, gedcom: GedcomData): Source[] {
     .map((sourceEntryReference) => mapToSource(sourceEntryReference, gedcom));
 }
 
-function eventNotes(entry: GedcomEntry, gedcom: GedcomData): string[][] {
+export function eventNotes(entry: GedcomEntry, gedcom: GedcomData): string[][] {
   const externalNotes = entry.tree
     .filter((subEntry) => subEntry.tag === 'NOTE')
     .map((note) => dereference(note, gedcom, (gedcom) => gedcom.other));

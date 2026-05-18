@@ -151,7 +151,7 @@ div.zoom {
 }
 
 .details .ui.items .item .content {
-  padding: 0 15px 0 25px;
+  padding: 0 15px 0 15px; /* was 0 15px 0 25px */
 }
 
 .details .item-header {
@@ -176,6 +176,14 @@ div.zoom {
 
 .ui.tabular.menu a {
   text-transform: uppercase;
+}
+
+.ui.sub.header {
+  margin-left: 20px;
+}
+
+.ui.list {
+  margin-left: 0px; /* was 20px */
 }
 
 .limit-height {

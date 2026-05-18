@@ -126,6 +126,11 @@ function sourceDetails(
     return null;
   }
 
+  console.log('function sourceDetails:',
+    'sourceReferenceEntries', sourceReferenceEntries,
+    'sources', sources
+  );
+
   return (
     <>
       <div className="item-header">

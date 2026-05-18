@@ -10,6 +10,8 @@ import {
 } from 'topola';
 import {compareDates} from './date_util';
 import {TopolaError} from './error';
+import {Image} from '../sidepanel/details/event-extras';
+import {eventImages, eventNotes} from '../sidepanel/details/events';
 
 export interface GedcomData {
   /** The HEAD entry. */
@@ -33,6 +35,9 @@ export interface Source {
   page?: string;
   date?: DateOrRange;
   publicationInfo?: string;
+  images?: Image[];
+  notes?: string[][];
+  id: string;
 }
 
 /**
@@ -351,6 +356,7 @@ export function mapToSource(
   sourceEntryReference: GedcomEntry,
   gedcom: GedcomData,
 ) {
+  // Get source ("Quelle") for source entry reference ("Fundstelle").
   const sourceEntry = dereference(
     sourceEntryReference,
     gedcom,
@@ -363,26 +369,75 @@ export function mapToSource(
 
   const author = sourceEntry.tree.find((subEntry) => 'AUTH' === subEntry.tag);
 
-  const publicationInfo = sourceEntry.tree.find(
-    (subEntry) => 'PUBL' === subEntry.tag,
-  );
+  const publicationInfo = sourceEntry.tree.find((subEntry) => 'PUBL' === subEntry.tag);
+
+  const page = sourceEntryReference.tree.find((subEntry) => 'PAGE' === subEntry.tag);
+
+  const sourceData = sourceEntryReference.tree.find((subEntry) => 'DATA' === subEntry.tag);
+
+  const date = sourceData ? resolveDate(sourceData) : undefined;
+
+  // Images of sources
+  // Get images referenced in the source entry ("Quelle").
+  const images = eventImages(sourceEntry, gedcom);  
+  // Add images referenced in the source entry reference ("Fundstelle").
+  images.push(...eventImages(sourceEntryReference, gedcom));
+
+  // Notes of sources
+  // Get notes referenced in the source entry ("Quelle").
+  const notes = eventNotes(sourceEntry, gedcom);
+  // Add notes referenced in the source entry reference ("Fundstelle").
+  notes.push(...eventNotes(sourceEntryReference, gedcom));
 
   const page = sourceEntryReference.tree.find(
-    (subEntry) => 'PAGE' === subEntry.tag,
+    (subEntry) => 'PAGE' === subEntry.tag
   );
 
   const sourceData = sourceEntryReference.tree.find(
-    (subEntry) => 'DATA' === subEntry.tag,
+    (subEntry) => 'DATA' === subEntry.tag
   );
 
   const date = sourceData ? resolveDate(sourceData) : undefined;
 
+  // Get OBJE image files referenced in the source entry reference ("Fundstelle").
+  const images: string[] = [];
+  sourceEntryReference.tree.forEach((subEntry) => {
+    console.log('function mapToSource: iterating sourceEntryReference.tree:',
+      'subEntry', subEntry
+    );
+    if (subEntry.tag === 'OBJE') {
+      const fileEntry = dereference(
+        subEntry,
+        gedcom,
+        (gedcom) => gedcom.other,
+      );
+      console.log('function mapToSource: dereferenced OBJE entry:',
+        'fileEntry', fileEntry
+      );
+      const imageFileEntry = getImageFileEntry(fileEntry);
+      console.log('function mapToSource: found image file entry:',
+        'imageFileEntry', imageFileEntry
+      );
+      if (imageFileEntry) {
+        console.log('function mapToSource: adding image file name to images:',
+          'imageFileEntry', imageFileEntry
+        );
+        images.push(imageFileEntry);
+      }
+    }
+  });
+
+  const id = 'dummy';//pointerToId(sourceEntryReference.pointer); // using the pointer as id causes too many re-renders in React, probably because the pointer is not stable across renders. Using a dummy id for now, but this should be fixed properly in the future.
+  
   return {
     title: title?.data || abbr?.data,
     author: author?.data,
     page: page?.data,
     date: date ? getDate(date.data) : undefined,
     publicationInfo: publicationInfo?.data,
+    images: images,
+    notes: notes,
+    id: id,
   };
 }
 
