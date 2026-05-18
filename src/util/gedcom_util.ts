@@ -356,7 +356,7 @@ export function mapToSource(
   sourceEntryReference: GedcomEntry,
   gedcom: GedcomData,
 ) {
-  // Conbine Source ("Quelle") and source entry reference ("Fundstelle").
+  // Get source ("Quelle") for source entry reference ("Fundstelle").
   const sourceEntry = dereference(
     sourceEntryReference,
     gedcom,
@@ -388,6 +388,44 @@ export function mapToSource(
   const notes = eventNotes(sourceEntry, gedcom);
   // Add notes referenced in the source entry reference ("Fundstelle").
   notes.push(...eventNotes(sourceEntryReference, gedcom));
+
+  const page = sourceEntryReference.tree.find(
+    (subEntry) => 'PAGE' === subEntry.tag
+  );
+
+  const sourceData = sourceEntryReference.tree.find(
+    (subEntry) => 'DATA' === subEntry.tag
+  );
+
+  const date = sourceData ? resolveDate(sourceData) : undefined;
+
+  // Get OBJE image files referenced in the source entry reference ("Fundstelle").
+  const images: string[] = [];
+  sourceEntryReference.tree.forEach((subEntry) => {
+    console.log('function mapToSource: iterating sourceEntryReference.tree:',
+      'subEntry', subEntry
+    );
+    if (subEntry.tag === 'OBJE') {
+      const fileEntry = dereference(
+        subEntry,
+        gedcom,
+        (gedcom) => gedcom.other,
+      );
+      console.log('function mapToSource: dereferenced OBJE entry:',
+        'fileEntry', fileEntry
+      );
+      const imageFileEntry = getImageFileEntry(fileEntry);
+      console.log('function mapToSource: found image file entry:',
+        'imageFileEntry', imageFileEntry
+      );
+      if (imageFileEntry) {
+        console.log('function mapToSource: adding image file name to images:',
+          'imageFileEntry', imageFileEntry
+        );
+        images.push(imageFileEntry);
+      }
+    }
+  });
 
   const id = 'dummy';//pointerToId(sourceEntryReference.pointer); // using the pointer as id causes too many re-renders in React, probably because the pointer is not stable across renders. Using a dummy id for now, but this should be fixed properly in the future.
   

@@ -37,6 +37,7 @@ export function Sources({sources}: Props) {
                 indi={source.id}
                 //files={props.event.files}
               />
+              {source.images && source.images.length > 0 && ` [${source.images.join(', ')}]`}
             </List.Description>
           </List.Content>
         </List.Item>
