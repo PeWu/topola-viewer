@@ -25,7 +25,7 @@ export function AdditionalFiles({files}: Props) {
               </a>
             </List.Header>
             <List.Description>
-              {file.titl && <div>{file.titl}</div>} 
+              {file.titl && <div>{file.titl}</div>}
             </List.Description>
           </List.Content>
         </List.Item>

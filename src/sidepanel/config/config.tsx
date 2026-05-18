@@ -1,8 +1,8 @@
-import {SourceHead} from '../head/head';
-import {GedcomData} from '../../util/gedcom_util';
 import {ParsedQuery} from 'query-string';
 import {FormattedMessage} from 'react-intl';
 import {Checkbox, Form, Header, Item} from 'semantic-ui-react';
+import {GedcomData} from '../../util/gedcom_util';
+import {SourceHead} from '../head/head';
 
 export enum ChartColors {
   NO_COLOR,
@@ -54,7 +54,7 @@ const SEX_ARG = new Map<string, Sex>([
 const SEX_ARG_INVERSE = new Map<Sex, string>();
 SEX_ARG.forEach((v, k) => SEX_ARG_INVERSE.set(v, k));
 
-export function argsToConfig(args: ParsedQuery<any>): Config {
+export function argsToConfig(args: ParsedQuery<unknown>): Config {
   const getParam = (name: string) => {
     const value = args[name];
     return typeof value === 'string' ? value : undefined;
@@ -67,12 +67,21 @@ export function argsToConfig(args: ParsedQuery<any>): Config {
   };
 }
 
-export function configToArgs(config: Config): ParsedQuery<any> {
-  return {
-    c: COLOR_ARG_INVERSE.get(config.color),
-    i: ID_ARG_INVERSE.get(config.id),
-    s: SEX_ARG_INVERSE.get(config.sex),
-  };
+export function configToArgs(config: Config): ParsedQuery {
+  const result: ParsedQuery = {};
+  const color = COLOR_ARG_INVERSE.get(config.color);
+  if (color) {
+    result.c = color;
+  }
+  const id = ID_ARG_INVERSE.get(config.id);
+  if (id) {
+    result.i = id;
+  }
+  const sex = SEX_ARG_INVERSE.get(config.sex);
+  if (sex) {
+    result.s = sex;
+  }
+  return result;
 }
 
 export function ConfigPanel(props: {
@@ -82,158 +91,169 @@ export function ConfigPanel(props: {
 }) {
   return (
     <>
-    {SourceHead(props.gedcom)}<Form className="details">
-      <Item.Group>
-        <Item>
-          <Item.Content>
-            <Header sub>
-              <FormattedMessage id="config.colors" defaultMessage="Colors" />
-            </Header>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
-                label={
-                  <FormattedMessage
-                    tagName="label"
-                    id="config.colors.NO_COLOR"
-                    defaultMessage="none"
-                  />
-                }
-                name="checkboxRadioGroup"
-                value="none"
-                checked={props.config.color === ChartColors.NO_COLOR}
-                onClick={() =>
-                  props.onChange({
-                    ...props.config,
-                    color: ChartColors.NO_COLOR,
-                  })
-                }
-              />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
-                label={
-                  <FormattedMessage
-                    tagName="label"
-                    id="config.colors.COLOR_BY_GENERATION"
-                    defaultMessage="by generation"
-                  />
-                }
-                name="checkboxRadioGroup"
-                value="generation"
-                checked={props.config.color === ChartColors.COLOR_BY_GENERATION}
-                onClick={() =>
-                  props.onChange({
-                    ...props.config,
-                    color: ChartColors.COLOR_BY_GENERATION,
-                  })
-                }
-              />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
-                label={
-                  <FormattedMessage
-                    tagName="label"
-                    id="config.colors.COLOR_BY_SEX"
-                    defaultMessage="by sex"
-                  />
-                }
-                name="checkboxRadioGroup"
-                value="gender"
-                checked={props.config.color === ChartColors.COLOR_BY_SEX}
-                onClick={() =>
-                  props.onChange({
-                    ...props.config,
-                    color: ChartColors.COLOR_BY_SEX,
-                  })
-                }
-              />
-            </Form.Field>
-          </Item.Content>
-        </Item>
-        <Item>
-          <Item.Content>
-            <Header sub>
-              <FormattedMessage id="config.ids" defaultMessage="IDs" />
-            </Header>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
-                label={
-                  <FormattedMessage
-                    tagName="label"
-                    id="config.ids.HIDE"
-                    defaultMessage="hide"
-                  />
-                }
-                name="checkboxRadioGroup"
-                value="hide"
-                checked={props.config.id === Ids.HIDE}
-                onClick={() => props.onChange({...props.config, id: Ids.HIDE})}
-              />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
-                label={
-                  <FormattedMessage
-                    tagName="label"
-                    id="config.ids.SHOW"
-                    defaultMessage="show"
-                  />
-                }
-                name="checkboxRadioGroup"
-                value="show"
-                checked={props.config.id === Ids.SHOW}
-                onClick={() => props.onChange({...props.config, id: Ids.SHOW})}
-              />
-            </Form.Field>
-          </Item.Content>
-        </Item>
-        <Item>
-          <Item.Content>
-            <Header sub>
-              <FormattedMessage id="config.sex" defaultMessage="Sex" />
-            </Header>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
-                label={
-                  <FormattedMessage
-                    tagName="label"
-                    id="config.sex.HIDE"
-                    defaultMessage="hide"
-                  />
-                }
-                name="checkboxRadioGroup"
-                value="hide"
-                checked={props.config.sex === Sex.HIDE}
-                onClick={() => props.onChange({...props.config, sex: Sex.HIDE})}
-              />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
-                label={
-                  <FormattedMessage
-                    tagName="label"
-                    id="config.sex.SHOW"
-                    defaultMessage="show"
-                  />
-                }
-                name="checkboxRadioGroup"
-                value="show"
-                checked={props.config.sex === Sex.SHOW}
-                onClick={() => props.onChange({...props.config, sex: Sex.SHOW})}
-              />
-            </Form.Field>
-          </Item.Content>
-        </Item>
-      </Item.Group>
-    </Form>
+      {SourceHead(props.gedcom)}
+      <Form className="details">
+        <Item.Group>
+          <Item>
+            <Item.Content>
+              <Header sub>
+                <FormattedMessage id="config.colors" defaultMessage="Colors" />
+              </Header>
+              <Form.Field className="no-margin">
+                <Checkbox
+                  radio
+                  label={
+                    <FormattedMessage
+                      tagName="label"
+                      id="config.colors.NO_COLOR"
+                      defaultMessage="none"
+                    />
+                  }
+                  name="checkboxRadioGroup"
+                  value="none"
+                  checked={props.config.color === ChartColors.NO_COLOR}
+                  onClick={() =>
+                    props.onChange({
+                      ...props.config,
+                      color: ChartColors.NO_COLOR,
+                    })
+                  }
+                />
+              </Form.Field>
+              <Form.Field className="no-margin">
+                <Checkbox
+                  radio
+                  label={
+                    <FormattedMessage
+                      tagName="label"
+                      id="config.colors.COLOR_BY_GENERATION"
+                      defaultMessage="by generation"
+                    />
+                  }
+                  name="checkboxRadioGroup"
+                  value="generation"
+                  checked={
+                    props.config.color === ChartColors.COLOR_BY_GENERATION
+                  }
+                  onClick={() =>
+                    props.onChange({
+                      ...props.config,
+                      color: ChartColors.COLOR_BY_GENERATION,
+                    })
+                  }
+                />
+              </Form.Field>
+              <Form.Field className="no-margin">
+                <Checkbox
+                  radio
+                  label={
+                    <FormattedMessage
+                      tagName="label"
+                      id="config.colors.COLOR_BY_SEX"
+                      defaultMessage="by sex"
+                    />
+                  }
+                  name="checkboxRadioGroup"
+                  value="gender"
+                  checked={props.config.color === ChartColors.COLOR_BY_SEX}
+                  onClick={() =>
+                    props.onChange({
+                      ...props.config,
+                      color: ChartColors.COLOR_BY_SEX,
+                    })
+                  }
+                />
+              </Form.Field>
+            </Item.Content>
+          </Item>
+          <Item>
+            <Item.Content>
+              <Header sub>
+                <FormattedMessage id="config.ids" defaultMessage="IDs" />
+              </Header>
+              <Form.Field className="no-margin">
+                <Checkbox
+                  radio
+                  label={
+                    <FormattedMessage
+                      tagName="label"
+                      id="config.ids.HIDE"
+                      defaultMessage="hide"
+                    />
+                  }
+                  name="checkboxRadioGroup"
+                  value="hide"
+                  checked={props.config.id === Ids.HIDE}
+                  onClick={() =>
+                    props.onChange({...props.config, id: Ids.HIDE})
+                  }
+                />
+              </Form.Field>
+              <Form.Field className="no-margin">
+                <Checkbox
+                  radio
+                  label={
+                    <FormattedMessage
+                      tagName="label"
+                      id="config.ids.SHOW"
+                      defaultMessage="show"
+                    />
+                  }
+                  name="checkboxRadioGroup"
+                  value="show"
+                  checked={props.config.id === Ids.SHOW}
+                  onClick={() =>
+                    props.onChange({...props.config, id: Ids.SHOW})
+                  }
+                />
+              </Form.Field>
+            </Item.Content>
+          </Item>
+          <Item>
+            <Item.Content>
+              <Header sub>
+                <FormattedMessage id="config.sex" defaultMessage="Sex" />
+              </Header>
+              <Form.Field className="no-margin">
+                <Checkbox
+                  radio
+                  label={
+                    <FormattedMessage
+                      tagName="label"
+                      id="config.sex.HIDE"
+                      defaultMessage="hide"
+                    />
+                  }
+                  name="checkboxRadioGroup"
+                  value="hide"
+                  checked={props.config.sex === Sex.HIDE}
+                  onClick={() =>
+                    props.onChange({...props.config, sex: Sex.HIDE})
+                  }
+                />
+              </Form.Field>
+              <Form.Field className="no-margin">
+                <Checkbox
+                  radio
+                  label={
+                    <FormattedMessage
+                      tagName="label"
+                      id="config.sex.SHOW"
+                      defaultMessage="show"
+                    />
+                  }
+                  name="checkboxRadioGroup"
+                  value="show"
+                  checked={props.config.sex === Sex.SHOW}
+                  onClick={() =>
+                    props.onChange({...props.config, sex: Sex.SHOW})
+                  }
+                />
+              </Form.Field>
+            </Item.Content>
+          </Item>
+        </Item.Group>
+      </Form>
     </>
   );
 }

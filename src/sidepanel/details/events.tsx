@@ -1,8 +1,6 @@
 import flatMap from 'array.prototype.flatmap';
 import {GedcomEntry} from 'parse-gedcom';
-import queryString from 'query-string';
-import {FormattedMessage, IntlShape, useIntl} from 'react-intl';
-import {Link, useLocation} from 'react-router';
+import {IntlShape, useIntl} from 'react-intl';
 import {Header, Item} from 'semantic-ui-react';
 import {DateOrRange, getDate} from 'topola';
 import {calcAge} from '../../util/age_util';
@@ -13,38 +11,16 @@ import {
   getData,
   getFileName,
   getImageFileEntry,
-  getName,
   getNonImageFileEntry,
   mapToSource,
-  pointerToId,
   resolveDate,
   resolveType,
   Source,
 } from '../../util/gedcom_util';
 import {FileEntry} from './additional-files';
 import {EventExtras, Image} from './event-extras';
+import {PersonLink} from './person-link';
 import {TranslatedTag} from './translated-tag';
-
-function PersonLink(props: {person: GedcomEntry}) {
-  const location = useLocation();
-
-  const name = getName(props.person);
-
-  const search = queryString.parse(location.search);
-  search['indi'] = pointerToId(props.person.pointer);
-
-  return (
-    <Item.Meta>
-      <Link to={{pathname: '/view', search: queryString.stringify(search)}}>
-        {name ? (
-          name
-        ) : (
-          <FormattedMessage id="name.unknown_name" defaultMessage="N.N." />
-        )}
-      </Link>
-    </Item.Meta>
-  );
-}
 
 interface Props {
   gedcom: GedcomData;

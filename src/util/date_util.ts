@@ -122,7 +122,7 @@ export function compareTopolaDates(
     return date1.month - date2.month;
   }
   if (date1.day && date2.day && date1.day !== date2.day) {
-    return date1.month - date2.month;
+    return date1.day - date2.day;
   }
   return 0;
 }
@@ -180,9 +180,5 @@ export function isDateRangeClosed(range: DateRange | undefined): boolean {
 }
 
 export function toDateObject(date: TopolaDate): Date {
-  return new Date(
-    date.year !== undefined ? date.year! : 0,
-    date.month !== undefined ? date.month! - 1 : 0,
-    date.day !== undefined ? date.day! : 1,
-  );
+  return new Date(date.year ?? 0, (date.month ?? 1) - 1, date.day ?? 1);
 }

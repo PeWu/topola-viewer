@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-05-02
+
+- Display search in mobile view (by marionikolov)
+
 ## 2026-04-20
 
 - Shift-click to show a person's details without rearranging the tree (by FrankBuchholz)

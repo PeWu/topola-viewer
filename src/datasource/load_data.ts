@@ -54,7 +54,7 @@ async function loadGedzip(
 
   let gedcom = undefined;
   const images = new Map<string, string>();
-  for (let fileName of Object.keys(unzipped)) {
+  for (const fileName of Object.keys(unzipped)) {
     if (fileName.endsWith('.ged')) {
       if (gedcom) {
         console.warn('Multiple GEDCOM files found in zip archive.');
@@ -151,13 +151,18 @@ export interface UploadSourceSpec {
   images?: Map<string, string>;
 }
 
+export interface UploadLocationState {
+  data: string;
+  images: Map<string, string>;
+}
+
 /** Files opened from the local computer. */
 export class UploadedDataSource implements DataSource<UploadSourceSpec> {
   // isNewData(args: Arguments, state: State): boolean {
   isNewData(
     newSource: SourceSelection<UploadSourceSpec>,
     oldSource: SourceSelection<UploadSourceSpec>,
-    data?: TopolaData,
+    _data?: TopolaData,
   ): boolean {
     return newSource.spec.hash !== oldSource.spec.hash;
   }
@@ -196,7 +201,7 @@ export class GedcomUrlDataSource implements DataSource<UrlSourceSpec> {
   isNewData(
     newSource: SourceSelection<UrlSourceSpec>,
     oldSource: SourceSelection<UrlSourceSpec>,
-    data?: TopolaData,
+    _data?: TopolaData,
   ): boolean {
     return newSource.spec.url !== oldSource.spec.url;
   }

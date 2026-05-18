@@ -2,10 +2,24 @@ import {defineConfig} from 'vite';
 import {resolve} from 'path';
 import react from '@vitejs/plugin-react';
 import viteTsconfigPaths from 'vite-tsconfig-paths';
+import {execSync} from 'child_process';
+
+let gitSha = '';
+let gitTime = '';
+try {
+  gitSha = execSync('git rev-parse --short HEAD').toString().trim();
+  gitTime = execSync('git log -1 --format=%ci').toString().trim();
+} catch (e) {
+  console.error('Failed to get git info', e);
+}
 
 export default defineConfig({
   // depending on your application, base can also be "/"
   base: '',
+  define: {
+    'import.meta.env.VITE_GIT_SHA': JSON.stringify(gitSha),
+    'import.meta.env.VITE_GIT_TIME': JSON.stringify(gitTime),
+  },
   plugins: [
     react(),
     viteTsconfigPaths(),

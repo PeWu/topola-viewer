@@ -45,7 +45,7 @@ function compare(a: lunr.Index.Result, b: lunr.Index.Result) {
 /** Returns all last names of all husbands as a space-separated string. */
 function getHusbandLastName(
   indi: JsonIndi,
-  indiMap: Map<String, JsonIndi>,
+  indiMap: Map<string, JsonIndi>,
   famMap: Map<string, JsonFam>,
 ): string {
   return (indi.fams || [])
@@ -57,7 +57,7 @@ function getHusbandLastName(
 }
 
 class LunrSearchIndex implements SearchIndex {
-  private index: lunr.Index | undefined;
+  private index!: lunr.Index;
   private indiMap: Map<string, JsonIndi>;
   private famMap: Map<string, JsonFam>;
 
@@ -67,6 +67,7 @@ class LunrSearchIndex implements SearchIndex {
   }
 
   initialize() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this.index = lunr(function () {
       //Trimmer will break non-latin characters, so custom multilingual implementation must be used
@@ -103,22 +104,20 @@ class LunrSearchIndex implements SearchIndex {
   }
 
   private initMultiLingualLunrWithoutTrimmer(
-    lunrInstance: any,
+    lunrInstance: lunr.Builder,
     languages: string[],
   ): void {
-    let wordCharacters = '';
     const pipelineFunctions: PipelineFunction[] = [];
     const searchPipelineFunctions: PipelineFunction[] = [];
     languages.forEach((language) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const lunrLanguage = lunr[language];
       if (language === 'en') {
-        wordCharacters += '\\w';
         pipelineFunctions.unshift(lunr.stopWordFilter);
         pipelineFunctions.push(lunr.stemmer);
         searchPipelineFunctions.push(lunr.stemmer);
       } else {
-        wordCharacters += lunrLanguage.wordCharacters;
         if (lunrLanguage.stopWordFilter) {
           pipelineFunctions.unshift(lunrLanguage.stopWordFilter);
         }
@@ -129,14 +128,11 @@ class LunrSearchIndex implements SearchIndex {
       }
     });
     lunrInstance.pipeline.reset();
-    lunrInstance.pipeline.add.apply(lunrInstance.pipeline, pipelineFunctions);
+    lunrInstance.pipeline.add(...pipelineFunctions);
 
     if (lunrInstance.searchPipeline) {
       lunrInstance.searchPipeline.reset();
-      lunrInstance.searchPipeline.add.apply(
-        lunrInstance.searchPipeline,
-        searchPipelineFunctions,
-      );
+      lunrInstance.searchPipeline.add(...searchPipelineFunctions);
     }
   }
 
@@ -146,13 +142,16 @@ class LunrSearchIndex implements SearchIndex {
       .filter((s) => !!s)
       .map((s) => `${s} ${s}*`)
       .join(' ');
-    const results = this.index!.search(query);
+    const results = this.index.search(query);
     return results
       .sort(compare)
       .slice(0, MAX_RESULTS)
       .map((result) => ({
         id: result.ref,
-        indi: this.indiMap.get(result.ref)!,
+        indi: this.indiMap.get(result.ref) || {
+          id: result.ref,
+          firstName: 'INDI NOT FOUND',
+        },
       }));
   }
 }

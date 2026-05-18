@@ -15,7 +15,7 @@ import {eventImages, eventNotes} from '../sidepanel/details/events';
 
 export interface GedcomData {
   /** The HEAD entry. */
-  head: GedcomEntry;
+  head?: GedcomEntry;
   /** INDI entries mapped by id. */
   indis: {[key: string]: GedcomEntry};
   /** FAM entries mapped by id. */
@@ -48,6 +48,7 @@ export function pointerToId(pointer: string): string {
   return pointer.substring(1, pointer.length - 1);
 }
 
+/** Returns a map from individual ID to individual data object. */
 export function idToIndiMap(data: JsonGedcomData): Map<string, JsonIndi> {
   const map = new Map<string, JsonIndi>();
   data.indis.forEach((indi) => {
@@ -56,6 +57,7 @@ export function idToIndiMap(data: JsonGedcomData): Map<string, JsonIndi> {
   return map;
 }
 
+/** Returns a map from family ID to family data object. */
 export function idToFamMap(data: JsonGedcomData): Map<string, JsonFam> {
   const map = new Map<string, JsonFam>();
   data.fams.forEach((fam) => {
@@ -65,7 +67,7 @@ export function idToFamMap(data: JsonGedcomData): Map<string, JsonFam> {
 }
 
 function prepareGedcom(entries: GedcomEntry[]): GedcomData {
-  const head = entries.find((entry) => entry.tag === 'HEAD')!;
+  const head = entries.find((entry) => entry.tag === 'HEAD');
   const indis: {[key: string]: GedcomEntry} = {};
   const fams: {[key: string]: GedcomEntry} = {};
   const other: {[key: string]: GedcomEntry} = {};
@@ -226,12 +228,13 @@ function filterImage(indi: JsonIndi, images: Map<string, string>): JsonIndi {
   const newImages: JsonImage[] = [];
   indi.images.forEach((image) => {
     const filePath = image.url.replaceAll('\\', '/');
-    const fileName = filePath.match(/[^/]*$/)![0];
-    // If the image file has been loaded into memory, use it.
-    if (images.has(filePath)) {
-      newImages.push({url: images.get(filePath)!, title: image.title});
-    } else if (images.has(fileName)) {
-      newImages.push({url: images.get(fileName)!, title: image.title});
+    const fileName = filePath.split('/').pop() || '';
+    const fileUrl = images.get(filePath);
+    const nameUrl = images.get(fileName);
+    if (fileUrl) {
+      newImages.push({url: fileUrl, title: image.title});
+    } else if (nameUrl) {
+      newImages.push({url: nameUrl, title: image.title});
     } else if (image.url.startsWith('http') && isImageFile(image.url)) {
       newImages.push(image);
     }
@@ -281,7 +284,8 @@ export function convertGedcom(
   };
 }
 
-export function getSoftware(head: GedcomEntry): string | null {
+/** Returns the name of the software used to generate the GEDCOM file, if available. */
+export function getSoftware(head?: GedcomEntry): string | null {
   const sour =
     head && head.tree && head.tree.find((entry) => entry.tag === 'SOUR');
   const name =
@@ -289,6 +293,7 @@ export function getSoftware(head: GedcomEntry): string | null {
   return (name && name.data) || null;
 }
 
+/** Returns the name of an individual, preferring birth name over married name. */
 export function getName(person: GedcomEntry): string | undefined {
   const names = person.tree.filter((subEntry) => subEntry.tag === 'NAME');
   const notMarriedName = names.find(
@@ -301,6 +306,7 @@ export function getName(person: GedcomEntry): string | undefined {
   return name?.data.replace(/\//g, '');
 }
 
+/** Returns the file name for a media entry, combining title and extension. */
 export function getFileName(fileEntry: GedcomEntry): string | undefined {
   const fileTitle = fileEntry?.tree.find((entry) => entry.tag === 'TITL')?.data;
 
@@ -321,26 +327,31 @@ function findFileEntry(
   );
 }
 
+/** Returns the first non-image file entry for a media object. */
 export function getNonImageFileEntry(
   objectEntry: GedcomEntry,
 ): GedcomEntry | undefined {
   return findFileEntry(objectEntry, (entry) => !isImageFile(entry.data));
 }
 
+/** Returns the first image file entry for a media object. */
 export function getImageFileEntry(
   objectEntry: GedcomEntry,
 ): GedcomEntry | undefined {
   return findFileEntry(objectEntry, (entry) => isImageFile(entry.data));
 }
 
+/** Resolves the DATE sub-entry for the given GEDCOM entry. */
 export function resolveDate(entry: GedcomEntry) {
   return entry.tree.find((subEntry) => subEntry.tag === 'DATE');
 }
 
+/** Resolves the TYPE sub-entry data for the given GEDCOM entry. */
 export function resolveType(entry: GedcomEntry) {
   return entry.tree.find((subEntry) => subEntry.tag === 'TYPE')?.data;
 }
 
+/** Converts a GEDCOM source reference entry to a structured Source object. */
 export function mapToSource(
   sourceEntryReference: GedcomEntry,
   gedcom: GedcomData,
@@ -390,4 +401,166 @@ export function mapToSource(
     notes: notes,
     id: id,
   };
+}
+
+/** Finds the shortest relationship path between two individuals in the family tree. */
+export function findRelationshipPath(
+  indiId1: string,
+  indiId2: string,
+  indiMap: Map<string, JsonIndi>,
+  famMap: Map<string, JsonFam>,
+): string[] {
+  const getNeighbors = (id: string): string[] => {
+    const indi = indiMap.get(id);
+    if (!indi) {
+      return [];
+    }
+
+    const neighbors: string[] = [];
+    if (indi.famc) {
+      const fam = famMap.get(indi.famc);
+      if (fam) {
+        if (fam.wife) {
+          neighbors.push(fam.wife);
+        }
+        if (fam.husb) {
+          neighbors.push(fam.husb);
+        }
+        if (fam.children) {
+          fam.children.forEach((child) => {
+            if (child !== id) {
+              neighbors.push(child);
+            }
+          });
+        }
+      }
+    }
+
+    if (indi.fams) {
+      indi.fams.forEach((famId) => {
+        const fam = famMap.get(famId);
+        if (fam) {
+          if (fam.wife && fam.wife !== id) {
+            neighbors.push(fam.wife);
+          }
+          if (fam.husb && fam.husb !== id) {
+            neighbors.push(fam.husb);
+          }
+          if (fam.children) {
+            fam.children.forEach((child) => neighbors.push(child));
+          }
+        }
+      });
+    }
+
+    return neighbors.filter((nId) => !nId.startsWith('private_'));
+  };
+
+  const queue: string[] = [indiId1];
+  const visited = new Map<string, string | null>();
+  visited.set(indiId1, null);
+
+  while (queue.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const current = queue.shift()!;
+    if (current === indiId2) {
+      const path: string[] = [];
+      let curr: string | null = current;
+      while (curr !== null) {
+        path.push(curr);
+        curr = visited.get(curr) || null;
+      }
+      return path.reverse();
+    }
+
+    const neighbors = getNeighbors(current);
+    for (const neighbor of neighbors) {
+      if (!visited.has(neighbor)) {
+        visited.set(neighbor, current);
+        queue.push(neighbor);
+      }
+    }
+  }
+
+  return [];
+}
+
+/** Returns the ancestors of an individual up to a specified number of generations. */
+export function getAncestors(
+  indiId: string,
+  generations: number,
+  indiMap: Map<string, JsonIndi>,
+  famMap: Map<string, JsonFam>,
+): string[] {
+  const result: string[] = [];
+  const queue: {id: string; gen: number}[] = [{id: indiId, gen: 0}];
+  const visited = new Set<string>();
+  visited.add(indiId);
+
+  while (queue.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const {id, gen} = queue.shift()!;
+    if (id !== indiId && !id.startsWith('private_')) {
+      result.push(id);
+    }
+
+    if (gen < generations) {
+      const indi = indiMap.get(id);
+      if (indi && indi.famc) {
+        const fam = famMap.get(indi.famc);
+        if (fam) {
+          if (fam.wife && !visited.has(fam.wife)) {
+            visited.add(fam.wife);
+            queue.push({id: fam.wife, gen: gen + 1});
+          }
+          if (fam.husb && !visited.has(fam.husb)) {
+            visited.add(fam.husb);
+            queue.push({id: fam.husb, gen: gen + 1});
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+/** Returns the descendants of an individual up to a specified number of generations. */
+export function getDescendants(
+  indiId: string,
+  generations: number,
+  indiMap: Map<string, JsonIndi>,
+  famMap: Map<string, JsonFam>,
+): string[] {
+  const result: string[] = [];
+  const queue: {id: string; gen: number}[] = [{id: indiId, gen: 0}];
+  const visited = new Set<string>();
+  visited.add(indiId);
+
+  while (queue.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const {id, gen} = queue.shift()!;
+    if (id !== indiId && !id.startsWith('private_')) {
+      result.push(id);
+    }
+
+    if (gen < generations) {
+      const indi = indiMap.get(id);
+      if (indi && indi.fams) {
+        indi.fams.forEach((famId) => {
+          const fam = famMap.get(famId);
+          if (fam && fam.children) {
+            fam.children.forEach((child) => {
+              if (!visited.has(child)) {
+                visited.add(child);
+                queue.push({id: child, gen: gen + 1});
+              }
+            });
+          }
+        });
+      }
+    }
+  }
+
+  return result;
 }

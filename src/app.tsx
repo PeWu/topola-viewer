@@ -25,6 +25,7 @@ import {
   GedcomUrlDataSource,
   getSelection,
   UploadedDataSource,
+  UploadLocationState,
   UploadSourceSpec,
   UrlSourceSpec,
 } from './datasource/load_data';
@@ -49,14 +50,30 @@ import {SidePanel} from './sidepanel/side-panel';
 import {analyticsEvent} from './util/analytics';
 import {getI18nMessage} from './util/error_i18n';
 import {idToIndiMap, TopolaData} from './util/gedcom_util';
+import {WebMcpBridge} from './webmcp';
 
 /**
- * Load GEDCOM URL from VITE_STATIC_URL environment variable.
+ * Load GEDCOM URL from environment variable (Vite VITE_STATIC_URL or dynamically
+ * injected via a meta tag from Caddy server).
  *
- * If this environment variable is provided, the viewer is switched to
+ * If this static URL is provided, the viewer is switched to
  * single-tree mode without the option to load other data.
  */
-const staticUrl = import.meta.env.VITE_STATIC_URL;
+function getStaticUrl(): string | undefined {
+  const envUrl = import.meta.env.VITE_STATIC_URL;
+  if (envUrl) return envUrl;
+
+  const metaTag = document.querySelector('meta[name="topola-static-url"]');
+  const metaUrl = metaTag?.getAttribute('content');
+  // Safely ignore if it is empty, the raw caddy template expression, or Vite's raw template placeholder
+  if (metaUrl && !metaUrl.startsWith('__') && !metaUrl.includes('{{ env')) {
+    return metaUrl;
+  }
+
+  return undefined;
+}
+
+const staticUrl = getStaticUrl();
 
 /** Shows an error message in the middle of the screen. */
 function ErrorMessage(props: {message?: string}) {
@@ -124,10 +141,7 @@ interface Arguments {
   config: Config;
 }
 
-function getParamFromSearch(
-  name: string,
-  search: queryString.ParsedQuery<string>,
-) {
+function getParamFromSearch(name: string, search: queryString.ParsedQuery) {
   const value = search[name];
   return typeof value === 'string' ? value : undefined;
 }
@@ -136,7 +150,7 @@ function getParamFromSearch(
  * Retrieve arguments passed into the application through the URL and uploaded
  * data.
  */
-function getArguments(location: H.Location<any>): Arguments {
+function getArguments(location: H.Location<UploadLocationState>): Arguments {
   const search = queryString.parse(location.search);
   const getParam = (name: string) => getParamFromSearch(name, search);
 
@@ -150,7 +164,7 @@ function getArguments(location: H.Location<any>): Arguments {
   const hash = getParam('file');
   const url = getParam('url');
   const embedded = getParam('embedded') === 'true'; // False by default.
-  var sourceSpec: DataSourceSpec | undefined = undefined;
+  let sourceSpec: DataSourceSpec | undefined = undefined;
   if (staticUrl) {
     sourceSpec = {
       source: DataSourceEnum.GEDCOM_URL,
@@ -246,6 +260,7 @@ export function App() {
   /** Freeze animations after initial chart render. */
   const [freezeAnimation, setFreezeAnimation] = useState(false);
   const [config, setConfig] = useState(DEFALUT_CONFIG);
+  const [mcpBridge] = useState(() => new WebMcpBridge());
 
   const intl = useIntl();
   const navigate = useNavigate();
@@ -256,7 +271,7 @@ export function App() {
     if (
       !selection ||
       selection.id !== newSelection.id ||
-      selection!.generation !== newSelection.generation
+      selection.generation !== newSelection.generation
     ) {
       setSelection(newSelection);
       setDetailIndi(newSelection.id);
@@ -267,9 +282,9 @@ export function App() {
     if (data === undefined) {
       return;
     }
-    let shouldHideIds = config.id === Ids.HIDE;
-    let shouldHideSex = config.sex === Sex.HIDE;
-    let indiMap = idToIndiMap(data.chartData);
+    const shouldHideIds = config.id === Ids.HIDE;
+    const shouldHideSex = config.sex === Sex.HIDE;
+    const indiMap = idToIndiMap(data.chartData);
     indiMap.forEach((indi) => {
       indi.hideId = shouldHideIds;
       indi.hideSex = shouldHideSex;
@@ -396,8 +411,8 @@ export function App() {
           updateChartWithConfig(args.config, data);
           setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
-        } catch (error: any) {
-          setErrorMessage(getI18nMessage(error, intl));
+        } catch (error: unknown) {
+          setErrorMessage(getI18nMessage(error as Error, intl));
         }
       } else if (
         state === AppState.SHOWING_CHART ||
@@ -411,15 +426,18 @@ export function App() {
         setState(
           loadMoreFromWikitree ? AppState.LOADING_MORE : AppState.SHOWING_CHART,
         );
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         updateDisplay(getSelection(data!.chartData, args.selection));
         if (loadMoreFromWikitree) {
           try {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const data = await loadWikiTree(args.selection!.id, intl);
             const newSelection = getSelection(data.chartData, args.selection);
             setData(data);
             setSelection(newSelection);
             setDetailIndi(newSelection.id);
             setState(AppState.SHOWING_CHART);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (error: any) {
             setState(AppState.SHOWING_CHART);
             displayErrorPopup(
@@ -437,7 +455,28 @@ export function App() {
     })();
   });
 
-  function updateUrl(args: queryString.ParsedQuery<any>) {
+  useEffect(() => {
+    mcpBridge.registerTools();
+    return () => {
+      mcpBridge.unregisterTools();
+    };
+  }, [mcpBridge]);
+
+  useEffect(() => {
+    mcpBridge.setData(data || null);
+  }, [data, mcpBridge]);
+
+  useEffect(() => {
+    mcpBridge.setDetailIndi(detailIndi || null);
+  }, [detailIndi, mcpBridge]);
+
+  useEffect(() => {
+    mcpBridge.setSetSelectionCallback((id: string) => {
+      onSelection({id, generation: 0});
+    });
+  }, [mcpBridge, location]);
+
+  function updateUrl(args: queryString.ParsedQuery<string>) {
     const search = queryString.parse(location.search);
     for (const key in args) {
       search[key] = args[key];
@@ -458,7 +497,7 @@ export function App() {
     analyticsEvent('selection_changed');
     updateUrl({
       indi: selection.id,
-      gen: selection.generation,
+      gen: String(selection.generation),
     });
   }
   /**
@@ -521,10 +560,13 @@ export function App() {
   }
 
   function renderChart(selection: IndiInfo) {
+    if (!data) {
+      return null;
+    }
     if (chartType === ChartType.Donatso) {
       return (
         <DonatsoChart
-          data={data!.chartData}
+          data={data.chartData}
           selection={selection}
           onSelection={onSelection}
         />
@@ -532,7 +574,7 @@ export function App() {
     }
     return (
       <Chart
-        data={data!.chartData}
+        data={data.chartData}
         selection={selection}
         chartType={chartType}
         onSelection={onSelection}
@@ -548,8 +590,11 @@ export function App() {
   function renderMainArea() {
     switch (state) {
       case AppState.SHOWING_CHART:
-      case AppState.LOADING_MORE:
-        const updatedSelection = getSelection(data!.chartData, selection);
+      case AppState.LOADING_MORE: {
+        if (!data) {
+          return null;
+        }
+        const updatedSelection = getSelection(data.chartData, selection);
         return (
           <div id="content">
             <ErrorPopup
@@ -562,7 +607,7 @@ export function App() {
             ) : null}
             <SidebarPushable>
               <SidePanel
-                data={data!}
+                data={data}
                 selectedIndiId={detailIndi || updatedSelection.id}
                 config={config}
                 expanded={showSidePanel}
@@ -577,9 +622,10 @@ export function App() {
             </SidebarPushable>
           </div>
         );
+      }
 
       case AppState.ERROR:
-        return <ErrorMessage message={error!} />;
+        return <ErrorMessage message={error || 'Unknown error'} />;
 
       case AppState.INITIAL:
       case AppState.LOADING:

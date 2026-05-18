@@ -16,7 +16,7 @@ function ViewLink(props: {params: {[key: string]: string}; text: string}) {
   );
 }
 
-function formatBuildDate(dateString: string) {
+function formatBuildDate(dateString: string | undefined) {
   return dateString?.slice(0, 16) || '';
 }
 
@@ -126,7 +126,7 @@ function Contents() {
       />
 
       <p className="ui right aligned version">
-        version: {formatBuildDate(import.meta.env.VITE_GIT_TIME!)} (
+        version: {formatBuildDate(import.meta.env.VITE_GIT_TIME)} (
         <a
           href={`https://github.com/PeWu/topola-viewer/commit/${import.meta.env.VITE_GIT_SHA}`}
         >
