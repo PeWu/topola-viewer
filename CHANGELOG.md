@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-05-31
+
+- Add "Open from Google Drive"
+
 ## 2026-05-02
 
 - Display search in mobile view (by marionikolov)

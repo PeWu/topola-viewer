@@ -144,5 +144,15 @@
   "family.unknown_spouse": "Unbekannter Ehepartner",
   "family.children": "Kinder",
   "family.child": "Kind",
-  "media.not_uploaded": "Datei nicht hochgeladen"
+  "media.not_uploaded": "Datei nicht hochgeladen",
+  "menu.load_from_google_drive": "Von Google Drive laden",
+  "menu.google_sign_out": "Google Drive trennen",
+  "google_auth.title": "Google Drive-Zugriff erforderlich",
+  "google_auth.instructions": "Um diese Datei anzuzeigen, müssen Sie sich authentifizieren und die Datei aus Ihrem Google Drive auswählen, um Berechtigungen zu erteilen.",
+  "google_auth.picker_instructions_header": "Berechtigungen erforderlich",
+  "google_auth.picker_instructions": "Die Anwendung hat keine Berechtigung, diese Datei zu lesen. Bitte wählen Sie sie im Dateibrowser-Popup aus, um Zugriff zu gewähren. Wenn es sich um eine freigegebene Datei handelt, die nicht angezeigt wird, versuchen Sie zuerst, eine Verknüpfung zu Ihrem Drive hinzuzufügen.",
+  "google_auth.cancel": "Abbrechen",
+  "google_auth.grant_button": "Zugriff gewähren & Datei auswählen",
+  "google_auth.switch_account_button": "Konto wechseln",
+  "error.GOOGLE_DRIVE_NOT_CONFIGURED": "Die Google Drive-Integration ist nicht konfiguriert."
 }

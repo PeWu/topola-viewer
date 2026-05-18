@@ -17,6 +17,9 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run build
+      env:
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
     - name: Deploy
       run: |

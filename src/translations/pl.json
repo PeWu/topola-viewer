@@ -144,5 +144,15 @@
   "family.unknown_spouse": "Nieznany współmałżonek",
   "family.children": "Dzieci",
   "family.child": "Dziecko",
-  "media.not_uploaded": "Plik nieprzesłany"
+  "media.not_uploaded": "Plik nieprzesłany",
+  "menu.load_from_google_drive": "Otwórz z Dysku Google",
+  "menu.google_sign_out": "Rozłącz Dysk Google",
+  "google_auth.title": "Wymagany dostęp do Dysku Google",
+  "google_auth.instructions": "Aby wyświetlić ten plik, musisz się zalogować i wybrać plik z Dysku Google, aby przyznać uprawnienia.",
+  "google_auth.picker_instructions_header": "Wymagane uprawnienia",
+  "google_auth.picker_instructions": "Aplikacja nie ma uprawnień do odczytu tego pliku. Wybierz go w oknie wyszukiwania plików, aby przyznać dostęp. Jeśli to jest plik udostępniony, który się nie wyświetla, spróbuj najpierw dodać skrót do swojego Dysku.",
+  "google_auth.cancel": "Anuluj",
+  "google_auth.grant_button": "Przejdź do autoryzacji i wyboru pliku",
+  "google_auth.switch_account_button": "Przełącz konto",
+  "error.GOOGLE_DRIVE_NOT_CONFIGURED": "Integracja z Dyskiem Google nie jest skonfigurowana."
 }

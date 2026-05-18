@@ -7,6 +7,7 @@ export enum DataSourceEnum {
   GEDCOM_URL,
   WIKITREE,
   EMBEDDED,
+  GOOGLE_DRIVE,
 }
 
 /** Source specification together with individual selection. */

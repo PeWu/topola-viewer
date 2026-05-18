@@ -144,5 +144,15 @@
   "family.unknown_spouse": "Neznámý manžel/ka",
   "family.children": "Děti",
   "family.child": "Dítě",
-  "media.not_uploaded": "Soubor nebyl nahrán"
+  "media.not_uploaded": "Soubor nebyl nahrán",
+  "menu.load_from_google_drive": "Načíst z Google Disku",
+  "menu.google_sign_out": "Odpojit Google Disk",
+  "google_auth.title": "Je vyžadován přístup k Disku Google",
+  "google_auth.instructions": "Chcete-li tento soubor zobrazit, musíte se ověřit a vybrat soubor z Disku Google, abyste udělili oprávnění.",
+  "google_auth.picker_instructions_header": "Vyžadována oprávnění",
+  "google_auth.picker_instructions": "Aplikace nemá oprávnění ke čtení tohoto souboru. Vyberte jej prosím v rozevíracím seznamu prohlížeče souborů pro udělení přístupu. Pokud se jedná o sdílený soubor, který se nezobrazuje, zkuste nejprve přidat zástupce na svůj Disk.",
+  "google_auth.cancel": "Zrušit",
+  "google_auth.grant_button": "Udělit přístup a vybrat soubor",
+  "google_auth.switch_account_button": "Přepnout účet",
+  "error.GOOGLE_DRIVE_NOT_CONFIGURED": "Integrace s Diskem Google není nakonfigurována."
 }

@@ -1,6 +1,6 @@
 import * as H from 'history';
 import queryString from 'query-string';
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router';
 import {
@@ -22,6 +22,16 @@ import {
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
 import {
+  GoogleDriveAuthError,
+  GoogleDriveDataSource,
+  GoogleDriveSourceSpec,
+} from './datasource/google_drive';
+import {
+  clearGoogleDriveCache,
+  googleDriveService,
+  isGoogleDriveConfigured,
+} from './datasource/google_drive_service';
+import {
   GedcomUrlDataSource,
   getSelection,
   revokeObjectUrls,
@@ -38,6 +48,7 @@ import {
 } from './datasource/wikitree';
 import {DonatsoChart} from './donatso-chart';
 import {Intro} from './intro';
+import {GoogleAuthModal} from './menu/google_auth_modal';
 import {TopBar} from './menu/top_bar';
 import {
   argsToConfig,
@@ -49,6 +60,7 @@ import {
 } from './sidepanel/config/config';
 import {SidePanel} from './sidepanel/side-panel';
 import {analyticsEvent} from './util/analytics';
+import {TopolaError} from './util/error';
 import {getI18nMessage} from './util/error_i18n';
 import {idToIndiMap, TopolaData} from './util/gedcom_util';
 import {WebMcpBridge} from './webmcp';
@@ -125,7 +137,8 @@ type DataSourceSpec =
   | UrlSourceSpec
   | UploadSourceSpec
   | WikiTreeSourceSpec
-  | EmbeddedSourceSpec;
+  | EmbeddedSourceSpec
+  | GoogleDriveSourceSpec;
 
 /**
  * Arguments passed to the application, primarily through URL parameters.
@@ -179,6 +192,14 @@ function getArguments(location: H.Location<UploadLocationState>): Arguments {
       authcode:
         getParam('authcode') || getParamFromSearch('authcode', windowSearch),
     };
+  } else if (getParam('source') === 'google-drive') {
+    const fileId = getParam('fileId');
+    if (fileId) {
+      sourceSpec = {
+        source: DataSourceEnum.GOOGLE_DRIVE,
+        fileId,
+      };
+    }
   } else if (hash) {
     sourceSpec = {
       source: DataSourceEnum.UPLOADED,
@@ -232,6 +253,11 @@ function getArguments(location: H.Location<UploadLocationState>): Arguments {
   };
 }
 
+const uploadedDataSource = new UploadedDataSource();
+const gedcomUrlDataSource = new GedcomUrlDataSource();
+const embeddedDataSource = new EmbeddedDataSource();
+const googleDriveDataSource = new GoogleDriveDataSource();
+
 export function App() {
   /** State of the application. */
   const [state, setState] = useState<AppState>(AppState.INITIAL);
@@ -260,24 +286,51 @@ export function App() {
   const [sourceSpec, setSourceSpec] = useState<DataSourceSpec>();
   /** Freeze animations after initial chart render. */
   const [freezeAnimation, setFreezeAnimation] = useState(false);
+  /** Configuration settings for chart display options (e.g. colors, hiding IDs). */
   const [config, setConfig] = useState(DEFALUT_CONFIG);
+  /** MCP bridge to communicate with external tools or servers (Model Context Protocol). */
   const [mcpBridge] = useState(() => new WebMcpBridge());
+  /** Controls the visibility of the Google Drive OAuth permission modal. */
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  /** Stores the file ID that failed to load from Google Drive due to authorization errors. */
+  const [failedFileId, setFailedFileId] = useState<string>();
+  /** Tracks whether the user has a valid cached Google Drive OAuth access token. */
+  const [hasGoogleToken, setHasGoogleToken] = useState(
+    () => !!googleDriveService.getAccessToken(),
+  );
 
   const intl = useIntl();
   const navigate = useNavigate();
   const location = useLocation();
 
-  /** Sets the state with a new individual selection and chart type. */
-  function updateDisplay(newSelection: IndiInfo) {
-    if (
-      !selection ||
-      selection.id !== newSelection.id ||
-      selection.generation !== newSelection.generation
-    ) {
-      setSelection(newSelection);
-      setDetailIndi(newSelection.id);
-    }
-  }
+  /** Prevents the Google Drive "Open with" state from being processed more than once. */
+  const stateProcessed = useRef(false);
+  /** Tracks whether the component is currently mounted to prevent state updates after unmount. */
+  const isMountedRef = useRef(true);
+  /** Incremented with each load request to ensure only the latest asynchronous load result is applied. */
+  const fetchIdRef = useRef(0);
+
+  /** Manages the mount lifecycle ref to avoid setting state on unmounted components. */
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const updateDisplay = useCallback(
+    (newSelection: IndiInfo) => {
+      if (
+        !selection ||
+        selection.id !== newSelection.id ||
+        selection.generation !== newSelection.generation
+      ) {
+        setSelection(newSelection);
+        setDetailIndi(newSelection.id);
+      }
+    },
+    [selection],
+  );
 
   function updateChartWithConfig(config: Config, data: TopolaData | undefined) {
     if (data === undefined) {
@@ -306,72 +359,143 @@ export function App() {
     setState(AppState.ERROR);
   }
 
-  const uploadedDataSource = new UploadedDataSource();
-  const gedcomUrlDataSource = new GedcomUrlDataSource();
-  const wikiTreeDataSource = new WikiTreeDataSource(intl);
-  const embeddedDataSource = new EmbeddedDataSource();
+  const wikiTreeDataSource = useMemo(
+    () => new WikiTreeDataSource(intl),
+    [intl],
+  );
 
-  function isNewData(newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) {
-    if (!sourceSpec || sourceSpec.source !== newSourceSpec.source) {
-      // New data source means new data.
-      return true;
-    }
-    const newSource = {spec: newSourceSpec, selection: newSelection};
-    const oldSouce = {
-      spec: sourceSpec,
-      selection: selection,
-    };
-    switch (newSource.spec.source) {
-      case DataSourceEnum.UPLOADED:
-        return uploadedDataSource.isNewData(
-          newSource as SourceSelection<UploadSourceSpec>,
-          oldSouce as SourceSelection<UploadSourceSpec>,
-          data,
-        );
-      case DataSourceEnum.GEDCOM_URL:
-        return gedcomUrlDataSource.isNewData(
-          newSource as SourceSelection<UrlSourceSpec>,
-          oldSouce as SourceSelection<UrlSourceSpec>,
-          data,
-        );
-      case DataSourceEnum.WIKITREE:
-        return wikiTreeDataSource.isNewData(
-          newSource as SourceSelection<WikiTreeSourceSpec>,
-          oldSouce as SourceSelection<WikiTreeSourceSpec>,
-          data,
-        );
-      case DataSourceEnum.EMBEDDED:
-        return embeddedDataSource.isNewData(
-          newSource as SourceSelection<EmbeddedSourceSpec>,
-          oldSouce as SourceSelection<EmbeddedSourceSpec>,
-          data,
-        );
-    }
-  }
+  const isNewData = useCallback(
+    (newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) => {
+      if (!sourceSpec || sourceSpec.source !== newSourceSpec.source) {
+        // New data source means new data.
+        return true;
+      }
+      const newSource = {spec: newSourceSpec, selection: newSelection};
+      const oldSouce = {
+        spec: sourceSpec,
+        selection: selection,
+      };
+      switch (newSource.spec.source) {
+        case DataSourceEnum.UPLOADED:
+          return uploadedDataSource.isNewData(
+            newSource as SourceSelection<UploadSourceSpec>,
+            oldSouce as SourceSelection<UploadSourceSpec>,
+            data,
+          );
+        case DataSourceEnum.GEDCOM_URL:
+          return gedcomUrlDataSource.isNewData(
+            newSource as SourceSelection<UrlSourceSpec>,
+            oldSouce as SourceSelection<UrlSourceSpec>,
+            data,
+          );
+        case DataSourceEnum.WIKITREE:
+          return wikiTreeDataSource.isNewData(
+            newSource as SourceSelection<WikiTreeSourceSpec>,
+            oldSouce as SourceSelection<WikiTreeSourceSpec>,
+            data,
+          );
+        case DataSourceEnum.EMBEDDED:
+          return embeddedDataSource.isNewData(
+            newSource as SourceSelection<EmbeddedSourceSpec>,
+            oldSouce as SourceSelection<EmbeddedSourceSpec>,
+            data,
+          );
+        case DataSourceEnum.GOOGLE_DRIVE:
+          return googleDriveDataSource.isNewData(
+            newSource as SourceSelection<GoogleDriveSourceSpec>,
+            oldSouce as SourceSelection<GoogleDriveSourceSpec>,
+            data,
+          );
+      }
+    },
+    [sourceSpec, selection, data, wikiTreeDataSource],
+  );
 
-  function loadData(newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) {
-    switch (newSourceSpec.source) {
-      case DataSourceEnum.UPLOADED:
-        return uploadedDataSource.loadData({
-          spec: newSourceSpec,
-          selection: newSelection,
-        });
-      case DataSourceEnum.GEDCOM_URL:
-        return gedcomUrlDataSource.loadData({
-          spec: newSourceSpec,
-          selection: newSelection,
-        });
-      case DataSourceEnum.WIKITREE:
-        return wikiTreeDataSource.loadData({
-          spec: newSourceSpec,
-          selection: newSelection,
-        });
-      case DataSourceEnum.EMBEDDED:
-        return embeddedDataSource.loadData({
-          spec: newSourceSpec,
-          selection: newSelection,
-        });
+  const loadData = useCallback(
+    (newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) => {
+      switch (newSourceSpec.source) {
+        case DataSourceEnum.UPLOADED:
+          return uploadedDataSource.loadData({
+            spec: newSourceSpec,
+            selection: newSelection,
+          });
+        case DataSourceEnum.GEDCOM_URL:
+          return gedcomUrlDataSource.loadData({
+            spec: newSourceSpec,
+            selection: newSelection,
+          });
+        case DataSourceEnum.WIKITREE:
+          return wikiTreeDataSource.loadData({
+            spec: newSourceSpec,
+            selection: newSelection,
+          });
+        case DataSourceEnum.EMBEDDED:
+          return embeddedDataSource.loadData({
+            spec: newSourceSpec,
+            selection: newSelection,
+          });
+        case DataSourceEnum.GOOGLE_DRIVE:
+          if (!isGoogleDriveConfigured()) {
+            throw new TopolaError(
+              'GOOGLE_DRIVE_NOT_CONFIGURED',
+              'Google Drive integration is not configured.',
+            );
+          }
+          return googleDriveDataSource.loadData({
+            spec: newSourceSpec as GoogleDriveSourceSpec,
+            selection: newSelection,
+          });
+      }
+    },
+    [wikiTreeDataSource],
+  );
+
+  // Google Drive "Open with" flow state checking.
+  useEffect(() => {
+    const search = queryString.parse(location.search);
+    const stateParam = search.state;
+    if (typeof stateParam === 'string' && !stateProcessed.current) {
+      try {
+        const parsedState = JSON.parse(stateParam);
+        if (
+          parsedState &&
+          parsedState.action === 'open' &&
+          Array.isArray(parsedState.ids) &&
+          parsedState.ids.length > 0
+        ) {
+          stateProcessed.current = true;
+          const fileId = parsedState.ids[0];
+          // Soft redirect to view file
+          navigate(
+            {
+              pathname: '/view',
+              search: queryString.stringify({
+                source: 'google-drive',
+                fileId,
+              }),
+            },
+            {replace: true},
+          );
+        }
+      } catch (err) {
+        // Silently catch JSON parsing errors for state parameters not meant for us (e.g. from other auth tools)
+        console.warn(
+          'Google Drive state query parameter JSON parsing failed or action mismatch:',
+          err,
+        );
+      }
     }
+  }, [navigate, location.search]);
+
+  async function onGoogleSignOut() {
+    await googleDriveService.signOut();
+    setHasGoogleToken(false);
+    setData(undefined);
+    setSelection(undefined);
+    setDetailIndi(undefined);
+    // Purge sessionStorage keys starting with "google-drive:"
+    clearGoogleDriveCache();
+    navigate({pathname: '/'}, {replace: true});
   }
 
   useEffect(() => {
@@ -406,15 +530,29 @@ export function App() {
         setChartType(args.chartType);
         setFreezeAnimation(args.freezeAnimation);
         setConfig(args.config);
+        const currentFetchId = ++fetchIdRef.current;
         try {
           const data = await loadData(args.sourceSpec, args.selection);
+          if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
+            return;
+          }
           // Set state with data.
           setData(data);
           updateChartWithConfig(args.config, data);
           setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
         } catch (error: unknown) {
-          setErrorMessage(getI18nMessage(error as Error, intl));
+          if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
+            return;
+          }
+          if (error instanceof GoogleDriveAuthError) {
+            if (args.sourceSpec.source === DataSourceEnum.GOOGLE_DRIVE) {
+              setFailedFileId(args.sourceSpec.fileId);
+              setShowAuthModal(true);
+            }
+          } else {
+            setErrorMessage(getI18nMessage(error as Error, intl));
+          }
         }
       } else if (
         state === AppState.SHOWING_CHART ||
@@ -431,9 +569,16 @@ export function App() {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         updateDisplay(getSelection(data!.chartData, args.selection));
         if (loadMoreFromWikitree) {
+          const currentFetchId = ++fetchIdRef.current;
           try {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const data = await loadWikiTree(args.selection!.id, intl);
+            if (
+              !isMountedRef.current ||
+              fetchIdRef.current !== currentFetchId
+            ) {
+              return;
+            }
             const newSelection = getSelection(data.chartData, args.selection);
             setData(data);
             setSelection(newSelection);
@@ -441,6 +586,12 @@ export function App() {
             setState(AppState.SHOWING_CHART);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (error: any) {
+            if (
+              !isMountedRef.current ||
+              fetchIdRef.current !== currentFetchId
+            ) {
+              return;
+            }
             setState(AppState.SHOWING_CHART);
             displayErrorPopup(
               intl.formatMessage(
@@ -455,7 +606,17 @@ export function App() {
         }
       }
     })();
-  });
+  }, [
+    location,
+    state,
+    selection,
+    data,
+    navigate,
+    intl,
+    isNewData,
+    loadData,
+    updateDisplay,
+  ]);
 
   useEffect(() => {
     mcpBridge.registerTools();
@@ -664,6 +825,9 @@ export function App() {
         showWikiTreeMenus={
           sourceSpec?.source === DataSourceEnum.WIKITREE && showWikiTreeMenus
         }
+        hasGoogleToken={hasGoogleToken}
+        onGoogleSignOut={onGoogleSignOut}
+        onGoogleTokenAcquired={() => setHasGoogleToken(true)}
       />
       {staticUrl ? (
         <Routes>
@@ -676,6 +840,33 @@ export function App() {
           <Route path="/view" element={renderMainArea()} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+      )}
+      {showAuthModal && failedFileId && (
+        <GoogleAuthModal
+          failedFileId={failedFileId}
+          onAuthSuccess={(fileId) => {
+            setShowAuthModal(false);
+            setHasGoogleToken(true);
+            if (fileId === failedFileId) {
+              setState(AppState.INITIAL);
+            } else {
+              navigate(
+                {
+                  pathname: '/view',
+                  search: queryString.stringify({
+                    source: 'google-drive',
+                    fileId,
+                  }),
+                },
+                {replace: true},
+              );
+            }
+          }}
+          onCancel={() => {
+            setShowAuthModal(false);
+            navigate({pathname: '/'}, {replace: true});
+          }}
+        />
       )}
     </>
   );

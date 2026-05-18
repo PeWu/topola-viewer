@@ -117,6 +117,20 @@ export async function loadFile(
   return {gedcom: await blob.text(), images: new Map()};
 }
 
+/** Parses the given file and prepares the TopolaData structure, revoking URLs on error. */
+export async function loadAndPrepareFile(
+  blob: Blob,
+  cacheId: string,
+): Promise<TopolaData> {
+  const {gedcom, images} = await loadFile(blob);
+  try {
+    return prepareData(gedcom, cacheId, images);
+  } catch (error) {
+    revokeObjectUrls(images);
+    throw error;
+  }
+}
+
 /** Fetches data from the given URL. Uses cors-anywhere if handleCors is true. */
 export async function loadFromUrl(
   url: string,
@@ -151,13 +165,7 @@ export async function loadFromUrl(
     throw new Error(response.statusText);
   }
 
-  const {gedcom, images} = await loadFile(await response.blob());
-  try {
-    return prepareData(gedcom, url, images);
-  } catch (error) {
-    revokeObjectUrls(images);
-    throw error;
-  }
+  return loadAndPrepareFile(await response.blob(), url);
 }
 
 /** Loads data from the given GEDCOM file contents. */

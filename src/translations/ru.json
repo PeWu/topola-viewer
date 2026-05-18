@@ -144,5 +144,15 @@
   "family.unknown_spouse": "Неизвестный супруг(а)",
   "family.children": "Дети",
   "family.child": "Ребёнок",
-  "media.not_uploaded": "Файл не загружен"
+  "media.not_uploaded": "Файл не загружен",
+  "menu.load_from_google_drive": "Загрузить с Google Диска",
+  "menu.google_sign_out": "Отключить Google Диск",
+  "google_auth.title": "Требуется доступ к Google Диску",
+  "google_auth.instructions": "Чтобы просмотреть этот файл, необходимо пройти авторизацию и выбрать файл на Google Диске для предоставления разрешений.",
+  "google_auth.picker_instructions_header": "Требуются разрешения",
+  "google_auth.picker_instructions": "У приложения нет разрешения на чтение этого файла. Пожалуйста, выберите его во всплывающем окне выбора файлов, чтобы предоставить доступ. Если это общий файл, который не отображается, попробуйте сначала добавить ярлык на свой Диск.",
+  "google_auth.cancel": "Отмена",
+  "google_auth.grant_button": "Предоставить доступ и выбрать файл",
+  "google_auth.switch_account_button": "Сменить аккаунт",
+  "error.GOOGLE_DRIVE_NOT_CONFIGURED": "Интеграция с Google Диском не настроена."
 }

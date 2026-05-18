@@ -3,8 +3,10 @@ import {FormattedMessage} from 'react-intl';
 import {Link, useLocation, useNavigate} from 'react-router';
 import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {IndiInfo, JsonGedcomData} from 'topola';
+import {isGoogleDriveConfigured} from '../datasource/google_drive_service';
 import {Media} from '../util/media';
-import {MenuType} from './menu_item';
+import {GoogleDriveMenu} from './google_drive_menu';
+import {MenuItem, MenuType} from './menu_item';
 import {SearchBar} from './search';
 import {UploadMenu} from './upload_menu';
 import {UrlMenu} from './url_menu';
@@ -35,6 +37,12 @@ interface Props {
   eventHandlers: EventHandlers;
   /** Whether to show additional WikiTree menus. */
   showWikiTreeMenus: boolean;
+  /** Whether the user has authorized Google Drive and has an active token. */
+  hasGoogleToken: boolean;
+  /** Callback to sign out of Google Drive. */
+  onGoogleSignOut?: () => void;
+  /** Callback triggered when a new Google Drive token is acquired. */
+  onGoogleTokenAcquired?: () => void;
 }
 
 export function TopBar(props: Props) {
@@ -202,6 +210,43 @@ export function TopBar(props: Props) {
     );
   }
 
+  function googleDriveDisconnectMenu(screenSize: ScreenSize) {
+    if (!props.hasGoogleToken || !isGoogleDriveConfigured()) {
+      return null;
+    }
+    return (
+      <>
+        <MenuItem
+          menuType={
+            screenSize === ScreenSize.SMALL ? MenuType.Dropdown : MenuType.Menu
+          }
+          onClick={props.onGoogleSignOut}
+        >
+          <Icon name="sign out" />
+          <FormattedMessage
+            id="menu.google_sign_out"
+            defaultMessage="Disconnect Google Drive"
+          />
+        </MenuItem>
+        {screenSize === ScreenSize.SMALL ? <Dropdown.Divider /> : null}
+      </>
+    );
+  }
+
+  function fileMenuItems(menuType: MenuType) {
+    return (
+      <>
+        <UploadMenu menuType={menuType} {...props} />
+        <UrlMenu menuType={menuType} {...props} />
+        <WikiTreeMenu menuType={menuType} {...props} />
+        <GoogleDriveMenu
+          menuType={menuType}
+          onTokenAcquired={props.onGoogleTokenAcquired}
+        />
+      </>
+    );
+  }
+
   function fileMenus(screenSize: ScreenSize) {
     // In standalone WikiTree mode, show only the "Select WikiTree ID" menu.
     if (!props.standalone && props.showWikiTreeMenus) {
@@ -237,26 +282,16 @@ export function TopBar(props: Props) {
             }
             className="item"
           >
-            <Dropdown.Menu>
-              <UploadMenu menuType={MenuType.Dropdown} {...props} />
-              <UrlMenu menuType={MenuType.Dropdown} {...props} />
-              <WikiTreeMenu menuType={MenuType.Dropdown} {...props} />
-            </Dropdown.Menu>
+            <Dropdown.Menu>{fileMenuItems(MenuType.Dropdown)}</Dropdown.Menu>
           </Dropdown>
         ) : (
-          <>
-            <UploadMenu menuType={MenuType.Menu} {...props} />
-            <UrlMenu menuType={MenuType.Menu} {...props} />
-            <WikiTreeMenu menuType={MenuType.Menu} {...props} />
-          </>
+          fileMenuItems(MenuType.Menu)
         );
 
       case ScreenSize.SMALL:
         return (
           <>
-            <UploadMenu menuType={MenuType.Dropdown} {...props} />
-            <UrlMenu menuType={MenuType.Dropdown} {...props} />
-            <WikiTreeMenu menuType={MenuType.Dropdown} {...props} />
+            {fileMenuItems(MenuType.Dropdown)}
             <Dropdown.Divider />
           </>
         );
@@ -295,6 +330,7 @@ export function TopBar(props: Props) {
           <Dropdown.Menu>
             {fileMenus(ScreenSize.SMALL)}
             {chartMenus(ScreenSize.SMALL)}
+            {googleDriveDisconnectMenu(ScreenSize.SMALL)}
             {wikiTreeLoginMenu(ScreenSize.SMALL)}
 
             <Dropdown.Item
@@ -330,6 +366,7 @@ export function TopBar(props: Props) {
         {fileMenus(ScreenSize.LARGE)}
         {chartMenus(ScreenSize.LARGE)}
         <Menu.Menu position="right">
+          {googleDriveDisconnectMenu(ScreenSize.LARGE)}
           {wikiTreeLoginMenu(ScreenSize.LARGE)}
           <Menu.Item
             href="https://github.com/PeWu/topola-viewer"

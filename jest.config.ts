@@ -4,7 +4,7 @@ const config: Config.InitialOptions = {
   roots: ["<rootDir>/src"],
   testEnvironment: "node",
   transform: {
-    "^.+.tsx?$": ["ts-jest", {}],
+    "^.+.tsx?$": "<rootDir>/tests/import_meta_transformer.js",
   },
   moduleNameMapper: {
     "d3-array": "<rootDir>/node_modules/d3-array/dist/d3-array.js",

@@ -144,5 +144,15 @@
   "family.unknown_spouse": "Неизвестен съпруг/а",
   "family.children": "Деца",
   "family.child": "Дете",
-  "media.not_uploaded": "Файлът не е качен"
+  "media.not_uploaded": "Файлът не е качен",
+  "menu.load_from_google_drive": "Зареждане от Google Диск",
+  "menu.google_sign_out": "Прекъсване на връзката с Google Диск",
+  "google_auth.title": "Изисква се достъп до Google Диск",
+  "google_auth.instructions": "За да прегледате този файл, трябва да се удостоверите и да изберете файла от вашия Google Диск, за да предоставите разрешения.",
+  "google_auth.picker_instructions_header": "Изискват се разрешения",
+  "google_auth.picker_instructions": "Приложението няма разрешение да чете този файл. Моля, изберете го в изскачащия прозорец на браузъра за файлове, за да предоставите достъп. Ако това е споделен файл, който не се показва, опитайте първо да добавите пряк път към вашия Диск.",
+  "google_auth.cancel": "Отказ",
+  "google_auth.grant_button": "Предоставяне на достъп и избор на файл",
+  "google_auth.switch_account_button": "Смяна на акаунт",
+  "error.GOOGLE_DRIVE_NOT_CONFIGURED": "Интеграцията с Google Drive не е конфигурирана."
 }

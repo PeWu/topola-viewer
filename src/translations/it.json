@@ -144,5 +144,15 @@
   "family.unknown_spouse": "Coniuge sconosciuto",
   "family.children": "Figli",
   "family.child": "Figlio",
-  "media.not_uploaded": "File non caricato"
+  "media.not_uploaded": "File non caricato",
+  "menu.load_from_google_drive": "Carica da Google Drive",
+  "menu.google_sign_out": "Disconnetti Google Drive",
+  "google_auth.title": "Accesso a Google Drive richiesto",
+  "google_auth.instructions": "Per visualizzare questo file, devi autenticarti e selezionare il file dal tuo Google Drive per concedere le autorisations.",
+  "google_auth.picker_instructions_header": "Autorizzazioni richieste",
+  "google_auth.picker_instructions": "L'applicazione non ha l'autorizzazione di leggere questo file. Selezionalo nel popup del browser dei file per concedere l'accesso. Se si tratta di un file condiviso che non viene visualizzato, prova prima ad aggiungere una scorciatoia al tuo Drive.",
+  "google_auth.cancel": "Annulla",
+  "google_auth.grant_button": "Concedi l'accesso e seleziona il file",
+  "google_auth.switch_account_button": "Cambia account",
+  "error.GOOGLE_DRIVE_NOT_CONFIGURED": "L'integrazione con Google Drive non è configurata."
 }
