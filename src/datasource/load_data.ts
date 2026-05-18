@@ -93,7 +93,7 @@ async function loadGedzip(
         const normalizedKey = fileName.replace(/\\/g, '/').toLowerCase();
         images.set(
           normalizedKey,
-          URL.createObjectURL(new Blob([unzipped[fileName]])),
+          URL.createObjectURL(new Blob([unzipped[fileName] as BlobPart])),
         );
       }
     }
