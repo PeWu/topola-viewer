@@ -13,6 +13,14 @@ interface Props {
   menuType: MenuType;
 }
 
+/**
+ * On touch devices (iOS, Android) the browser's file picker ignores unknown
+ * extensions like .ged and may restrict selection to photos when image types
+ * are listed. Omitting the `accept` attribute lets the OS file browser show
+ * all files without filtering.
+ */
+const isTouchDevice = navigator.maxTouchPoints > 0;
+
 /** Displays and handles the "Open file" menu. */
 export function UploadMenu(props: Props) {
   const navigate = useNavigate();
@@ -84,6 +92,11 @@ export function UploadMenu(props: Props) {
       <input
         className="hidden"
         type="file"
+        accept={
+          isTouchDevice
+            ? undefined
+            : '.ged,.gdz,.gedzip,.zip,.jpg,.jpeg,.png,.gif,.webp'
+        }
         id="fileInput"
         multiple
         onChange={handleUpload}
