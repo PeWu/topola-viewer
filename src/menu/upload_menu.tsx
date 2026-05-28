@@ -84,7 +84,7 @@ export function UploadMenu(props: Props) {
       <input
         className="hidden"
         type="file"
-        accept=".ged,.gdz,.gedzip,.zip,.webp,image/*"
+        accept=".ged,.gdz,.gedzip,.zip,.jpg,.jpeg,.png,.gif,.webp"
         id="fileInput"
         multiple
         onChange={handleUpload}
