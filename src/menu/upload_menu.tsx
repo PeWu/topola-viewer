@@ -19,7 +19,7 @@ interface Props {
  * are listed. Omitting the `accept` attribute lets the OS file browser show
  * all files without filtering.
  */
-const isTouchDevice = navigator.maxTouchPoints > 0;
+const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 /** Displays and handles the "Open file" menu. */
 export function UploadMenu(props: Props) {
@@ -93,7 +93,7 @@ export function UploadMenu(props: Props) {
         className="hidden"
         type="file"
         accept={
-          isTouchDevice
+          isMobileDevice
             ? undefined
             : '.ged,.gdz,.gedzip,.zip,.jpg,.jpeg,.png,.gif,.webp'
         }
