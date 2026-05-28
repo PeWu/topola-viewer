@@ -6,3 +6,4 @@ test-results/
 .playwright/
 .idea
 .vscode
+.env
