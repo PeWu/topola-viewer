@@ -20,6 +20,7 @@ Verify functional correctness, route parameters, drawer side-panels, dynamic aut
 *   **[embedded.spec.ts](embedded.spec.ts)**: Tests embedded iframe operations using virtual server postMessage listeners to execute proper parent-child synchronizations.
 *   **[intro.spec.ts](intro.spec.ts)**: Checks base landing layouts, instructions panels, menu existence, and responsive header navigation buttons.
 *   **[search.spec.ts](search.spec.ts)**: Targets autocompletion components using robust search locators to verify input debouncing and focus updates.
+*   **[upload.spec.ts](upload.spec.ts)**: Validates uploading raw GEDCOM files from the local filesystem, asserting navigation transitions, state parsing, and virtual tree renderings.
 *   **[webmcp.spec.ts](webmcp.spec.ts)**: Evaluates out-of-process browser calls from Model Context Protocol tool registrations and action assertions.
 
 ### 2. Visual Regression / Screenshot Specs
