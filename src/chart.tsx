@@ -25,7 +25,7 @@ import {
   RelativesChart,
   ChartColors as TopolaChartColors,
 } from 'topola';
-import {ChartColors, Ids, Sex} from './sidepanel/config/config';
+import {ChartColors, Ids, PlaceDisplay, Sex} from './sidepanel/config/config';
 import {Media} from './util/media';
 import {usePrevious} from './util/previous-hook';
 
@@ -325,6 +325,8 @@ export interface ChartProps {
   colors?: ChartColors;
   hideIds?: Ids;
   hideSex?: Sex;
+  placeDisplay?: PlaceDisplay;
+  placeCount?: number;
 }
 
 class ChartWrapper {
@@ -501,7 +503,9 @@ export function Chart(props: ChartProps) {
         props.chartType !== prevProps?.chartType ||
         props.colors !== prevProps?.colors ||
         props.hideIds !== prevProps?.hideIds ||
-        props.hideSex !== prevProps?.hideSex;
+        props.hideSex !== prevProps?.hideSex ||
+        props.placeDisplay !== prevProps?.placeDisplay ||
+        props.placeCount !== prevProps?.placeCount;
       const resetPosition =
         props.chartType !== prevProps?.chartType ||
         props.data !== prevProps.data ||

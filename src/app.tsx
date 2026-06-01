@@ -56,13 +56,15 @@ import {
   configToArgs,
   DEFALUT_CONFIG,
   Ids,
+  PlaceDisplay,
   Sex,
 } from './sidepanel/config/config';
 import {SidePanel} from './sidepanel/side-panel';
 import {analyticsEvent} from './util/analytics';
 import {TopolaError} from './util/error';
 import {getI18nMessage} from './util/error_i18n';
-import {idToIndiMap, TopolaData} from './util/gedcom_util';
+import {idToFamMap, idToIndiMap, TopolaData} from './util/gedcom_util';
+import {shortenPlace} from './util/place_util';
 import {WebMcpBridge} from './webmcp';
 
 /**
@@ -258,6 +260,9 @@ const gedcomUrlDataSource = new GedcomUrlDataSource();
 const embeddedDataSource = new EmbeddedDataSource();
 const googleDriveDataSource = new GoogleDriveDataSource();
 
+/** Stores original place strings before chart-config shortening, keyed by the event object. */
+const originalPlace = new WeakMap<object, string | undefined>();
+
 export function App() {
   /** State of the application. */
   const [state, setState] = useState<AppState>(AppState.INITIAL);
@@ -338,10 +343,24 @@ export function App() {
     }
     const shouldHideIds = config.id === Ids.HIDE;
     const shouldHideSex = config.sex === Sex.HIDE;
+
+    function applyPlace(event: {place?: string}) {
+      if (!originalPlace.has(event)) {
+        originalPlace.set(event, event.place);
+      }
+      event.place = shortenPlace(originalPlace.get(event), config.place, config.placeCount);
+    }
+
     const indiMap = idToIndiMap(data.chartData);
     indiMap.forEach((indi) => {
       indi.hideId = shouldHideIds;
       indi.hideSex = shouldHideSex;
+      if (indi.birth) applyPlace(indi.birth);
+      if (indi.death) applyPlace(indi.death);
+    });
+    const famMap = idToFamMap(data.chartData);
+    famMap.forEach((fam) => {
+      if (fam.marriage) applyPlace(fam.marriage);
     });
   }
 
@@ -754,6 +773,8 @@ export function App() {
         colors={config.color}
         hideIds={config.id}
         hideSex={config.sex}
+        placeDisplay={config.place}
+        placeCount={config.placeCount}
       />
     );
   }
