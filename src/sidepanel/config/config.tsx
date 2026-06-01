@@ -283,10 +283,7 @@ export function ConfigPanel(props: {
           <Item>
             <Item.Content>
               <Header sub>
-                <FormattedMessage
-                  id="config.places"
-                  defaultMessage="Places"
-                />
+                <FormattedMessage id="config.places" defaultMessage="Places" />
               </Header>
               <Form.Field className="no-margin">
                 <Checkbox

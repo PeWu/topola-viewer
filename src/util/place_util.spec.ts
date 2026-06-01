@@ -13,7 +13,9 @@ describe('shortenPlace', () => {
   });
 
   it('defaults to 2 components in SHORT mode', () => {
-    expect(shortenPlace(LONG, PlaceDisplay.SHORT)).toBe('Cyclone, Keating Township');
+    expect(shortenPlace(LONG, PlaceDisplay.SHORT)).toBe(
+      'Cyclone, Keating Township',
+    );
   });
 
   it('keeps first N components when count is specified', () => {

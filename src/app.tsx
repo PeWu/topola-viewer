@@ -56,7 +56,6 @@ import {
   configToArgs,
   DEFALUT_CONFIG,
   Ids,
-  PlaceDisplay,
   Sex,
 } from './sidepanel/config/config';
 import {SidePanel} from './sidepanel/side-panel';
@@ -348,7 +347,11 @@ export function App() {
       if (!originalPlace.has(event)) {
         originalPlace.set(event, event.place);
       }
-      event.place = shortenPlace(originalPlace.get(event), config.place, config.placeCount);
+      event.place = shortenPlace(
+        originalPlace.get(event),
+        config.place,
+        config.placeCount,
+      );
     }
 
     const indiMap = idToIndiMap(data.chartData);
