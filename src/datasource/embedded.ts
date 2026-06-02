@@ -1,6 +1,7 @@
 import {analyticsEvent} from '../util/analytics';
 import {getSoftware, TopolaData} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
+import {storeGedcom} from './gedcom_store';
 import {loadGedcom} from './load_data';
 
 /**
@@ -55,7 +56,9 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
         return;
       }
       try {
-        const data = await loadGedcom('', gedcom);
+        const embeddedHash = 'embedded';
+        storeGedcom(embeddedHash, gedcom, new Map());
+        const data = await loadGedcom(embeddedHash);
         const software = getSoftware(data.gedcom.head);
         analyticsEvent('embedded_file_loaded', {
           event_label: software,
@@ -70,6 +73,7 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
 
   async loadData(
     _source: SourceSelection<EmbeddedSourceSpec>,
+    _onProgress?: (status: string) => void,
   ): Promise<TopolaData> {
     // Notify the parent window that we are ready.
     return new Promise<TopolaData>((resolve, reject) => {
