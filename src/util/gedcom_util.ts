@@ -278,12 +278,31 @@ function filterImages(
  * @param images Map from file name to image URL. This is used to pass in
  *   uploaded images.
  */
-export function convertGedcom(
+/**
+ * Yields to the browser event loop, allowing incremental GC and UI updates.
+ * Calls onProgress if provided; does not touch the DOM directly.
+ */
+function yieldToEventLoop(
+  onProgress?: (status: string) => void,
+  status?: string,
+): Promise<void> {
+  if (status) onProgress?.(status);
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+export async function convertGedcom(
   gedcom: string,
   images: Map<string, string>,
-): TopolaData {
+  onProgress?: (status: string) => void,
+): Promise<TopolaData> {
+  await yieldToEventLoop(onProgress, 'Step 1/4: parsing GEDCOM…');
+
   const entries = parseGedcom(gedcom);
+
+  await yieldToEventLoop(onProgress, 'Step 2/4: building family graph…');
+
   const json = gedcomEntriesToJson(entries);
+
   if (
     !json ||
     !json.indis ||
@@ -294,9 +313,17 @@ export function convertGedcom(
     throw new TopolaError('GEDCOM_READ_FAILED', 'Failed to read GEDCOM file');
   }
 
+  await yieldToEventLoop(onProgress, 'Step 3/4: sorting & normalizing…');
+
+  const chartData = filterImages(normalizeGedcom(json), images);
+
+  await yieldToEventLoop(onProgress, 'Step 4/4: indexing records…');
+
+  const gedcomData = prepareGedcom(entries);
+
   return {
-    chartData: filterImages(normalizeGedcom(json), images),
-    gedcom: prepareGedcom(entries),
+    chartData,
+    gedcom: gedcomData,
     images,
   };
 }

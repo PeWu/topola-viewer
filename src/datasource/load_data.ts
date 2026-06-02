@@ -5,6 +5,7 @@ import {analyticsEvent} from '../util/analytics';
 import {TopolaError} from '../util/error';
 import {convertGedcom, getSoftware, TopolaData} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
+import {getStoredGedcom} from './gedcom_store';
 
 /**
  * Returns a valid IndiInfo object, either with the given indi and generation
@@ -23,20 +24,29 @@ export function getSelection(
   return {id, generation: selection?.generation || 0};
 }
 
-function prepareData(
+// sessionStorage limit is ~5MB in all browsers. The serialized output for
+// typical files includes both chartData (~7.85MB for 24K individuals) and the
+// raw gedcom entry tree (~25MB), so attempting JSON.stringify for large files
+// wastes 10-20s in Safari and always fails. Skip caching above this threshold.
+const SESSION_CACHE_GEDCOM_LIMIT = 512 * 1024; // 512KB raw GEDCOM → safe to try
+
+async function prepareData(
   gedcom: string,
   cacheId: string,
   images?: Map<string, string>,
-): TopolaData {
-  const data = convertGedcom(gedcom, images || new Map());
+  onProgress?: (status: string) => void,
+): Promise<TopolaData> {
+  const data = await convertGedcom(gedcom, images || new Map(), onProgress);
   if (!images || images.size === 0) {
-    const dataToSerialize = {...data};
-    delete dataToSerialize.images;
-    const serializedData = JSON.stringify(dataToSerialize);
-    try {
-      sessionStorage.setItem(cacheId, serializedData);
-    } catch (e) {
-      console.warn('Failed to store data in session storage: ' + e);
+    if (gedcom.length <= SESSION_CACHE_GEDCOM_LIMIT) {
+      const dataToSerialize = {...data};
+      delete dataToSerialize.images;
+      const serializedData = JSON.stringify(dataToSerialize);
+      try {
+        sessionStorage.setItem(cacheId, serializedData);
+      } catch (e) {
+        console.warn('Failed to store data in session storage: ' + e);
+      }
     }
   }
   return data;
@@ -121,10 +131,11 @@ export async function loadFile(
 export async function loadAndPrepareFile(
   blob: Blob,
   cacheId: string,
+  onProgress?: (status: string) => void,
 ): Promise<TopolaData> {
   const {gedcom, images} = await loadFile(blob);
   try {
-    return prepareData(gedcom, cacheId, images);
+    return await prepareData(gedcom, cacheId, images, onProgress);
   } catch (error) {
     revokeObjectUrls(images);
     throw error;
@@ -135,6 +146,7 @@ export async function loadAndPrepareFile(
 export async function loadFromUrl(
   url: string,
   handleCors: boolean,
+  onProgress?: (status: string) => void,
 ): Promise<TopolaData> {
   try {
     const cachedData = sessionStorage.getItem(url);
@@ -165,14 +177,13 @@ export async function loadFromUrl(
     throw new Error(response.statusText);
   }
 
-  return loadAndPrepareFile(await response.blob(), url);
+  return loadAndPrepareFile(await response.blob(), url, onProgress);
 }
 
 /** Loads data from the given GEDCOM file contents. */
 export async function loadGedcom(
   hash: string,
-  gedcom?: string,
-  images?: Map<string, string>,
+  onProgress?: (status: string) => void,
 ): Promise<TopolaData> {
   try {
     const cachedData = sessionStorage.getItem(hash);
@@ -182,36 +193,31 @@ export async function loadGedcom(
   } catch (e) {
     console.warn('Failed to load data from session storage: ' + e);
   }
-  if (!gedcom) {
+  // Retrieve from the in-memory store (survives within-tab navigation even
+  // when the GEDCOM is too large for history.pushState or sessionStorage).
+  const stored = getStoredGedcom(hash);
+  if (!stored) {
     throw new TopolaError(
       'ERROR_LOADING_UPLOADED_FILE',
       'Error loading data. Please upload your file again.',
     );
   }
   try {
-    return prepareData(gedcom, hash, images);
+    return await prepareData(stored.gedcom, hash, stored.images, onProgress);
   } catch (error) {
-    revokeObjectUrls(images);
+    revokeObjectUrls(stored.images);
     throw error;
   }
 }
 
 export interface UploadSourceSpec {
   source: DataSourceEnum.UPLOADED;
-  gedcom?: string;
-  /** Hash of the GEDCOM contents. */
+  /** Fingerprint of the uploaded file, used as cache key and store lookup. */
   hash: string;
-  images?: Map<string, string>;
-}
-
-export interface UploadLocationState {
-  data: string;
-  images: Map<string, string>;
 }
 
 /** Files opened from the local computer. */
 export class UploadedDataSource implements DataSource<UploadSourceSpec> {
-  // isNewData(args: Arguments, state: State): boolean {
   isNewData(
     newSource: SourceSelection<UploadSourceSpec>,
     oldSource: SourceSelection<UploadSourceSpec>,
@@ -222,18 +228,12 @@ export class UploadedDataSource implements DataSource<UploadSourceSpec> {
 
   async loadData(
     source: SourceSelection<UploadSourceSpec>,
+    onProgress?: (status: string) => void,
   ): Promise<TopolaData> {
     try {
-      const data = await loadGedcom(
-        source.spec.hash,
-        source.spec.gedcom,
-        source.spec.images,
-      );
+      const data = await loadGedcom(source.spec.hash, onProgress);
       const software = getSoftware(data.gedcom.head);
-      analyticsEvent('upload_file_loaded', {
-        event_label: software,
-        event_value: (source.spec.images && source.spec.images.size) || 0,
-      });
+      analyticsEvent('upload_file_loaded', {event_label: software});
       return data;
     } catch (error) {
       analyticsEvent('upload_file_error');
@@ -259,9 +259,16 @@ export class GedcomUrlDataSource implements DataSource<UrlSourceSpec> {
     return newSource.spec.url !== oldSource.spec.url;
   }
 
-  async loadData(source: SourceSelection<UrlSourceSpec>): Promise<TopolaData> {
+  async loadData(
+    source: SourceSelection<UrlSourceSpec>,
+    onProgress?: (status: string) => void,
+  ): Promise<TopolaData> {
     try {
-      const data = await loadFromUrl(source.spec.url, source.spec.handleCors);
+      const data = await loadFromUrl(
+        source.spec.url,
+        source.spec.handleCors,
+        onProgress,
+      );
       const software = getSoftware(data.gedcom.head);
       analyticsEvent('upload_file_loaded', {event_label: software});
       return data;
