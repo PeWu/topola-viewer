@@ -36,7 +36,6 @@ import {
   getSelection,
   revokeObjectUrls,
   UploadedDataSource,
-  UploadLocationState,
   UploadSourceSpec,
   UrlSourceSpec,
 } from './datasource/load_data';
@@ -164,7 +163,7 @@ function getParamFromSearch(name: string, search: queryString.ParsedQuery) {
  * Retrieve arguments passed into the application through the URL and uploaded
  * data.
  */
-function getArguments(location: H.Location<UploadLocationState>): Arguments {
+function getArguments(location: H.Location): Arguments {
   const search = queryString.parse(location.search);
   const getParam = (name: string) => getParamFromSearch(name, search);
 
@@ -204,8 +203,6 @@ function getArguments(location: H.Location<UploadLocationState>): Arguments {
     sourceSpec = {
       source: DataSourceEnum.UPLOADED,
       hash,
-      gedcom: location.state && location.state.data,
-      images: location.state && location.state.images,
     };
   } else if (url) {
     sourceSpec = {
@@ -261,6 +258,8 @@ const googleDriveDataSource = new GoogleDriveDataSource();
 export function App() {
   /** State of the application. */
   const [state, setState] = useState<AppState>(AppState.INITIAL);
+  /** Progress message shown during LOADING and initial chart render. */
+  const [loadingStatus, setLoadingStatus] = useState('Loading…');
   /** Loaded data. */
   const [data, setData] = useState<TopolaData>();
   /** Selected individual. */
@@ -412,18 +411,22 @@ export function App() {
   );
 
   const loadData = useCallback(
-    (newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) => {
+    (
+      newSourceSpec: DataSourceSpec,
+      newSelection?: IndiInfo,
+      onProgress?: (status: string) => void,
+    ) => {
       switch (newSourceSpec.source) {
         case DataSourceEnum.UPLOADED:
-          return uploadedDataSource.loadData({
-            spec: newSourceSpec,
-            selection: newSelection,
-          });
+          return uploadedDataSource.loadData(
+            {spec: newSourceSpec, selection: newSelection},
+            onProgress,
+          );
         case DataSourceEnum.GEDCOM_URL:
-          return gedcomUrlDataSource.loadData({
-            spec: newSourceSpec,
-            selection: newSelection,
-          });
+          return gedcomUrlDataSource.loadData(
+            {spec: newSourceSpec, selection: newSelection},
+            onProgress,
+          );
         case DataSourceEnum.WIKITREE:
           return wikiTreeDataSource.loadData({
             spec: newSourceSpec,
@@ -441,10 +444,13 @@ export function App() {
               'Google Drive integration is not configured.',
             );
           }
-          return googleDriveDataSource.loadData({
-            spec: newSourceSpec as GoogleDriveSourceSpec,
-            selection: newSelection,
-          });
+          return googleDriveDataSource.loadData(
+            {
+              spec: newSourceSpec as GoogleDriveSourceSpec,
+              selection: newSelection,
+            },
+            onProgress,
+          );
       }
     },
     [wikiTreeDataSource],
@@ -531,12 +537,23 @@ export function App() {
         setFreezeAnimation(args.freezeAnimation);
         setConfig(args.config);
         const currentFetchId = ++fetchIdRef.current;
+        setLoadingStatus('Loading…');
         try {
-          const data = await loadData(args.sourceSpec, args.selection);
+          const data = await loadData(
+            args.sourceSpec,
+            args.selection,
+            (status) => {
+              if (isMountedRef.current) setLoadingStatus(status);
+            },
+          );
           if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
             return;
           }
-          // Set state with data.
+          // Show "Rendering chart…" while the initial D3 layout runs (which
+          // happens in the Chart useEffect after SHOWING_CHART is set).
+          setLoadingStatus(
+            `Rendering chart (${data.chartData.indis.length.toLocaleString()} people)…`,
+          );
           setData(data);
           updateChartWithConfig(args.config, data);
           setShowSidePanel(args.showSidePanel);
@@ -754,6 +771,7 @@ export function App() {
         colors={config.color}
         hideIds={config.id}
         hideSex={config.sex}
+        onFirstRender={() => setLoadingStatus('')}
       />
     );
   }
@@ -804,8 +822,31 @@ export function App() {
     }
   }
 
+  const progressPill =
+    loadingStatus &&
+    (state === AppState.LOADING || state === AppState.SHOWING_CHART) ? (
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 16,
+          left: 16,
+          background: 'rgba(0,0,0,0.7)',
+          color: '#fff',
+          padding: '6px 12px',
+          borderRadius: 4,
+          fontFamily: 'monospace',
+          fontSize: 12,
+          zIndex: 9999,
+          pointerEvents: 'none',
+        }}
+      >
+        {loadingStatus}
+      </div>
+    ) : null;
+
   return (
     <>
+      {progressPill}
       <TopBar
         data={data?.chartData}
         allowAllRelativesChart={sourceSpec?.source !== DataSourceEnum.WIKITREE}

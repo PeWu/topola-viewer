@@ -325,6 +325,8 @@ export interface ChartProps {
   colors?: ChartColors;
   hideIds?: Ids;
   hideSex?: Sex;
+  /** Called once after the initial D3 layout and SVG render completes. */
+  onFirstRender?: () => void;
 }
 
 class ChartWrapper {
@@ -362,6 +364,13 @@ class ChartWrapper {
       resetPosition: false,
     },
   ) {
+    // Nothing changed — the SVG is already correct. Skip re-render.
+    // This prevents repeated full D3 layout passes (500ms+ each) that happen
+    // when React re-renders for unrelated state changes.
+    if (!args.initialRender && !args.resetPosition) {
+      return;
+    }
+
     // Wait for animation to finish if animation is in progress.
     if (!args.initialRender && this.animating) {
       this.rerenderRequired = true;
@@ -519,6 +528,7 @@ export function Chart(props: ChartProps) {
         initialRender: true,
         resetPosition: true,
       });
+      props.onFirstRender?.();
     }
   });
 
