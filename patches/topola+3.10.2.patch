@@ -1,0 +1,75 @@
+diff --git a/node_modules/topola/dist/ancestor-chart.js b/node_modules/topola/dist/ancestor-chart.js
+index e33450b..0a4bb50 100644
+--- a/node_modules/topola/dist/ancestor-chart.js
++++ b/node_modules/topola/dist/ancestor-chart.js
+@@ -82,12 +82,18 @@ var AncestorChart = /** @class */ (function () {
+                 family: { id: this.options.startFam },
+             });
+         }
++        // Track real family IDs already added to prevent exponential blowup
++        // from pedigree collapse (endogamy). Without this, the same ancestral
++        // family can appear thousands of times, creating a 400K+ node tree.
++        var addedFamilies = new Set();
+         while (stack.length) {
+             var entry = stack.pop();
+             var fam = this.options.data.getFam(entry.family.id);
+             if (!fam) {
+                 continue;
+             }
++            var alreadyAdded = addedFamilies.has(entry.family.id);
++            addedFamilies.add(entry.family.id);
+             var _c = entry.family.id === this.options.startFam &&
+                 this.options.swapStartSpouses
+                 ? [fam.getMother(), fam.getFather()]
+@@ -100,7 +106,7 @@ var AncestorChart = /** @class */ (function () {
+                 var indi = this.options.data.getIndi(mother);
+                 var famc = indi.getFamilyAsChild();
+                 if (famc) {
+-                    if ((_a = this.options.collapsedSpouse) === null || _a === void 0 ? void 0 : _a.has(entry.id)) {
++                    if (alreadyAdded || ((_a = this.options.collapsedSpouse) === null || _a === void 0 ? void 0 : _a.has(entry.id))) {
+                         entry.spouse.expander = api_1.ExpanderState.PLUS;
+                     }
+                     else {
+@@ -120,7 +126,7 @@ var AncestorChart = /** @class */ (function () {
+                 var indi = this.options.data.getIndi(father);
+                 var famc = indi.getFamilyAsChild();
+                 if (famc) {
+-                    if ((_b = this.options.collapsedIndi) === null || _b === void 0 ? void 0 : _b.has(entry.id)) {
++                    if (alreadyAdded || ((_b = this.options.collapsedIndi) === null || _b === void 0 ? void 0 : _b.has(entry.id))) {
+                         entry.indi.expander = api_1.ExpanderState.PLUS;
+                     }
+                     else {
+diff --git a/node_modules/topola/dist/descendant-chart.js b/node_modules/topola/dist/descendant-chart.js
+index 56f3660..c65dcd5 100644
+--- a/node_modules/topola/dist/descendant-chart.js
++++ b/node_modules/topola/dist/descendant-chart.js
+@@ -121,9 +121,13 @@ var DescendantChart = /** @class */ (function () {
+             nodes.forEach(function (node) { return (node.parentId = dummyNode_1.id); });
+         }
+         parents.push.apply(parents, nodes);
++        // Track real family IDs already added to prevent exponential blowup
++        // from pedigree collapse in descendant trees.
++        var addedDescFamilies = new Set();
+         var stack = [];
+         nodes.forEach(function (node) {
+             if (node.family) {
++                addedDescFamilies.add(node.family.id);
+                 stack.push(node);
+             }
+         });
+@@ -143,8 +147,14 @@ var DescendantChart = /** @class */ (function () {
+                     childNodes.forEach(function (node) {
+                         node.parentId = entry.id;
+                         if (node.family) {
++                            var alreadyAdded = addedDescFamilies.has(node.family.id);
+                             node.id = "".concat(idGenerator.getId(node.family.id));
+-                            stack.push(node);
++                            if (!alreadyAdded) {
++                                addedDescFamilies.add(node.family.id);
++                                stack.push(node);
++                            } else {
++                                node.family.expander = api_1.ExpanderState.PLUS;
++                            }
+                         }
+                     });
+                     parents.push.apply(parents, childNodes);
