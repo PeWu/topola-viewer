@@ -757,6 +757,7 @@ export function App() {
           data={data.chartData}
           selection={selection}
           onSelection={onSelection}
+          onFirstRender={() => setLoadingStatus('')}
         />
       );
     }

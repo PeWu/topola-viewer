@@ -17,6 +17,8 @@ export interface DonatsoChartProps {
   data: JsonGedcomData;
   selection: IndiInfo;
   onSelection: (indiInfo: IndiInfo) => void;
+  /** Called once after the initial chart render completes. */
+  onFirstRender?: () => void;
 }
 
 function getOtherSpouse(fam: JsonFam, indi: string) {
@@ -114,6 +116,7 @@ export function DonatsoChart(props: DonatsoChartProps) {
   useEffect(() => {
     if (!prevProps) {
       chartWrapper.current.initializeChart(props, intl);
+      props.onFirstRender?.();
     } else {
       chartWrapper.current.updateChart(props, intl);
     }
