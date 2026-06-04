@@ -1,11 +1,14 @@
-import {describe, expect, it} from '@jest/globals';
-import {getStoredGedcom, storeGedcom} from './gedcom_store';
-
-// Reset module state between tests by re-importing fresh; since Jest caches
-// modules we instead test the observable contract directly.
+import {beforeEach, describe, expect, it} from '@jest/globals';
+import {clearStoredGedcom, getStoredGedcom, storeGedcom} from './gedcom_store';
 
 describe('gedcom_store', () => {
   const images = new Map<string, string>();
+
+  beforeEach(() => {
+    // Jest caches module instances, so module-level state persists across
+    // tests. Reset explicitly to keep tests independent of execution order.
+    clearStoredGedcom();
+  });
 
   it('returns undefined for an unknown hash', () => {
     expect(getStoredGedcom('unknown')).toBeUndefined();

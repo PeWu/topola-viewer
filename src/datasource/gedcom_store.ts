@@ -26,3 +26,12 @@ export function getStoredGedcom(
 ): {gedcom: string; images: Map<string, string>} | undefined {
   return currentHash === hash && currentEntry ? currentEntry : undefined;
 }
+
+/**
+ * Resets store state to empty. Use in test beforeEach to prevent module-level
+ * state from bleeding between test cases (Jest caches module instances).
+ */
+export function clearStoredGedcom(): void {
+  currentHash = null;
+  currentEntry = null;
+}
