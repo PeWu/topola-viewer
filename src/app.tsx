@@ -754,6 +754,8 @@ export function App() {
         colors={config.color}
         hideIds={config.id}
         hideSex={config.sex}
+        placeDisplay={config.place}
+        placeCount={config.placeCount}
       />
     );
   }

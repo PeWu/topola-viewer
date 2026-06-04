@@ -10,7 +10,7 @@ import {
   zoomTransform,
 } from 'd3-zoom';
 import {saveAs} from 'file-saver';
-import {useEffect, useRef} from 'react';
+import {useEffect, useMemo, useRef} from 'react';
 import {IntlShape, useIntl} from 'react-intl';
 import {
   ChartHandle,
@@ -25,8 +25,9 @@ import {
   RelativesChart,
   ChartColors as TopolaChartColors,
 } from 'topola';
-import {ChartColors, Ids, Sex} from './sidepanel/config/config';
+import {ChartColors, Ids, PlaceDisplay, Sex} from './sidepanel/config/config';
 import {Media} from './util/media';
+import {DEFAULT_PLACE_DISPLAY_COUNT, shortenPlace} from './util/place_util';
 import {usePrevious} from './util/previous-hook';
 
 /** How much to zoom when using the +/- buttons. */
@@ -325,6 +326,8 @@ export interface ChartProps {
   colors?: ChartColors;
   hideIds?: Ids;
   hideSex?: Sex;
+  placeDisplay?: PlaceDisplay;
+  placeCount?: number;
 }
 
 class ChartWrapper {
@@ -495,13 +498,52 @@ export function Chart(props: ChartProps) {
   const prevProps = usePrevious(props);
   const intl = useIntl();
 
+  const placeDisplay = props.placeDisplay ?? PlaceDisplay.FULL;
+  const placeCount = props.placeCount ?? DEFAULT_PLACE_DISPLAY_COUNT;
+
+  const processedData = useMemo(() => {
+    if (placeDisplay === PlaceDisplay.FULL) {
+      return props.data;
+    }
+    return {
+      ...props.data,
+      indis: props.data.indis.map((indi) => ({
+        ...indi,
+        birth: indi.birth
+          ? {
+              ...indi.birth,
+              place: shortenPlace(indi.birth.place, placeDisplay, placeCount),
+            }
+          : undefined,
+        death: indi.death
+          ? {
+              ...indi.death,
+              place: shortenPlace(indi.death.place, placeDisplay, placeCount),
+            }
+          : undefined,
+      })),
+      fams: props.data.fams.map((fam) => ({
+        ...fam,
+        marriage: fam.marriage
+          ? {
+              ...fam.marriage,
+              place: shortenPlace(fam.marriage.place, placeDisplay, placeCount),
+            }
+          : undefined,
+      })),
+    };
+  }, [props.data, placeDisplay, placeCount]);
+
   useEffect(() => {
+    const propsWithProcessedData: ChartProps = {...props, data: processedData};
     if (prevProps) {
       const initialRender =
         props.chartType !== prevProps?.chartType ||
         props.colors !== prevProps?.colors ||
         props.hideIds !== prevProps?.hideIds ||
-        props.hideSex !== prevProps?.hideSex;
+        props.hideSex !== prevProps?.hideSex ||
+        props.placeDisplay !== prevProps?.placeDisplay ||
+        props.placeCount !== prevProps?.placeCount;
       const resetPosition =
         props.chartType !== prevProps?.chartType ||
         props.data !== prevProps.data ||
@@ -510,12 +552,12 @@ export function Chart(props: ChartProps) {
         // Therefore, compare id and generation instead.
         props.selection.id !== prevProps.selection.id ||
         props.selection.generation !== prevProps.selection.generation;
-      chartWrapper.current.renderChart(props, intl, {
+      chartWrapper.current.renderChart(propsWithProcessedData, intl, {
         initialRender,
         resetPosition,
       });
     } else {
-      chartWrapper.current.renderChart(props, intl, {
+      chartWrapper.current.renderChart(propsWithProcessedData, intl, {
         initialRender: true,
         resetPosition: true,
       });
