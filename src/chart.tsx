@@ -328,6 +328,8 @@ export interface ChartProps {
   hideSex?: Sex;
   placeDisplay?: PlaceDisplay;
   placeCount?: number;
+  /** Called once after the initial D3 layout and SVG render completes. */
+  onFirstRender?: () => void;
 }
 
 class ChartWrapper {
@@ -365,6 +367,13 @@ class ChartWrapper {
       resetPosition: false,
     },
   ) {
+    // Nothing changed — the SVG is already correct. Skip re-render.
+    // This prevents repeated full D3 layout passes (500ms+ each) that happen
+    // when React re-renders for unrelated state changes.
+    if (!args.initialRender && !args.resetPosition) {
+      return;
+    }
+
     // Wait for animation to finish if animation is in progress.
     if (!args.initialRender && this.animating) {
       this.rerenderRequired = true;
@@ -561,6 +570,12 @@ export function Chart(props: ChartProps) {
         initialRender: true,
         resetPosition: true,
       });
+      // Clear the loading pill now that the chart SVG is in the DOM.
+      // This fires before the D3 fade-in animation completes (~400ms), which
+      // is intentional: the chart is visible and interactive at this point,
+      // and keeping the pill visible during the animation would create a
+      // confusing overlap.
+      props.onFirstRender?.();
     }
   });
 

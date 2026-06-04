@@ -1,6 +1,7 @@
 import {analyticsEvent} from '../util/analytics';
 import {getSoftware, TopolaData} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
+import {storeGedcom} from './gedcom_store';
 import {loadGedcom} from './load_data';
 
 /**
@@ -45,6 +46,7 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
     message: EmbeddedMessage,
     resolve: (value: TopolaData) => void,
     reject: (reason: unknown) => void,
+    onProgress?: (status: string) => void,
   ) {
     if (message.message === EmbeddedMessageType.PARENT_READY) {
       // Parent didn't receive the first 'ready' message, so we need to send it again.
@@ -55,7 +57,9 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
         return;
       }
       try {
-        const data = await loadGedcom('', gedcom);
+        const embeddedHash = 'embedded';
+        storeGedcom(embeddedHash, gedcom, new Map());
+        const data = await loadGedcom(embeddedHash, onProgress);
         const software = getSoftware(data.gedcom.head);
         analyticsEvent('embedded_file_loaded', {
           event_label: software,
@@ -70,13 +74,24 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
 
   async loadData(
     _source: SourceSelection<EmbeddedSourceSpec>,
+    onProgress?: (status: string) => void,
   ): Promise<TopolaData> {
     // Notify the parent window that we are ready.
     return new Promise<TopolaData>((resolve, reject) => {
+      // Remove the listener once the GEDCOM arrives (resolve) or an error
+      // occurs (reject) to prevent it from accumulating across loadData calls.
+      const wrappedResolve = (value: TopolaData) => {
+        window.removeEventListener('message', listener);
+        resolve(value);
+      };
+      const wrappedReject = (reason: unknown) => {
+        window.removeEventListener('message', listener);
+        reject(reason);
+      };
+      const listener = (event: MessageEvent) =>
+        this.onMessage(event.data, wrappedResolve, wrappedReject, onProgress);
       window.parent.postMessage({message: EmbeddedMessageType.READY}, '*');
-      window.addEventListener('message', (data) =>
-        this.onMessage(data.data, resolve, reject),
-      );
+      window.addEventListener('message', listener);
     });
   }
 }

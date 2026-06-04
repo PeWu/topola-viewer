@@ -35,6 +35,7 @@ export class GoogleDriveDataSource implements DataSource<GoogleDriveSourceSpec> 
 
   async loadData(
     source: SourceSelection<GoogleDriveSourceSpec>,
+    onProgress?: (status: string) => void,
   ): Promise<TopolaData> {
     const fileId = source.spec.fileId;
     const cacheKey = `${GOOGLE_DRIVE_CACHE_KEY_PREFIX}${fileId}`;
@@ -88,6 +89,6 @@ export class GoogleDriveDataSource implements DataSource<GoogleDriveSourceSpec> 
 
     // 5. Parse and prepare the file content
     const blob = await response.blob();
-    return loadAndPrepareFile(blob, cacheKey);
+    return loadAndPrepareFile(blob, cacheKey, onProgress);
   }
 }

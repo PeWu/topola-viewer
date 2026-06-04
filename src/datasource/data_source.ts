@@ -28,5 +28,8 @@ export interface DataSource<SourceSpecT> {
     data?: TopolaData,
   ): boolean;
   /** Loads data from the data source. */
-  loadData(spec: SourceSelection<SourceSpecT>): Promise<TopolaData>;
+  loadData(
+    spec: SourceSelection<SourceSpecT>,
+    onProgress?: (status: string) => void,
+  ): Promise<TopolaData>;
 }

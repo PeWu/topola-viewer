@@ -51,12 +51,20 @@ export function SearchBar(props: Props) {
     } as SearchResultProps;
   }
 
+  /** Returns the index, building it on first use to avoid blocking the initial render. */
+  function getOrBuildIndex(): SearchIndex {
+    if (!searchIndex.current) {
+      searchIndex.current = buildSearchIndex(props.data);
+    }
+    return searchIndex.current;
+  }
+
   /** On search input change. */
   function handleSearch(input: string | undefined) {
-    if (!input || !searchIndex.current) {
+    if (!input) {
       return;
     }
-    const results = searchIndex.current
+    const results = getOrBuildIndex()
       .search(input)
       .map((result) => displaySearchResult(result));
     setSearchResults(results);
@@ -76,9 +84,20 @@ export function SearchBar(props: Props) {
     setSearchString(value || '');
   }
 
-  // Initialize the search index.
+  // When data changes, reset the index and schedule a background rebuild so
+  // the first keystroke doesn't block the UI. Falls back to a 200ms timeout
+  // if requestIdleCallback is unavailable (e.g. Firefox 115, Safari 16).
   useEffect(() => {
-    searchIndex.current = buildSearchIndex(props.data);
+    searchIndex.current = undefined;
+    const build = () => {
+      searchIndex.current = buildSearchIndex(props.data);
+    };
+    if (typeof requestIdleCallback !== 'undefined') {
+      const handle = requestIdleCallback(build, {timeout: 5000});
+      return () => cancelIdleCallback(handle);
+    }
+    const handle = setTimeout(build, 200);
+    return () => clearTimeout(handle);
   }, [props.data]);
 
   return (

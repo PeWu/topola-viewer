@@ -87,6 +87,7 @@ export class WikiTreeDataSource implements DataSource<WikiTreeSourceSpec> {
 
   async loadData(
     source: SourceSelection<WikiTreeSourceSpec>,
+    _onProgress?: (status: string) => void,
   ): Promise<TopolaData> {
     if (!source.selection) {
       throw new TopolaError(
