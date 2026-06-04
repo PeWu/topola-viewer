@@ -1,5 +1,5 @@
 import {describe, expect, it} from '@jest/globals';
-import {fileFingerprint} from '../util/file_fingerprint';
+import {fileFingerprint} from './file_fingerprint';
 
 const makeFile = (
   name: string,

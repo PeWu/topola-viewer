@@ -80,7 +80,6 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
     return new Promise<TopolaData>((resolve, reject) => {
       // Remove the listener once the GEDCOM arrives (resolve) or an error
       // occurs (reject) to prevent it from accumulating across loadData calls.
-      let listener: (event: MessageEvent) => void;
       const wrappedResolve = (value: TopolaData) => {
         window.removeEventListener('message', listener);
         resolve(value);
@@ -89,7 +88,7 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
         window.removeEventListener('message', listener);
         reject(reason);
       };
-      listener = (event: MessageEvent) =>
+      const listener = (event: MessageEvent) =>
         this.onMessage(event.data, wrappedResolve, wrappedReject, onProgress);
       window.parent.postMessage({message: EmbeddedMessageType.READY}, '*');
       window.addEventListener('message', listener);

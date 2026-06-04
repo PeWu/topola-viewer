@@ -180,7 +180,7 @@ export async function loadFromUrl(
   return loadAndPrepareFile(await response.blob(), url, onProgress);
 }
 
-/** Loads data from the given GEDCOM file contents. */
+/** Loads GEDCOM data from the cache or the in-memory store by its hash. */
 export async function loadGedcom(
   hash: string,
   onProgress?: (status: string) => void,
