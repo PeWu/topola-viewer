@@ -528,6 +528,11 @@ export function Chart(props: ChartProps) {
         initialRender: true,
         resetPosition: true,
       });
+      // Clear the loading pill now that the chart SVG is in the DOM.
+      // This fires before the D3 fade-in animation completes (~400ms), which
+      // is intentional: the chart is visible and interactive at this point,
+      // and keeping the pill visible during the animation would create a
+      // confusing overlap.
       props.onFirstRender?.();
     }
   });
