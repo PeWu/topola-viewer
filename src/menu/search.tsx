@@ -89,17 +89,15 @@ export function SearchBar(props: Props) {
   // if requestIdleCallback is unavailable (e.g. Firefox 115, Safari 16).
   useEffect(() => {
     searchIndex.current = undefined;
-    let handle: ReturnType<typeof setTimeout> | number;
     const build = () => {
       searchIndex.current = buildSearchIndex(props.data);
     };
     if (typeof requestIdleCallback !== 'undefined') {
-      handle = requestIdleCallback(build, {timeout: 5000});
-      return () => cancelIdleCallback(handle as number);
-    } else {
-      handle = setTimeout(build, 200);
-      return () => clearTimeout(handle as ReturnType<typeof setTimeout>);
+      const handle = requestIdleCallback(build, {timeout: 5000});
+      return () => cancelIdleCallback(handle);
     }
+    const handle = setTimeout(build, 200);
+    return () => clearTimeout(handle);
   }, [props.data]);
 
   return (
