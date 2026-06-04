@@ -428,15 +428,15 @@ export function App() {
             onProgress,
           );
         case DataSourceEnum.WIKITREE:
-          return wikiTreeDataSource.loadData({
-            spec: newSourceSpec,
-            selection: newSelection,
-          });
+          return wikiTreeDataSource.loadData(
+            {spec: newSourceSpec, selection: newSelection},
+            onProgress,
+          );
         case DataSourceEnum.EMBEDDED:
-          return embeddedDataSource.loadData({
-            spec: newSourceSpec,
-            selection: newSelection,
-          });
+          return embeddedDataSource.loadData(
+            {spec: newSourceSpec, selection: newSelection},
+            onProgress,
+          );
         case DataSourceEnum.GOOGLE_DRIVE:
           if (!isGoogleDriveConfigured()) {
             throw new TopolaError(
