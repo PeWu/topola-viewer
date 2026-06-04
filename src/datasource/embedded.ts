@@ -46,6 +46,7 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
     message: EmbeddedMessage,
     resolve: (value: TopolaData) => void,
     reject: (reason: unknown) => void,
+    onProgress?: (status: string) => void,
   ) {
     if (message.message === EmbeddedMessageType.PARENT_READY) {
       // Parent didn't receive the first 'ready' message, so we need to send it again.
@@ -58,7 +59,7 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
       try {
         const embeddedHash = 'embedded';
         storeGedcom(embeddedHash, gedcom, new Map());
-        const data = await loadGedcom(embeddedHash);
+        const data = await loadGedcom(embeddedHash, onProgress);
         const software = getSoftware(data.gedcom.head);
         analyticsEvent('embedded_file_loaded', {
           event_label: software,
@@ -73,13 +74,13 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
 
   async loadData(
     _source: SourceSelection<EmbeddedSourceSpec>,
-    _onProgress?: (status: string) => void,
+    onProgress?: (status: string) => void,
   ): Promise<TopolaData> {
     // Notify the parent window that we are ready.
     return new Promise<TopolaData>((resolve, reject) => {
       window.parent.postMessage({message: EmbeddedMessageType.READY}, '*');
       window.addEventListener('message', (data) =>
-        this.onMessage(data.data, resolve, reject),
+        this.onMessage(data.data, resolve, reject, onProgress),
       );
     });
   }
