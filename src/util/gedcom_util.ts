@@ -200,9 +200,34 @@ export function getData(entry: GedcomEntry) {
   return result;
 }
 
-/** Sorts children and spouses. */
+/**
+ * Ensures the male spouse is always in the `husb` field and the female in the
+ * `wife` field, regardless of how the source labels them. Only acts
+ * when both spouses have a known, differing sex — same-sex couples and
+ * families with unknown sex are left unchanged.
+ */
+function normalizeSpouseSex(gedcom: JsonGedcomData): JsonGedcomData {
+  const indiMap = idToIndiMap(gedcom);
+  let changed = false;
+
+  const newFams = gedcom.fams.map((fam) => {
+    const husbSex = fam.husb ? indiMap.get(fam.husb)?.sex : undefined;
+    const wifeSex = fam.wife ? indiMap.get(fam.wife)?.sex : undefined;
+
+    if (husbSex === 'F' && wifeSex === 'M') {
+      changed = true;
+      return Object.assign({}, fam, {husb: fam.wife, wife: fam.husb});
+    }
+
+    return fam;
+  });
+
+  return changed ? Object.assign({}, gedcom, {fams: newFams}) : gedcom;
+}
+
+/** Sorts children and spouses, and ensures male is in husb / female in wife. */
 export function normalizeGedcom(gedcom: JsonGedcomData): JsonGedcomData {
-  return sortSpouses(sortChildren(gedcom));
+  return normalizeSpouseSex(sortSpouses(sortChildren(gedcom)));
 }
 
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
