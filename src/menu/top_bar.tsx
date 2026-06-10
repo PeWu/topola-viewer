@@ -32,13 +32,13 @@ interface Props {
   data?: JsonGedcomData;
   standalone: boolean;
   /** Whether to show the "All relatives" chart type in the menu. */
-  allowAllRelativesChart: boolean;
-  allowPrintAndDownload: boolean;
-  eventHandlers: EventHandlers;
+  allowAllRelativesChart?: boolean;
+  allowPrintAndDownload?: boolean;
+  eventHandlers?: EventHandlers;
   /** Whether to show additional WikiTree menus. */
-  showWikiTreeMenus: boolean;
+  showWikiTreeMenus?: boolean;
   /** Whether the user has authorized Google Drive and has an active token. */
-  hasGoogleToken: boolean;
+  hasGoogleToken?: boolean;
   /** Callback to sign out of Google Drive. */
   onGoogleSignOut?: () => void;
   /** Callback triggered when a new Google Drive token is acquired. */
@@ -101,7 +101,7 @@ export function TopBar(props: Props) {
         return (
           <>
             <Menu.Item
-              onClick={props.eventHandlers.onPrint}
+              onClick={props.eventHandlers?.onPrint}
               disabled={!props.allowPrintAndDownload}
             >
               <Icon name="print" />
@@ -122,19 +122,19 @@ export function TopBar(props: Props) {
               disabled={!props.allowPrintAndDownload}
             >
               <Dropdown.Menu>
-                <Dropdown.Item onClick={props.eventHandlers.onDownloadPdf}>
+                <Dropdown.Item onClick={props.eventHandlers?.onDownloadPdf}>
                   <FormattedMessage
                     id="menu.pdf_file"
                     defaultMessage="PDF file"
                   />
                 </Dropdown.Item>
-                <Dropdown.Item onClick={props.eventHandlers.onDownloadPng}>
+                <Dropdown.Item onClick={props.eventHandlers?.onDownloadPng}>
                   <FormattedMessage
                     id="menu.png_file"
                     defaultMessage="PNG file"
                   />
                 </Dropdown.Item>
-                <Dropdown.Item onClick={props.eventHandlers.onDownloadSvg}>
+                <Dropdown.Item onClick={props.eventHandlers?.onDownloadSvg}>
                   <FormattedMessage
                     id="menu.svg_file"
                     defaultMessage="SVG file"
@@ -156,7 +156,9 @@ export function TopBar(props: Props) {
             </Dropdown>
             <SearchBar
               data={props.data}
-              onSelection={props.eventHandlers.onSelection}
+              onSelection={
+                props.eventHandlers?.onSelection || (() => undefined)
+              }
               {...props}
             />
           </>
@@ -165,28 +167,28 @@ export function TopBar(props: Props) {
       case ScreenSize.SMALL:
         return (
           <>
-            <Dropdown.Item onClick={props.eventHandlers.onPrint}>
+            <Dropdown.Item onClick={props.eventHandlers?.onPrint}>
               <Icon name="print" />
               <FormattedMessage id="menu.print" defaultMessage="Print" />
             </Dropdown.Item>
 
             <Dropdown.Divider />
 
-            <Dropdown.Item onClick={props.eventHandlers.onDownloadPdf}>
+            <Dropdown.Item onClick={props.eventHandlers?.onDownloadPdf}>
               <Icon name="download" />
               <FormattedMessage
                 id="menu.download_pdf"
                 defaultMessage="Download PDF"
               />
             </Dropdown.Item>
-            <Dropdown.Item onClick={props.eventHandlers.onDownloadPng}>
+            <Dropdown.Item onClick={props.eventHandlers?.onDownloadPng}>
               <Icon name="download" />
               <FormattedMessage
                 id="menu.download_png"
                 defaultMessage="Download PNG"
               />
             </Dropdown.Item>
-            <Dropdown.Item onClick={props.eventHandlers.onDownloadSvg}>
+            <Dropdown.Item onClick={props.eventHandlers?.onDownloadSvg}>
               <Icon name="download" />
               <FormattedMessage
                 id="menu.download_svg"
@@ -351,7 +353,7 @@ export function TopBar(props: Props) {
         {props.showingChart && props.data && (
           <SearchBar
             data={props.data}
-            onSelection={props.eventHandlers.onSelection}
+            onSelection={props.eventHandlers?.onSelection || (() => undefined)}
             {...props}
           />
         )}
