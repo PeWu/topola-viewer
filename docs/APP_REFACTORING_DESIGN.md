@@ -80,7 +80,7 @@ To refactor `app.tsx` safely and maintain continuous code correctness, we will m
 ### Step-by-Step Execution Plan
 
 #### Phase 1: Pure Component and Utility Extraction
-*   [ ] **Step 1.1:** Create `src/components/error_display.tsx` and move `ErrorMessage` and `ErrorPopup` from `src/app.tsx`. Update imports in `src/app.tsx`.
+*   [x] **Step 1.1:** Create `src/components/error_display.tsx` and move `ErrorMessage` and `ErrorPopup` from `src/app.tsx`. Update imports in `src/app.tsx`.
 *   [ ] **Step 1.2:** Create `src/datasource/instances.ts` and move data source class instantiations. Update references in `src/app.tsx`. Refactor `EmbeddedDataSource` to clean up its message event listener when the loading promise resolves or rejects (or track listener state) to prevent duplicate event listener leaks on multiple page mounts.
 *   [ ] **Step 1.3:** Create `src/util/url_args.ts` (the parsing utility) and `src/util/url_args.spec.ts` (its Jest unit test suite) together. Extract URL query parameter parsing functions and types from `src/app.tsx`, write comprehensive tests, update imports in `src/app.tsx`, and run `npm test` to verify.
 *   [ ] **Step 1.4:** Modify `src/menu/top_bar.tsx` to make chart-specific props and event handlers optional (e.g. `data`, `allowAllRelativesChart`, `allowPrintAndDownload`, `eventHandlers`, etc.), preparing the component for rendering on the landing screen without dummy properties.

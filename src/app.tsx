@@ -1,15 +1,9 @@
 import * as H from 'history';
 import queryString from 'query-string';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {FormattedMessage, useIntl} from 'react-intl';
+import {useIntl} from 'react-intl';
 import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router';
-import {
-  Loader,
-  Message,
-  Portal,
-  SidebarPushable,
-  SidebarPusher,
-} from 'semantic-ui-react';
+import {Loader, SidebarPushable, SidebarPusher} from 'semantic-ui-react';
 import {IndiInfo} from 'topola';
 import {
   Chart,
@@ -19,6 +13,7 @@ import {
   downloadSvg,
   printChart,
 } from './chart';
+import {ErrorMessage, ErrorPopup} from './components/error_display';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
 import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
 import {
@@ -86,43 +81,6 @@ function getStaticUrl(): string | undefined {
 }
 
 const staticUrl = getStaticUrl();
-
-/** Shows an error message in the middle of the screen. */
-function ErrorMessage(props: {message?: string}) {
-  return (
-    <Message negative className="error">
-      <Message.Header>
-        <FormattedMessage
-          id="error.failed_to_load_file"
-          defaultMessage={'Failed to load file'}
-        />
-      </Message.Header>
-      <p>{props.message}</p>
-    </Message>
-  );
-}
-
-interface ErrorPopupProps {
-  message?: string;
-  open: boolean;
-  onDismiss: () => void;
-}
-
-/**
- * Shows a dismissable error message in the bottom left corner of the screen.
- */
-function ErrorPopup(props: ErrorPopupProps) {
-  return (
-    <Portal open={props.open} onClose={props.onDismiss}>
-      <Message negative className="errorPopup" onDismiss={props.onDismiss}>
-        <Message.Header>
-          <FormattedMessage id="error.error" defaultMessage={'Error'} />
-        </Message.Header>
-        <p>{props.message}</p>
-      </Message>
-    </Portal>
-  );
-}
 
 enum AppState {
   INITIAL,
