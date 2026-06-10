@@ -1,4 +1,3 @@
-import * as H from 'history';
 import queryString from 'query-string';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useIntl} from 'react-intl';
@@ -48,7 +47,6 @@ import {Intro} from './intro';
 import {GoogleAuthModal} from './menu/google_auth_modal';
 import {TopBar} from './menu/top_bar';
 import {
-  argsToConfig,
   Config,
   configToArgs,
   DEFALUT_CONFIG,
@@ -60,28 +58,13 @@ import {analyticsEvent} from './util/analytics';
 import {TopolaError} from './util/error';
 import {getI18nMessage} from './util/error_i18n';
 import {idToIndiMap, TopolaData} from './util/gedcom_util';
+import {
+  DataSourceSpec,
+  getArguments,
+  getStaticUrl,
+  getUrlForArgs,
+} from './util/url_args';
 import {WebMcpBridge} from './webmcp';
-
-/**
- * Load GEDCOM URL from environment variable (Vite VITE_STATIC_URL or dynamically
- * injected via a meta tag from Caddy server).
- *
- * If this static URL is provided, the viewer is switched to
- * single-tree mode without the option to load other data.
- */
-function getStaticUrl(): string | undefined {
-  const envUrl = import.meta.env.VITE_STATIC_URL;
-  if (envUrl) return envUrl;
-
-  const metaTag = document.querySelector('meta[name="topola-static-url"]');
-  const metaUrl = metaTag?.getAttribute('content');
-  // Safely ignore if it is empty, the raw caddy template expression, or Vite's raw template placeholder
-  if (metaUrl && !metaUrl.startsWith('__') && !metaUrl.includes('{{ env')) {
-    return metaUrl;
-  }
-
-  return undefined;
-}
 
 const staticUrl = getStaticUrl();
 
@@ -91,124 +74,6 @@ enum AppState {
   ERROR,
   SHOWING_CHART,
   LOADING_MORE,
-}
-
-type DataSourceSpec =
-  | UrlSourceSpec
-  | UploadSourceSpec
-  | WikiTreeSourceSpec
-  | EmbeddedSourceSpec
-  | GoogleDriveSourceSpec;
-
-/**
- * Arguments passed to the application, primarily through URL parameters.
- * Non-optional arguments get populated with default values.
- */
-interface Arguments {
-  sourceSpec?: DataSourceSpec;
-  selection?: IndiInfo;
-  chartType: ChartType;
-  standalone: boolean;
-  showWikiTreeMenus: boolean;
-  freezeAnimation: boolean;
-  showSidePanel: boolean;
-  config: Config;
-}
-
-function getParamFromSearch(name: string, search: queryString.ParsedQuery) {
-  const value = search[name];
-  return typeof value === 'string' ? value : undefined;
-}
-
-/**
- * Retrieve arguments passed into the application through the URL and uploaded
- * data.
- */
-function getArguments(location: H.Location): Arguments {
-  const search = queryString.parse(location.search);
-  const getParam = (name: string) => getParamFromSearch(name, search);
-
-  const view = getParam('view');
-  const chartTypes = new Map<string | undefined, ChartType>([
-    ['relatives', ChartType.Relatives],
-    ['fancy', ChartType.Fancy],
-    ['donatso', ChartType.Donatso],
-  ]);
-
-  const hash = getParam('file');
-  const url = getParam('url');
-  const embedded = getParam('embedded') === 'true'; // False by default.
-  let sourceSpec: DataSourceSpec | undefined = undefined;
-  if (staticUrl) {
-    sourceSpec = {
-      source: DataSourceEnum.GEDCOM_URL,
-      url: staticUrl,
-      handleCors: false,
-    };
-  } else if (getParam('source') === 'wikitree') {
-    const windowSearch = queryString.parse(window.location.search);
-    sourceSpec = {
-      source: DataSourceEnum.WIKITREE,
-      authcode:
-        getParam('authcode') || getParamFromSearch('authcode', windowSearch),
-    };
-  } else if (getParam('source') === 'google-drive') {
-    const fileId = getParam('fileId');
-    if (fileId) {
-      sourceSpec = {
-        source: DataSourceEnum.GOOGLE_DRIVE,
-        fileId,
-      };
-    }
-  } else if (hash) {
-    sourceSpec = {
-      source: DataSourceEnum.UPLOADED,
-      hash,
-    };
-  } else if (url) {
-    sourceSpec = {
-      source: DataSourceEnum.GEDCOM_URL,
-      url,
-      handleCors: getParam('handleCors') !== 'false', // True by default.
-    };
-  } else if (embedded) {
-    sourceSpec = {source: DataSourceEnum.EMBEDDED};
-  }
-
-  const indi = getParam('indi');
-  const parsedGen = Number(getParam('gen'));
-  const selection = indi
-    ? {id: indi, generation: !isNaN(parsedGen) ? parsedGen : 0}
-    : undefined;
-
-  /**
-   * Determines whether the side panel should be shown taking into account the
-   * URL parameter and the viewport size.
-   *
-   * On mobile devices (max-width: 767px), the side panel is hidden by default.
-   * On tablet and desktop, the side panel is shown by default.
-   */
-  function getShowSidePanel() {
-    if (window.matchMedia('(max-width: 767px)').matches) {
-      // On mobile, hide the side panel by default.
-      return getParam('sidePanel') === 'true';
-    }
-    // On tablet and desktop, show the side panel by default.
-    return getParam('sidePanel') !== 'false';
-  }
-
-  return {
-    sourceSpec,
-    selection,
-    // Hourglass is the default view.
-    chartType: chartTypes.get(view) || ChartType.Hourglass,
-
-    showSidePanel: getShowSidePanel(),
-    standalone: getParam('standalone') !== 'false' && !embedded && !staticUrl,
-    showWikiTreeMenus: getParam('showWikiTreeMenus') !== 'false', // True by default.
-    freezeAnimation: getParam('freeze') === 'true', // False by default
-    config: argsToConfig(search),
-  };
 }
 
 export function App() {
@@ -620,13 +485,10 @@ export function App() {
     });
   }, [mcpBridge, location]);
 
-  function updateUrl(args: queryString.ParsedQuery<string>) {
-    const search = queryString.parse(location.search);
-    for (const key in args) {
-      search[key] = args[key];
-    }
-    location.search = queryString.stringify(search);
-    navigate(location);
+  function updateUrl(
+    args: Record<string, string | (string | null)[] | null | undefined>,
+  ) {
+    navigate(getUrlForArgs(location, args));
   }
 
   /**

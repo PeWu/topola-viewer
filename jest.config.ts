@@ -16,6 +16,8 @@ const config: Config.InitialOptions = {
     "d3-selection": "<rootDir>/node_modules/d3-selection/dist/d3-selection.js",
     "d3-timer": "<rootDir>/node_modules/d3-timer/dist/d3-timer.js",
     "d3-transition": "<rootDir>/node_modules/d3-transition/dist/d3-transition.js",
+    "d3-drag": "<rootDir>/node_modules/d3-drag/dist/d3-drag.js",
+    "d3-zoom": "<rootDir>/node_modules/d3-zoom/dist/d3-zoom.js",
   },
 };
 
