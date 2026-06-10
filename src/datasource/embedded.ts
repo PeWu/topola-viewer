@@ -33,6 +33,8 @@ export interface EmbeddedSourceSpec {
 
 /** GEDCOM file received from outside of the iframe. */
 export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
+  private activeListener?: (event: MessageEvent) => void;
+
   isNewData(
     _newSource: SourceSelection<EmbeddedSourceSpec>,
     _oldSource: SourceSelection<EmbeddedSourceSpec>,
@@ -76,20 +78,32 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
     _source: SourceSelection<EmbeddedSourceSpec>,
     onProgress?: (status: string) => void,
   ): Promise<TopolaData> {
+    if (this.activeListener) {
+      window.removeEventListener('message', this.activeListener);
+      this.activeListener = undefined;
+    }
+
     // Notify the parent window that we are ready.
     return new Promise<TopolaData>((resolve, reject) => {
       // Remove the listener once the GEDCOM arrives (resolve) or an error
       // occurs (reject) to prevent it from accumulating across loadData calls.
       const wrappedResolve = (value: TopolaData) => {
-        window.removeEventListener('message', listener);
+        if (this.activeListener === listener) {
+          window.removeEventListener('message', listener);
+          this.activeListener = undefined;
+        }
         resolve(value);
       };
       const wrappedReject = (reason: unknown) => {
-        window.removeEventListener('message', listener);
+        if (this.activeListener === listener) {
+          window.removeEventListener('message', listener);
+          this.activeListener = undefined;
+        }
         reject(reason);
       };
       const listener = (event: MessageEvent) =>
         this.onMessage(event.data, wrappedResolve, wrappedReject, onProgress);
+      this.activeListener = listener;
       window.parent.postMessage({message: EmbeddedMessageType.READY}, '*');
       window.addEventListener('message', listener);
     });
