@@ -86,8 +86,8 @@ To refactor `app.tsx` safely and maintain continuous code correctness, we will m
 *   [x] **Step 1.4:** Modify `src/menu/top_bar.tsx` to make chart-specific props and event handlers optional (e.g. `data`, `allowAllRelativesChart`, `allowPrintAndDownload`, `eventHandlers`, etc.), preparing the component for rendering on the landing screen without dummy properties.
 
 #### Phase 2: WebMCP Bridge Extraction
-*   [ ] **Step 2.1:** Create `src/hooks/use_webmcp_bridge.ts` wrapping WebMCP registration and synchronization effects.
-*   [ ] **Step 2.2:** Replace the inline WebMCP logic and `useEffect` blocks in `src/app.tsx` with a single call to the custom `useWebMcpBridge` hook. Verify using `npm test`. Note: During Phase 4, this hook call will be moved from `src/app.tsx` into `src/pages/view_page.tsx` where the layout state is relocated.
+*   [x] **Step 2.1:** Create `src/hooks/use_webmcp_bridge.ts` wrapping WebMCP registration and synchronization effects.
+*   [x] **Step 2.2:** Replace the inline WebMCP logic and `useEffect` blocks in `src/app.tsx` with a single call to the custom `useWebMcpBridge` hook. Verify using `npm test`. Note: During Phase 4, this hook call will be moved from `src/app.tsx` into `src/pages/view_page.tsx` where the layout state is relocated.
 
 #### Phase 3: Shifting to URL as Single Source of Truth
 We will gradually eliminate React state variables in `src/app.tsx` and derive them (including settings like `standalone`, `showWikiTreeMenus`, and `freezeAnimation`) directly from the `useLocation()` search query parameters on render:

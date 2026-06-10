@@ -43,6 +43,7 @@ import {
   WikiTreeSourceSpec,
 } from './datasource/wikitree';
 import {DonatsoChart} from './donatso-chart';
+import {useWebMcpBridge} from './hooks/use_webmcp_bridge';
 import {Intro} from './intro';
 import {GoogleAuthModal} from './menu/google_auth_modal';
 import {TopBar} from './menu/top_bar';
@@ -64,7 +65,6 @@ import {
   getStaticUrl,
   getUrlForArgs,
 } from './util/url_args';
-import {WebMcpBridge} from './webmcp';
 
 const staticUrl = getStaticUrl();
 
@@ -108,8 +108,7 @@ export function App() {
   const [freezeAnimation, setFreezeAnimation] = useState(false);
   /** Configuration settings for chart display options (e.g. colors, hiding IDs). */
   const [config, setConfig] = useState(DEFALUT_CONFIG);
-  /** MCP bridge to communicate with external tools or servers (Model Context Protocol). */
-  const [mcpBridge] = useState(() => new WebMcpBridge());
+
   /** Controls the visibility of the Google Drive OAuth permission modal. */
   const [showAuthModal, setShowAuthModal] = useState(false);
   /** Stores the file ID that failed to load from Google Drive due to authorization errors. */
@@ -456,13 +455,6 @@ export function App() {
     updateDisplay,
   ]);
 
-  useEffect(() => {
-    mcpBridge.registerTools();
-    return () => {
-      mcpBridge.unregisterTools();
-    };
-  }, [mcpBridge]);
-
   // Clean up object URLs created for uploaded images/files when the dataset
   // changes or the app unmounts to prevent memory leaks.
   useEffect(() => {
@@ -471,19 +463,7 @@ export function App() {
     };
   }, [data]);
 
-  useEffect(() => {
-    mcpBridge.setData(data || null);
-  }, [data, mcpBridge]);
-
-  useEffect(() => {
-    mcpBridge.setDetailIndi(detailIndi || null);
-  }, [detailIndi, mcpBridge]);
-
-  useEffect(() => {
-    mcpBridge.setSetSelectionCallback((id: string) => {
-      onSelection({id, generation: 0});
-    });
-  }, [mcpBridge, location]);
+  useWebMcpBridge(data, detailIndi, onSelection);
 
   function updateUrl(
     args: Record<string, string | (string | null)[] | null | undefined>,
