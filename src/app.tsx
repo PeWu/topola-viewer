@@ -15,10 +15,9 @@ import {
 } from './chart';
 import {ErrorMessage, ErrorPopup} from './components/error_display';
 import {DataSourceEnum, SourceSelection} from './datasource/data_source';
-import {EmbeddedDataSource, EmbeddedSourceSpec} from './datasource/embedded';
+import {EmbeddedSourceSpec} from './datasource/embedded';
 import {
   GoogleDriveAuthError,
-  GoogleDriveDataSource,
   GoogleDriveSourceSpec,
 } from './datasource/google_drive';
 import {
@@ -27,10 +26,14 @@ import {
   isGoogleDriveConfigured,
 } from './datasource/google_drive_service';
 import {
-  GedcomUrlDataSource,
+  embeddedDataSource,
+  gedcomUrlDataSource,
+  googleDriveDataSource,
+  uploadedDataSource,
+} from './datasource/instances';
+import {
   getSelection,
   revokeObjectUrls,
-  UploadedDataSource,
   UploadSourceSpec,
   UrlSourceSpec,
 } from './datasource/load_data';
@@ -207,11 +210,6 @@ function getArguments(location: H.Location): Arguments {
     config: argsToConfig(search),
   };
 }
-
-const uploadedDataSource = new UploadedDataSource();
-const gedcomUrlDataSource = new GedcomUrlDataSource();
-const embeddedDataSource = new EmbeddedDataSource();
-const googleDriveDataSource = new GoogleDriveDataSource();
 
 export function App() {
   /** State of the application. */
