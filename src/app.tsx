@@ -43,6 +43,7 @@ import {
   WikiTreeSourceSpec,
 } from './datasource/wikitree';
 import {DonatsoChart} from './donatso-chart';
+import {useGoogleAuth} from './hooks/use_google_auth';
 import {useWebMcpBridge} from './hooks/use_webmcp_bridge';
 import {Intro} from './intro';
 import {GoogleAuthModal} from './menu/google_auth_modal';
@@ -90,10 +91,8 @@ export function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   /** Stores the file ID that failed to load from Google Drive due to authorization errors. */
   const [failedFileId, setFailedFileId] = useState<string>();
-  /** Tracks whether the user has a valid cached Google Drive OAuth access token. */
-  const [hasGoogleToken, setHasGoogleToken] = useState(
-    () => !!googleDriveService.getAccessToken(),
-  );
+  /** Tracks whether the user has a valid cached Google Drive OAuth access token and provides a state setter. */
+  const {hasGoogleToken, setHasGoogleToken} = useGoogleAuth();
 
   const intl = useIntl();
   const navigate = useNavigate();
