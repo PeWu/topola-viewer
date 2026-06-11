@@ -96,8 +96,7 @@ export function App() {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   /** Specification of the source of the data. */
   const [sourceSpec, setSourceSpec] = useState<DataSourceSpec>();
-  /** Freeze animations after initial chart render. */
-  const [freezeAnimation, setFreezeAnimation] = useState(false);
+
   /** Configuration settings for chart display options (e.g. colors, hiding IDs). */
   const [config, setConfig] = useState(DEFALUT_CONFIG);
 
@@ -124,6 +123,8 @@ export function App() {
    * from WikiTree.
    */
   const showWikiTreeMenus = args.showWikiTreeMenus;
+  /** Freeze animations after initial chart render. */
+  const freezeAnimation = args.freezeAnimation;
 
   /** Prevents the Google Drive "Open with" state from being processed more than once. */
   const stateProcessed = useRef(false);
@@ -354,7 +355,6 @@ export function App() {
         setSourceSpec(args.sourceSpec);
         setSelection(args.selection);
         setDetailIndi(args.selection?.id);
-        setFreezeAnimation(args.freezeAnimation);
         setConfig(args.config);
         const currentFetchId = ++fetchIdRef.current;
         setLoadingStatus('Loading…');
