@@ -47,13 +47,7 @@ import {useWebMcpBridge} from './hooks/use_webmcp_bridge';
 import {Intro} from './intro';
 import {GoogleAuthModal} from './menu/google_auth_modal';
 import {TopBar} from './menu/top_bar';
-import {
-  Config,
-  configToArgs,
-  DEFALUT_CONFIG,
-  Ids,
-  Sex,
-} from './sidepanel/config/config';
+import {Config, configToArgs, Ids, Sex} from './sidepanel/config/config';
 import {SidePanel} from './sidepanel/side-panel';
 import {analyticsEvent} from './util/analytics';
 import {TopolaError} from './util/error';
@@ -92,9 +86,6 @@ export function App() {
   /** Specification of the source of the data. */
   const [sourceSpec, setSourceSpec] = useState<DataSourceSpec>();
 
-  /** Configuration settings for chart display options (e.g. colors, hiding IDs). */
-  const [config, setConfig] = useState(DEFALUT_CONFIG);
-
   /** Controls the visibility of the Google Drive OAuth permission modal. */
   const [showAuthModal, setShowAuthModal] = useState(false);
   /** Stores the file ID that failed to load from Google Drive due to authorization errors. */
@@ -122,6 +113,12 @@ export function App() {
   const freezeAnimation = args.freezeAnimation;
   /** Whether the side panel is shown. */
   const showSidePanel = args.showSidePanel;
+  /** Configuration settings for chart display options (e.g. colors, hiding IDs). */
+  const config = args.config;
+
+  useMemo(() => {
+    updateChartWithConfig(config, data);
+  }, [config, data]);
   /** The currently selected individual. Fallback to default individual from loaded data if not specified. */
   const updatedSelection = useMemo(() => {
     return data ? getSelection(data.chartData, args.selection) : undefined;
@@ -345,7 +342,6 @@ export function App() {
         setState(AppState.LOADING);
         // Set state from URL parameters.
         setSourceSpec(args.sourceSpec);
-        setConfig(args.config);
         const currentFetchId = ++fetchIdRef.current;
         setLoadingStatus('Loading…');
         try {
@@ -369,7 +365,6 @@ export function App() {
             data.chartData,
             args.selection,
           );
-          updateChartWithConfig(args.config, data);
           setState(AppState.SHOWING_CHART);
         } catch (error: unknown) {
           if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
@@ -587,8 +582,6 @@ export function App() {
                 expanded={showSidePanel}
                 onToggle={onToggleSidePanel}
                 onConfigChange={(config) => {
-                  setConfig(config);
-                  updateChartWithConfig(config, data);
                   updateUrl(configToArgs(config), {replace: true});
                 }}
               />
