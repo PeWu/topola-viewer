@@ -98,8 +98,7 @@ export function App() {
    * from WikiTree.
    */
   const [showWikiTreeMenus, setShowWikiTreeMenus] = useState(true);
-  /** Type of displayed chart. */
-  const [chartType, setChartType] = useState<ChartType>(ChartType.Hourglass);
+
   /** Whether to show the error popup. */
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   /** Specification of the source of the data. */
@@ -121,6 +120,10 @@ export function App() {
   const intl = useIntl();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const args = useMemo(() => getArguments(location), [location]);
+  /** Type of displayed chart. */
+  const chartType = args.chartType;
 
   /** Prevents the Google Drive "Open with" state from being processed more than once. */
   const stateProcessed = useRef(false);
@@ -353,7 +356,6 @@ export function App() {
         setDetailIndi(args.selection?.id);
         setStandalone(args.standalone);
         setShowWikiTreeMenus(args.showWikiTreeMenus);
-        setChartType(args.chartType);
         setFreezeAnimation(args.freezeAnimation);
         setConfig(args.config);
         const currentFetchId = ++fetchIdRef.current;
@@ -399,7 +401,6 @@ export function App() {
         const loadMoreFromWikitree =
           args.sourceSpec.source === DataSourceEnum.WIKITREE &&
           (!selection || selection.id !== args.selection?.id);
-        setChartType(args.chartType);
         setState(
           loadMoreFromWikitree ? AppState.LOADING_MORE : AppState.SHOWING_CHART,
         );

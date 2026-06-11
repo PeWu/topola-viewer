@@ -91,7 +91,7 @@ To refactor `app.tsx` safely and maintain continuous code correctness, we will m
 
 #### Phase 3: Shifting to URL as Single Source of Truth
 We will gradually eliminate React state variables in `src/app.tsx` and derive them (including settings like `standalone`, `showWikiTreeMenus`, and `freezeAnimation`) directly from the `useLocation()` search query parameters on render:
-*   [ ] **Step 3.1a:** Shift `chartType` to URL as SSOT. Derive it using `useMemo` from search parameters, replace calls to `setChartType` with URL updates, and remove the React state variable and sync effect.
+*   [x] **Step 3.1a:** Shift `chartType` to URL as SSOT. Derive it using `useMemo` from search parameters, replace calls to `setChartType` with URL updates, and remove the React state variable and sync effect.
 *   [ ] **Step 3.1b:** Shift `standalone` to URL as SSOT. Derive it directly from search parameters on render and remove its React state variable.
 *   [ ] **Step 3.1c:** Shift `showWikiTreeMenus` to URL as SSOT. Derive it directly from search parameters on render and remove its React state variable.
 *   [ ] **Step 3.1d:** Shift `freezeAnimation` to URL as SSOT. Derive it directly from search parameters on render and remove its React state variable.
