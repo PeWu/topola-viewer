@@ -86,8 +86,6 @@ export function App() {
 
   /** Error to display. */
   const [error, setError] = useState<string>();
-  /** Whether the side panel is shown. */
-  const [showSidePanel, setShowSidePanel] = useState(false);
 
   /** Whether to show the error popup. */
   const [showErrorPopup, setShowErrorPopup] = useState(false);
@@ -122,6 +120,8 @@ export function App() {
   const showWikiTreeMenus = args.showWikiTreeMenus;
   /** Freeze animations after initial chart render. */
   const freezeAnimation = args.freezeAnimation;
+  /** Whether the side panel is shown. */
+  const showSidePanel = args.showSidePanel;
   /** The currently selected individual. Fallback to default individual from loaded data if not specified. */
   const updatedSelection = useMemo(() => {
     return data ? getSelection(data.chartData, args.selection) : undefined;
@@ -161,10 +161,12 @@ export function App() {
 
   function onToggleSidePanel() {
     const newShowSidePanel = !showSidePanel;
-    setShowSidePanel(newShowSidePanel);
-    updateUrl({
-      sidePanel: newShowSidePanel ? 'true' : 'false',
-    });
+    updateUrl(
+      {
+        sidePanel: newShowSidePanel ? 'true' : 'false',
+      },
+      {replace: true},
+    );
   }
 
   /** Sets error message after data load failure. */
@@ -368,7 +370,6 @@ export function App() {
             args.selection,
           );
           updateChartWithConfig(args.config, data);
-          setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
         } catch (error: unknown) {
           if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
@@ -446,8 +447,9 @@ export function App() {
 
   function updateUrl(
     args: Record<string, string | (string | null)[] | null | undefined>,
+    options?: {replace?: boolean},
   ) {
-    navigate(getUrlForArgs(location, args));
+    navigate(getUrlForArgs(location, args), options);
   }
 
   /**
@@ -587,7 +589,7 @@ export function App() {
                 onConfigChange={(config) => {
                   setConfig(config);
                   updateChartWithConfig(config, data);
-                  updateUrl(configToArgs(config));
+                  updateUrl(configToArgs(config), {replace: true});
                 }}
               />
               <SidebarPusher>{renderChart(selection)}</SidebarPusher>
