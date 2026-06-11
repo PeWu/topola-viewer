@@ -83,10 +83,7 @@ export function App() {
   const [loadingStatus, setLoadingStatus] = useState('Loading…');
   /** Loaded data. */
   const [data, setData] = useState<TopolaData>();
-  /** Selected individual. */
-  const [selection, setSelection] = useState<IndiInfo>();
-  /** Selected individual which should be displayed in the details pane. */
-  const [detailIndi, setDetailIndi] = useState<string>();
+
   /** Error to display. */
   const [error, setError] = useState<string>();
   /** Whether the side panel is shown. */
@@ -125,6 +122,12 @@ export function App() {
   const showWikiTreeMenus = args.showWikiTreeMenus;
   /** Freeze animations after initial chart render. */
   const freezeAnimation = args.freezeAnimation;
+  /** The currently selected individual. Fallback to default individual from loaded data if not specified. */
+  const updatedSelection = useMemo(() => {
+    return data ? getSelection(data.chartData, args.selection) : undefined;
+  }, [data, args.selection]);
+  /** The individual displayed in the details pane. */
+  const detailIndi = args.detail || updatedSelection?.id;
 
   /** Prevents the Google Drive "Open with" state from being processed more than once. */
   const stateProcessed = useRef(false);
@@ -132,6 +135,8 @@ export function App() {
   const isMountedRef = useRef(true);
   /** Incremented with each load request to ensure only the latest asynchronous load result is applied. */
   const fetchIdRef = useRef(0);
+  /** Tracks the currently loaded selection to check if new data needs to be fetched. */
+  const loadedSelectionRef = useRef<IndiInfo>();
 
   /** Manages the mount lifecycle ref to avoid setting state on unmounted components. */
   useEffect(() => {
@@ -140,20 +145,6 @@ export function App() {
       isMountedRef.current = false;
     };
   }, []);
-
-  const updateDisplay = useCallback(
-    (newSelection: IndiInfo) => {
-      if (
-        !selection ||
-        selection.id !== newSelection.id ||
-        selection.generation !== newSelection.generation
-      ) {
-        setSelection(newSelection);
-        setDetailIndi(newSelection.id);
-      }
-    },
-    [selection],
-  );
 
   function updateChartWithConfig(config: Config, data: TopolaData | undefined) {
     if (data === undefined) {
@@ -196,7 +187,7 @@ export function App() {
       const newSource = {spec: newSourceSpec, selection: newSelection};
       const oldSouce = {
         spec: sourceSpec,
-        selection: selection,
+        selection: loadedSelectionRef.current,
       };
       switch (newSource.spec.source) {
         case DataSourceEnum.UPLOADED:
@@ -231,7 +222,7 @@ export function App() {
           );
       }
     },
-    [sourceSpec, selection, data, wikiTreeDataSource],
+    [sourceSpec, data, wikiTreeDataSource],
   );
 
   const loadData = useCallback(
@@ -321,8 +312,7 @@ export function App() {
     await googleDriveService.signOut();
     setHasGoogleToken(false);
     setData(undefined);
-    setSelection(undefined);
-    setDetailIndi(undefined);
+    loadedSelectionRef.current = undefined;
     // Purge sessionStorage keys starting with "google-drive:"
     clearGoogleDriveCache();
     navigate({pathname: '/'}, {replace: true});
@@ -353,8 +343,6 @@ export function App() {
         setState(AppState.LOADING);
         // Set state from URL parameters.
         setSourceSpec(args.sourceSpec);
-        setSelection(args.selection);
-        setDetailIndi(args.selection?.id);
         setConfig(args.config);
         const currentFetchId = ++fetchIdRef.current;
         setLoadingStatus('Loading…');
@@ -375,6 +363,10 @@ export function App() {
             `Rendering chart (${data.chartData.indis.length.toLocaleString()} people)…`,
           );
           setData(data);
+          loadedSelectionRef.current = getSelection(
+            data.chartData,
+            args.selection,
+          );
           updateChartWithConfig(args.config, data);
           setShowSidePanel(args.showSidePanel);
           setState(AppState.SHOWING_CHART);
@@ -398,12 +390,11 @@ export function App() {
         // Update selection if it has changed in the URL.
         const loadMoreFromWikitree =
           args.sourceSpec.source === DataSourceEnum.WIKITREE &&
-          (!selection || selection.id !== args.selection?.id);
+          (!loadedSelectionRef.current ||
+            loadedSelectionRef.current.id !== args.selection?.id);
         setState(
           loadMoreFromWikitree ? AppState.LOADING_MORE : AppState.SHOWING_CHART,
         );
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        updateDisplay(getSelection(data!.chartData, args.selection));
         if (loadMoreFromWikitree) {
           const currentFetchId = ++fetchIdRef.current;
           try {
@@ -417,8 +408,7 @@ export function App() {
             }
             const newSelection = getSelection(data.chartData, args.selection);
             setData(data);
-            setSelection(newSelection);
-            setDetailIndi(newSelection.id);
+            loadedSelectionRef.current = newSelection;
             setState(AppState.SHOWING_CHART);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (error: any) {
@@ -442,17 +432,7 @@ export function App() {
         }
       }
     })();
-  }, [
-    location,
-    state,
-    selection,
-    data,
-    navigate,
-    intl,
-    isNewData,
-    loadData,
-    updateDisplay,
-  ]);
+  }, [location, state, data, navigate, intl, isNewData, loadData]);
 
   // Clean up object URLs created for uploaded images/files when the dataset
   // changes or the app unmounts to prevent memory leaks.
@@ -483,6 +463,7 @@ export function App() {
     updateUrl({
       indi: selection.id,
       gen: String(selection.generation),
+      detail: null,
     });
   }
   /**
@@ -490,7 +471,9 @@ export function App() {
    * Shows the individual in the details pane.
    */
   function onDetailSelection(selection: IndiInfo) {
-    setDetailIndi(selection.id);
+    updateUrl({
+      detail: selection.id,
+    });
   }
 
   function onPrint() {
@@ -580,10 +563,10 @@ export function App() {
     switch (state) {
       case AppState.SHOWING_CHART:
       case AppState.LOADING_MORE: {
-        if (!data) {
+        if (!data || !updatedSelection) {
           return null;
         }
-        const updatedSelection = getSelection(data.chartData, selection);
+        const selection = updatedSelection;
         return (
           <div id="content">
             <ErrorPopup
@@ -597,7 +580,7 @@ export function App() {
             <SidebarPushable>
               <SidePanel
                 data={data}
-                selectedIndiId={detailIndi || updatedSelection.id}
+                selectedIndiId={detailIndi || selection.id}
                 config={config}
                 expanded={showSidePanel}
                 onToggle={onToggleSidePanel}
@@ -607,7 +590,7 @@ export function App() {
                   updateUrl(configToArgs(config));
                 }}
               />
-              <SidebarPusher>{renderChart(updatedSelection)}</SidebarPusher>
+              <SidebarPusher>{renderChart(selection)}</SidebarPusher>
             </SidebarPushable>
           </div>
         );
