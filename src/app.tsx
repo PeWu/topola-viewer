@@ -91,8 +91,7 @@ export function App() {
   const [error, setError] = useState<string>();
   /** Whether the side panel is shown. */
   const [showSidePanel, setShowSidePanel] = useState(false);
-  /** Whether the app is in standalone mode, i.e. showing 'open file' menus. */
-  const [standalone, setStandalone] = useState(true);
+
   /**
    * Whether the app should display WikiTree-specific menus when showing data
    * from WikiTree.
@@ -124,6 +123,8 @@ export function App() {
   const args = useMemo(() => getArguments(location), [location]);
   /** Type of displayed chart. */
   const chartType = args.chartType;
+  /** Whether the app is in standalone mode, i.e. showing 'open file' menus. */
+  const standalone = args.standalone;
 
   /** Prevents the Google Drive "Open with" state from being processed more than once. */
   const stateProcessed = useRef(false);
@@ -354,7 +355,6 @@ export function App() {
         setSourceSpec(args.sourceSpec);
         setSelection(args.selection);
         setDetailIndi(args.selection?.id);
-        setStandalone(args.standalone);
         setShowWikiTreeMenus(args.showWikiTreeMenus);
         setFreezeAnimation(args.freezeAnimation);
         setConfig(args.config);
