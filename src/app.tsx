@@ -1,32 +1,19 @@
 import queryString from 'query-string';
-import {useEffect, useMemo, useRef} from 'react';
+import {useEffect, useRef} from 'react';
 import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router';
-import {
-  clearGoogleDriveCache,
-  googleDriveService,
-} from './datasource/google_drive_service';
-import {useGoogleAuth} from './hooks/use_google_auth';
-import {Intro} from './intro';
-import {TopBar} from './menu/top_bar';
+import {IntroPage} from './pages/intro_page';
 import {ViewPage} from './pages/view_page';
-import {getArguments, getStaticUrl} from './util/url_args';
+import {getStaticUrl} from './util/url_args';
 
 const staticUrl = getStaticUrl();
 
 /**
  * Root App component that orchestrates top-level routing, Google Drive "Open with"
- * payload interception and redirection, and global layout rendering for the intro view.
+ * payload interception and redirection.
  */
 export function App() {
-  /** Tracks whether the user has a valid cached Google Drive OAuth access token and provides a state setter. */
-  const {hasGoogleToken, setHasGoogleToken} = useGoogleAuth();
-
   const navigate = useNavigate();
   const location = useLocation();
-
-  const args = useMemo(() => getArguments(location), [location]);
-  /** Whether the app is in standalone mode, i.e. showing 'open file' menus. */
-  const standalone = args.standalone;
 
   /** Prevents the Google Drive "Open with" state from being processed more than once. */
   const stateProcessed = useRef(false);
@@ -68,14 +55,6 @@ export function App() {
     }
   }, [navigate, location.search]);
 
-  async function onGoogleSignOut() {
-    await googleDriveService.signOut();
-    setHasGoogleToken(false);
-    // Purge sessionStorage keys starting with "google-drive:"
-    clearGoogleDriveCache();
-    navigate({pathname: '/'}, {replace: true});
-  }
-
   const isViewPage = location.pathname === '/view';
 
   if (isViewPage) {
@@ -87,25 +66,14 @@ export function App() {
     );
   }
 
-  return (
-    <>
-      <TopBar
-        showingChart={false}
-        standalone={standalone}
-        hasGoogleToken={hasGoogleToken}
-        onGoogleSignOut={onGoogleSignOut}
-        onGoogleTokenAcquired={() => setHasGoogleToken(true)}
-      />
-      {staticUrl ? (
-        <Routes>
-          <Route path="*" element={<Navigate to="/view" replace />} />
-        </Routes>
-      ) : (
-        <Routes>
-          <Route path="/" element={<Intro />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      )}
-    </>
+  return staticUrl ? (
+    <Routes>
+      <Route path="*" element={<Navigate to="/view" replace />} />
+    </Routes>
+  ) : (
+    <Routes>
+      <Route path="/" element={<IntroPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
