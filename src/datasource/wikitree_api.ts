@@ -83,7 +83,16 @@ async function getRelatives(
 ): Promise<Person[]> {
   const result: Person[] = [];
   const keysToFetch: string[] = [];
+
+  // Deduplicate keys
+  const uniqueKeys: string[] = [];
   keys.forEach((key) => {
+    if (!uniqueKeys.includes(key)) {
+      uniqueKeys.push(key);
+    }
+  });
+
+  uniqueKeys.forEach((key) => {
     const cachedData = getCacheItem<Person>(`wikitree:relatives:${key}`);
     if (cachedData) {
       result.push(cachedData);
@@ -110,6 +119,7 @@ async function getRelatives(
   response.forEach((person) => {
     setCacheItem(`wikitree:relatives:${person.Name}`, person);
   });
+
   return result.concat(response);
 }
 
@@ -143,14 +153,31 @@ function getSpouseKeys(person: Person) {
 }
 
 async function getAllAncestors(keys: string[], handleCors: boolean) {
+  // Deduplicate input keys
+  const uniqueKeys: string[] = [];
+  keys.forEach((k) => {
+    if (!uniqueKeys.includes(k)) {
+      uniqueKeys.push(k);
+    }
+  });
+
   const ancestors = await Promise.all(
-    keys.map((key) => getAncestors(key, handleCors)),
+    uniqueKeys.map((key) => getAncestors(key, handleCors)),
   );
   const ancestorKeys = ancestors
     .flat()
     .map((person) => person.Name)
     .filter((key) => !!key);
-  const ancestorDetails = await getRelatives(ancestorKeys, handleCors);
+
+  // Deduplicate ancestorKeys as well before calling getRelatives
+  const uniqueAncestorKeys: string[] = [];
+  ancestorKeys.forEach((k) => {
+    if (!uniqueAncestorKeys.includes(k)) {
+      uniqueAncestorKeys.push(k);
+    }
+  });
+
+  const ancestorDetails = await getRelatives(uniqueAncestorKeys, handleCors);
 
   // Map from person id to father id if the father profile is private.
   const privateFathers: Map<number, number> = new Map();
@@ -210,10 +237,22 @@ async function getAllDescendants(key: string, handleCors: boolean) {
       Object.values(person.Spouses || {}),
     );
     everyone.push(...allSpouses);
+
     // Fetch all children.
-    toFetch = people.flatMap((person) =>
+    const nextToFetch = people.flatMap((person) =>
       Object.values(person.Children || {}).map((c) => c.Name),
     );
+    // Deduplicate nextToFetch and filter out already fetched people
+    const uniqueNextToFetch: string[] = [];
+    nextToFetch.forEach((name) => {
+      if (
+        !uniqueNextToFetch.includes(name) &&
+        !everyone.some((p) => p.Name === name)
+      ) {
+        uniqueNextToFetch.push(name);
+      }
+    });
+    toFetch = uniqueNextToFetch;
     generation++;
   }
   return everyone;

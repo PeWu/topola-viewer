@@ -292,13 +292,16 @@ export function ViewPage() {
       }
 
       if (
-        state === AppState.INITIAL ||
-        isNewData(args.sourceSpec, args.selection)
+        (state === AppState.INITIAL ||
+          isNewData(args.sourceSpec, args.selection)) &&
+        state !== AppState.LOADING &&
+        state !== AppState.LOADING_MORE
       ) {
         // Set loading state.
         setState(AppState.LOADING);
         // Set state from URL parameters.
         setSourceSpec(args.sourceSpec);
+        loadedSelectionRef.current = args.selection;
         const currentFetchId = ++fetchIdRef.current;
         setLoadingStatus('Loading…');
         try {
@@ -343,8 +346,9 @@ export function ViewPage() {
         // Update selection if it has changed in the URL.
         const loadMoreFromWikitree =
           args.sourceSpec.source === DataSourceEnum.WIKITREE &&
+          !!args.selection &&
           (!loadedSelectionRef.current ||
-            loadedSelectionRef.current.id !== args.selection?.id);
+            loadedSelectionRef.current.id !== args.selection.id);
         setState(
           loadMoreFromWikitree ? AppState.LOADING_MORE : AppState.SHOWING_CHART,
         );
