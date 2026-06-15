@@ -1,3 +1,4 @@
+import type {ParsedQuery} from 'query-string';
 import {IntlShape} from 'react-intl';
 import {analyticsEvent} from '../util/analytics';
 import {TopolaError} from '../util/error';
@@ -108,4 +109,19 @@ export class WikiTreeDataSource implements DataSource<WikiTreeSourceSpec> {
       throw error;
     }
   }
+}
+
+export const WIKITREE_REDIRECT_KEYS = ['authcode'];
+
+export function handleWikiTreeRedirect(
+  windowSearch: ParsedQuery,
+  currentPathname: string,
+): {redirectPath: string; paramsModified: boolean} | null {
+  if (windowSearch.authcode) {
+    return {
+      redirectPath: currentPathname,
+      paramsModified: true,
+    };
+  }
+  return null;
 }

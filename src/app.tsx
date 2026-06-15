@@ -1,6 +1,14 @@
 import queryString from 'query-string';
 import {useMemo} from 'react';
 import {Navigate, Route, Routes, useLocation} from 'react-router';
+import {
+  GOOGLE_DRIVE_REDIRECT_KEYS,
+  handleGoogleDriveRedirect,
+} from './datasource/google_drive';
+import {
+  handleWikiTreeRedirect,
+  WIKITREE_REDIRECT_KEYS,
+} from './datasource/wikitree';
 import {IntroPage} from './pages/intro_page';
 import {ViewPage} from './pages/view_page';
 import {getStaticUrl} from './util/url_args';
@@ -28,43 +36,31 @@ export function App() {
     let paramsModified = false;
 
     // 1. Handle Google Drive "Open with" action
-    const stateParam = mergedParams.state;
-    if (typeof stateParam === 'string') {
-      try {
-        const parsedState = JSON.parse(stateParam);
-        if (
-          parsedState &&
-          parsedState.action === 'open' &&
-          Array.isArray(parsedState.ids) &&
-          parsedState.ids.length > 0
-        ) {
-          const fileId = parsedState.ids[0];
-          redirectPath = '/view';
-          mergedParams.source = 'google-drive';
-          mergedParams.fileId = fileId;
-          delete mergedParams.state;
-          paramsModified = true;
-        }
-      } catch (err) {
-        // Silently catch JSON parsing errors for state parameters not meant for us
-        console.warn(
-          'Google Drive state query parameter JSON parsing failed or action mismatch:',
-          err,
-        );
-      }
-    }
-
-    // 2. Handle WikiTree authcode presence
-    if (windowSearch.authcode) {
-      redirectPath = redirectPath || location.pathname;
+    const gdResult = handleGoogleDriveRedirect(mergedParams);
+    if (gdResult) {
+      redirectPath = gdResult.redirectPath;
+      mergedParams.source = 'google-drive';
+      mergedParams.fileId = gdResult.fileId;
+      delete mergedParams.state;
       paramsModified = true;
     }
 
-    if (paramsModified || windowSearch.state || windowSearch.authcode) {
+    // 2. Handle WikiTree authcode presence
+    const wtResult = handleWikiTreeRedirect(windowSearch, location.pathname);
+    if (wtResult) {
+      redirectPath = redirectPath || wtResult.redirectPath;
+      paramsModified = paramsModified || wtResult.paramsModified;
+    }
+
+    const hasRedirectKeys =
+      GOOGLE_DRIVE_REDIRECT_KEYS.some((k) => windowSearch[k] !== undefined) ||
+      WIKITREE_REDIRECT_KEYS.some((k) => windowSearch[k] !== undefined);
+
+    if (paramsModified || hasRedirectKeys) {
       // Strip external state / authcode parameters from window.location.search to prevent redirect loops.
       const cleanWindowSearch = {...windowSearch};
-      delete cleanWindowSearch.state;
-      delete cleanWindowSearch.authcode;
+      GOOGLE_DRIVE_REDIRECT_KEYS.forEach((k) => delete cleanWindowSearch[k]);
+      WIKITREE_REDIRECT_KEYS.forEach((k) => delete cleanWindowSearch[k]);
 
       const cleanWindowSearchStr = queryString.stringify(cleanWindowSearch);
       const newUrl =

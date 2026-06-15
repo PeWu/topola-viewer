@@ -1,3 +1,4 @@
+import type {ParsedQuery} from 'query-string';
 import {TopolaData} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 import {
@@ -91,4 +92,35 @@ export class GoogleDriveDataSource implements DataSource<GoogleDriveSourceSpec> 
     const blob = await response.blob();
     return loadAndPrepareFile(blob, cacheKey, onProgress);
   }
+}
+
+export const GOOGLE_DRIVE_REDIRECT_KEYS = ['state'];
+
+export function handleGoogleDriveRedirect(
+  mergedParams: ParsedQuery,
+): {redirectPath: string; fileId: string} | null {
+  const stateParam = mergedParams.state;
+  if (typeof stateParam === 'string') {
+    try {
+      const parsedState = JSON.parse(stateParam);
+      if (
+        parsedState &&
+        parsedState.action === 'open' &&
+        Array.isArray(parsedState.ids) &&
+        parsedState.ids.length > 0
+      ) {
+        return {
+          redirectPath: '/view',
+          fileId: parsedState.ids[0],
+        };
+      }
+    } catch (err) {
+      // Silently catch JSON parsing errors for state parameters not meant for us
+      console.warn(
+        'Google Drive state query parameter JSON parsing failed or action mismatch:',
+        err,
+      );
+    }
+  }
+  return null;
 }
