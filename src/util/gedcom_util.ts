@@ -207,11 +207,26 @@ export function normalizeGedcom(gedcom: JsonGedcomData): JsonGedcomData {
 
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
-/** Returns true if the given file name has a known image extension. */
+/**
+ * Returns true if the given file reference points to an image.
+ *
+ * Recognizes two kinds of reference:
+ * - a name/URL ending in a known image extension (e.g. `photo.jpg`), and
+ * - an extensionless but inherently browser-renderable image reference: a
+ *   `blob:` object URL or a `data:image/...` URI.
+ *
+ * The second case matters because `isBrowserLoadable` already accepts these
+ * schemes, but they carry no path extension. Without this, `filterImage` drops
+ * any OBJE/FILE whose value is an object or data URL (e.g. images injected by an
+ * embedding host), even though the browser could render them.
+ */
 export function isImageFile(fileName: string): boolean {
-  const cleanName = fileName.split(/[?#]/)[0];
-  const lowerName = cleanName.toLowerCase();
-  return IMAGE_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+  const lowerName = fileName.toLowerCase();
+  if (lowerName.startsWith('blob:') || lowerName.startsWith('data:image/')) {
+    return true;
+  }
+  const cleanName = lowerName.split(/[?#]/)[0];
+  return IMAGE_EXTENSIONS.some((ext) => cleanName.endsWith(ext));
 }
 
 /**

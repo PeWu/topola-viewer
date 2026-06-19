@@ -215,6 +215,17 @@ describe('Media Resolution and Utilities', () => {
       expect(isImageFile('test.webp?a=1&b=2#h')).toBe(true);
       expect(isImageFile('test.pdf?img=test.jpg')).toBe(false);
     });
+
+    it('treats blob: and data:image URLs as images', () => {
+      expect(isImageFile('blob:https://example.org/0-1-2-3')).toBe(true);
+      expect(isImageFile('data:image/avif;base64,AAAA')).toBe(true);
+      expect(isImageFile('data:image/png;base64,iVBORw0KGgo=')).toBe(true);
+    });
+
+    it('does not treat non-image extensionless URLs as images', () => {
+      expect(isImageFile('data:application/pdf;base64,AAAA')).toBe(false);
+      expect(isImageFile('https://example.org/photo')).toBe(false);
+    });
   });
 
   describe('isBrowserLoadable()', () => {
