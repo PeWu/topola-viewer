@@ -35,9 +35,10 @@ async function prepareData(
   cacheId: string,
   images?: Map<string, string>,
   onProgress?: (status: string) => void,
+  useSessionCache = true,
 ): Promise<TopolaData> {
   const data = await convertGedcom(gedcom, images || new Map(), onProgress);
-  if (!images || images.size === 0) {
+  if (useSessionCache && (!images || images.size === 0)) {
     if (gedcom.length <= SESSION_CACHE_GEDCOM_LIMIT) {
       const dataToSerialize = {...data};
       delete dataToSerialize.images;
@@ -184,14 +185,18 @@ export async function loadFromUrl(
 export async function loadGedcom(
   hash: string,
   onProgress?: (status: string) => void,
+  options?: {useSessionCache?: boolean},
 ): Promise<TopolaData> {
-  try {
-    const cachedData = sessionStorage.getItem(hash);
-    if (cachedData) {
-      return JSON.parse(cachedData);
+  const useSessionCache = options?.useSessionCache ?? true;
+  if (useSessionCache) {
+    try {
+      const cachedData = sessionStorage.getItem(hash);
+      if (cachedData) {
+        return JSON.parse(cachedData);
+      }
+    } catch (e) {
+      console.warn('Failed to load data from session storage: ' + e);
     }
-  } catch (e) {
-    console.warn('Failed to load data from session storage: ' + e);
   }
   // Retrieve from the in-memory store (survives within-tab navigation even
   // when the GEDCOM is too large for history.pushState or sessionStorage).
@@ -203,7 +208,13 @@ export async function loadGedcom(
     );
   }
   try {
-    return await prepareData(stored.gedcom, hash, stored.images, onProgress);
+    return await prepareData(
+      stored.gedcom,
+      hash,
+      stored.images,
+      onProgress,
+      useSessionCache,
+    );
   } catch (error) {
     revokeObjectUrls(stored.images);
     throw error;

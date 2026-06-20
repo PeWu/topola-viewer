@@ -61,7 +61,15 @@ export class EmbeddedDataSource implements DataSource<EmbeddedSourceSpec> {
       try {
         const embeddedHash = 'embedded';
         storeGedcom(embeddedHash, gedcom, new Map());
-        const data = await loadGedcom(embeddedHash, onProgress);
+        // Embedded data is volatile: the parent re-posts a fresh GEDCOM on every
+        // load (and a page reload re-runs the ready/parent_ready handshake, so
+        // the parent re-sends). That GEDCOM may inline object URLs (blob:/data:)
+        // that die with the previous document. Persisting it to sessionStorage
+        // under the constant 'embedded' key would return dead URLs on the next
+        // load, so opt out of the session cache for embedded data.
+        const data = await loadGedcom(embeddedHash, onProgress, {
+          useSessionCache: false,
+        });
         const software = getSoftware(data.gedcom.head);
         analyticsEvent('embedded_file_loaded', {
           event_label: software,
