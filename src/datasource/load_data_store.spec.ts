@@ -1,6 +1,7 @@
-import {describe, expect, it} from '@jest/globals';
+import {beforeEach, describe, expect, it} from '@jest/globals';
 import {storeGedcom} from './gedcom_store';
 import {loadGedcom} from './load_data';
+import {mockSessionStorage} from './test_helpers';
 
 // Minimal GEDCOM with 1 individual and 1 family so convertGedcom succeeds.
 const MINIMAL_GEDCOM = [
@@ -41,5 +42,33 @@ describe('loadGedcom()', () => {
       'Step 3/4: sorting & normalizing…',
       'Step 4/4: indexing records…',
     ]);
+  });
+});
+
+describe('loadGedcom() session cache', () => {
+  let sessionStorageMock: {[key: string]: string};
+
+  beforeEach(() => {
+    sessionStorageMock = mockSessionStorage();
+  });
+
+  it('caches prepared data in sessionStorage by default', async () => {
+    const hash = 'cache-default-hash';
+    storeGedcom(hash, MINIMAL_GEDCOM, new Map());
+    await loadGedcom(hash);
+    expect(sessionStorageMock[hash]).toBeDefined();
+  });
+
+  it('ignores and preserves the cache when useSessionCache is false', async () => {
+    const hash = 'cache-disabled-hash';
+    sessionStorageMock[hash] = JSON.stringify({stale: true});
+    storeGedcom(hash, MINIMAL_GEDCOM, new Map());
+
+    const data = await loadGedcom(hash, undefined, {useSessionCache: false});
+
+    // Returned from the in-memory store, not the stale cache.
+    expect(data.chartData.indis).toHaveLength(1);
+    // The stale entry is neither served nor overwritten with fresh data.
+    expect(sessionStorageMock[hash]).toBe(JSON.stringify({stale: true}));
   });
 });
