@@ -39,22 +39,22 @@ import {
 } from '../datasource/load_data';
 import {
   loadWikiTree,
-  PRIVATE_ID_PREFIX,
   WikiTreeDataSource,
   WikiTreeSourceSpec,
 } from '../datasource/wikitree';
 import {DonatsoChart} from '../donatso-chart';
 import {useGoogleAuth} from '../hooks/use_google_auth';
+import {useUrlState} from '../hooks/use_url_state';
 import {useWebMcpBridge} from '../hooks/use_webmcp_bridge';
 import {GoogleAuthModal} from '../menu/google_auth_modal';
 import {TopBar} from '../menu/top_bar';
-import {Config, configToArgs, Ids, Sex} from '../sidepanel/config/config';
+import {Config, Ids, Sex} from '../sidepanel/config/config';
 import {SidePanel} from '../sidepanel/side-panel';
 import {analyticsEvent} from '../util/analytics';
 import {TopolaError} from '../util/error';
 import {getI18nMessage} from '../util/error_i18n';
 import {idToIndiMap, TopolaData} from '../util/gedcom_util';
-import {DataSourceSpec, getArguments, getUrlForArgs} from '../util/url_args';
+import {DataSourceSpec, getArguments} from '../util/url_args';
 
 export enum AppState {
   INITIAL,
@@ -92,36 +92,36 @@ export function ViewPage() {
   /** Tracks whether the user has a valid cached Google Drive OAuth access token and provides a state setter. */
   const {hasGoogleToken, setHasGoogleToken} = useGoogleAuth();
 
+  const {
+    chartType,
+    standalone,
+    showWikiTreeMenus,
+    freezeAnimation,
+    showSidePanel,
+    config,
+    selection: urlSelection,
+    detail: urlDetail,
+    onSelection,
+    onDetailSelection,
+    onToggleSidePanel,
+    onConfigChange,
+  } = useUrlState();
+
   const intl = useIntl();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const args = useMemo(() => getArguments(location), [location]);
-  /** Type of displayed chart. */
-  const chartType = args.chartType;
-  /** Whether the app is in standalone mode, i.e. showing 'open file' menus. */
-  const standalone = args.standalone;
-  /**
-   * Whether the app should display WikiTree-specific menus when showing data
-   * from WikiTree.
-   */
-  const showWikiTreeMenus = args.showWikiTreeMenus;
-  /** Freeze animations after initial chart render. */
-  const freezeAnimation = args.freezeAnimation;
-  /** Whether the side panel is shown. */
-  const showSidePanel = args.showSidePanel;
-  /** Configuration settings for chart display options (e.g. colors, hiding IDs). */
-  const config = args.config;
-
   useMemo(() => {
     updateChartWithConfig(config, data);
   }, [config, data]);
+
   /** The currently selected individual. Fallback to default individual from loaded data if not specified. */
   const updatedSelection = useMemo(() => {
-    return data ? getSelection(data.chartData, args.selection) : undefined;
-  }, [data, args.selection]);
+    return data ? getSelection(data.chartData, urlSelection) : undefined;
+  }, [data, urlSelection]);
+
   /** The individual displayed in the details pane. */
-  const detailIndi = args.detail || updatedSelection?.id;
+  const detailIndi = urlDetail || updatedSelection?.id;
 
   /** Tracks whether the component is currently mounted to prevent state updates after unmount. */
   const isMountedRef = useRef(true);
@@ -151,15 +151,7 @@ export function ViewPage() {
     });
   }
 
-  function onToggleSidePanel() {
-    const newShowSidePanel = !showSidePanel;
-    updateUrl(
-      {
-        sidePanel: newShowSidePanel ? 'true' : 'false',
-      },
-      {replace: true},
-    );
-  }
+  /** Sets error message after data load failure. */
 
   /** Sets error message after data load failure. */
   function setErrorMessage(message: string) {
@@ -402,39 +394,6 @@ export function ViewPage() {
 
   useWebMcpBridge(data, detailIndi, onSelection);
 
-  function updateUrl(
-    args: Record<string, string | (string | null)[] | null | undefined>,
-    options?: {replace?: boolean},
-  ) {
-    navigate(getUrlForArgs(location, args), options);
-  }
-
-  /**
-   * Called when the user clicks an individual box in the chart.
-   * Updates the browser URL.
-   */
-  function onSelection(selection: IndiInfo) {
-    // Don't allow selecting WikiTree private profiles.
-    if (selection.id.startsWith(PRIVATE_ID_PREFIX)) {
-      return;
-    }
-    analyticsEvent('selection_changed');
-    updateUrl({
-      indi: selection.id,
-      gen: String(selection.generation),
-      detail: null,
-    });
-  }
-  /**
-   * Called when the user shift+clicks an individual box in the chart.
-   * Shows the individual in the details pane.
-   */
-  function onDetailSelection(selection: IndiInfo) {
-    updateUrl({
-      detail: selection.id,
-    });
-  }
-
   function onPrint() {
     analyticsEvent('print');
     printChart();
@@ -543,9 +502,7 @@ export function ViewPage() {
                 config={config}
                 expanded={showSidePanel}
                 onToggle={onToggleSidePanel}
-                onConfigChange={(config) => {
-                  updateUrl(configToArgs(config), {replace: true});
-                }}
+                onConfigChange={onConfigChange}
               />
               <SidebarPusher>{renderChart(selection)}</SidebarPusher>
             </SidebarPushable>
