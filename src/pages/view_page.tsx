@@ -13,6 +13,7 @@ import {
   printChart,
 } from '../chart';
 import {ErrorMessage, ErrorPopup} from '../components/error_display';
+import {ProgressPill} from '../components/progress_pill';
 import {DataSourceEnum, SourceSelection} from '../datasource/data_source';
 import {EmbeddedSourceSpec} from '../datasource/embedded';
 import {
@@ -55,7 +56,7 @@ import {getI18nMessage} from '../util/error_i18n';
 import {idToIndiMap, TopolaData} from '../util/gedcom_util';
 import {DataSourceSpec, getArguments, getUrlForArgs} from '../util/url_args';
 
-enum AppState {
+export enum AppState {
   INITIAL,
   LOADING,
   ERROR,
@@ -561,31 +562,9 @@ export function ViewPage() {
     }
   }
 
-  const progressPill =
-    loadingStatus &&
-    (state === AppState.LOADING || state === AppState.SHOWING_CHART) ? (
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 16,
-          left: 16,
-          background: 'rgba(0,0,0,0.7)',
-          color: '#fff',
-          padding: '6px 12px',
-          borderRadius: 4,
-          fontFamily: 'monospace',
-          fontSize: 12,
-          zIndex: 9999,
-          pointerEvents: 'none',
-        }}
-      >
-        {loadingStatus}
-      </div>
-    ) : null;
-
   return (
     <>
-      {progressPill}
+      <ProgressPill loadingStatus={loadingStatus} state={state} />
       <TopBar
         data={data?.chartData}
         allowAllRelativesChart={sourceSpec?.source !== DataSourceEnum.WIKITREE}
