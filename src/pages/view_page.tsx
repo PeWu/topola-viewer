@@ -1,4 +1,3 @@
-import queryString from 'query-string';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useIntl} from 'react-intl';
 import {useLocation, useNavigate} from 'react-router';
@@ -20,11 +19,7 @@ import {
   GoogleDriveAuthError,
   GoogleDriveSourceSpec,
 } from '../datasource/google_drive';
-import {
-  clearGoogleDriveCache,
-  googleDriveService,
-  isGoogleDriveConfigured,
-} from '../datasource/google_drive_service';
+import {isGoogleDriveConfigured} from '../datasource/google_drive_service';
 import {
   embeddedDataSource,
   gedcomUrlDataSource,
@@ -43,7 +38,7 @@ import {
   WikiTreeSourceSpec,
 } from '../datasource/wikitree';
 import {DonatsoChart} from '../donatso-chart';
-import {useGoogleAuth} from '../hooks/use_google_auth';
+import {useGoogleDriveAuthFlow} from '../hooks/use_google_drive_auth_flow';
 import {useUrlState} from '../hooks/use_url_state';
 import {useWebMcpBridge} from '../hooks/use_webmcp_bridge';
 import {GoogleAuthModal} from '../menu/google_auth_modal';
@@ -85,12 +80,25 @@ export function ViewPage() {
   /** Specification of the source of the data. */
   const [sourceSpec, setSourceSpec] = useState<DataSourceSpec>();
 
-  /** Controls the visibility of the Google Drive OAuth permission modal. */
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  /** Stores the file ID that failed to load from Google Drive due to authorization errors. */
-  const [failedFileId, setFailedFileId] = useState<string>();
-  /** Tracks whether the user has a valid cached Google Drive OAuth access token and provides a state setter. */
-  const {hasGoogleToken, setHasGoogleToken} = useGoogleAuth();
+  // Manage Google Drive auth and session flows
+  const {
+    showAuthModal,
+    failedFileId,
+    hasGoogleToken,
+    setHasGoogleToken,
+    onGoogleSignOut,
+    triggerAuthError,
+    onAuthSuccess,
+    onCancel,
+  } = useGoogleDriveAuthFlow({
+    onSignOut: useCallback(() => {
+      setData(undefined);
+      loadedSelectionRef.current = undefined;
+    }, []),
+    onAuthSuccess: useCallback(() => {
+      setState(AppState.INITIAL);
+    }, []),
+  });
 
   const {
     chartType,
@@ -257,16 +265,6 @@ export function ViewPage() {
     [wikiTreeDataSource],
   );
 
-  async function onGoogleSignOut() {
-    await googleDriveService.signOut();
-    setHasGoogleToken(false);
-    setData(undefined);
-    loadedSelectionRef.current = undefined;
-    // Purge sessionStorage keys starting with "google-drive:"
-    clearGoogleDriveCache();
-    navigate({pathname: '/'}, {replace: true});
-  }
-
   useEffect(() => {
     (async () => {
       if (location.pathname !== '/view') {
@@ -325,8 +323,7 @@ export function ViewPage() {
           }
           if (error instanceof GoogleDriveAuthError) {
             if (args.sourceSpec.source === DataSourceEnum.GOOGLE_DRIVE) {
-              setFailedFileId(args.sourceSpec.fileId);
-              setShowAuthModal(true);
+              triggerAuthError(args.sourceSpec.fileId);
             }
           } else {
             setErrorMessage(getI18nMessage(error as Error, intl));
@@ -382,7 +379,16 @@ export function ViewPage() {
         }
       }
     })();
-  }, [location, state, data, navigate, intl, isNewData, loadData]);
+  }, [
+    location,
+    state,
+    data,
+    navigate,
+    intl,
+    isNewData,
+    loadData,
+    triggerAuthError,
+  ]);
 
   // Clean up object URLs created for uploaded images/files when the dataset
   // changes or the app unmounts to prevent memory leaks.
@@ -548,28 +554,8 @@ export function ViewPage() {
       {showAuthModal && failedFileId && (
         <GoogleAuthModal
           failedFileId={failedFileId}
-          onAuthSuccess={(fileId) => {
-            setShowAuthModal(false);
-            setHasGoogleToken(true);
-            if (fileId === failedFileId) {
-              setState(AppState.INITIAL);
-            } else {
-              navigate(
-                {
-                  pathname: '/view',
-                  search: queryString.stringify({
-                    source: 'google-drive',
-                    fileId,
-                  }),
-                },
-                {replace: true},
-              );
-            }
-          }}
-          onCancel={() => {
-            setShowAuthModal(false);
-            navigate({pathname: '/'}, {replace: true});
-          }}
+          onAuthSuccess={onAuthSuccess}
+          onCancel={onCancel}
         />
       )}
     </>
