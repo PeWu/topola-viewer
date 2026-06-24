@@ -27,7 +27,7 @@ function Contents() {
       setChangelog(await getChangelog(1));
       updateSeenVersion();
     })();
-  });
+  }, []);
 
   return (
     <>

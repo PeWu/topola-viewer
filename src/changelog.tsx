@@ -68,7 +68,7 @@ export function Changelog() {
       setOpen(!!changes);
       updateSeenVersion();
     })();
-  });
+  }, []);
 
   return (
     <Modal open={open} centered={false}>
