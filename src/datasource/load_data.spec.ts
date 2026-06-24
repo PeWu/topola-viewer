@@ -13,7 +13,7 @@ describe('loadFile', () => {
     const {gedcom, images} = await loadFile(blob);
     // File length may differ between Linux and Windows due to line endings (\n vs \r\n)
     // So, check for a set of values instead of exactly one value
-    expect([4408, 4765]).toContain(gedcom.length);
+    expect([4549, 4909]).toContain(gedcom.length);
     expect(images).toEqual(new Map());
   });
 
@@ -24,7 +24,7 @@ describe('loadFile', () => {
     });
     const blob = new Blob([Buffer.from(file)]) as globalThis.Blob;
     const {gedcom, images} = await loadFile(blob);
-    expect(gedcom.length).toBe(4408);
+    expect([4549, 4909]).toContain(gedcom.length);
     expect(images.size).toBe(1);
   });
 });

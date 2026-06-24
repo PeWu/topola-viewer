@@ -58,4 +58,29 @@ test.describe('Configurations Integration @visual', () => {
     await page.waitForTimeout(300);
     await expect(page).toHaveScreenshot('config-state-minimalist.png');
   });
+
+  test('Places Configuration Options', async ({page}) => {
+    // Locate the section container inside form.details specifically to avoid Info tab ambiguity.
+    const placesSection = page
+      .locator('form.details .item')
+      .filter({hasText: 'Places'});
+
+    // 1. Toggle "hide" places.
+    await placesSection.getByText('hide').click();
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot('config-state-places-hide.png');
+
+    // 2. Toggle "short" places (default count is 2).
+    await placesSection.getByText('short').click();
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot(
+      'config-state-places-short-default.png',
+    );
+
+    // 3. Change short place count to 1.
+    const countInput = placesSection.locator('input[type="number"]');
+    await countInput.fill('1');
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot('config-state-places-short-1.png');
+  });
 });

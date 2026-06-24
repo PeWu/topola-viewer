@@ -15,6 +15,9 @@
 0 @I1@ INDI
 1 NAME Bonifacy /Gibbs/
 1 SEX M
+1 BIRT
+2 DATE 18 JUN 1970
+2 PLAC Cyclone, Keating Township, McKean, Pennsylvania, United States
 1 FAMC @F3@
 1 FAMS @F1@
 1 NOTE a random note
@@ -25,8 +28,8 @@
 1 NAME Jarmila /Valenta/
 1 SEX F
 1 BIRT
-2 DATE
-2 PLAC
+2 DATE 22 MAY 1975
+2 PLAC Prague, Bohemia, Austria-Hungary
 1 FAMC @F6@
 1 FAMS @F1@
 1 CHAN

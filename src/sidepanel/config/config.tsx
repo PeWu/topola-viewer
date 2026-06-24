@@ -291,15 +291,15 @@ export function ConfigPanel(props: {
                   label={
                     <FormattedMessage
                       tagName="label"
-                      id="config.places.FULL"
-                      defaultMessage="full"
+                      id="config.places.HIDE"
+                      defaultMessage="hide"
                     />
                   }
                   name="checkboxRadioGroup"
-                  value="full"
-                  checked={props.config.place === PlaceDisplay.FULL}
+                  value="hide"
+                  checked={props.config.place === PlaceDisplay.HIDE}
                   onClick={() =>
-                    props.onChange({...props.config, place: PlaceDisplay.FULL})
+                    props.onChange({...props.config, place: PlaceDisplay.HIDE})
                   }
                 />
               </Form.Field>
@@ -343,15 +343,15 @@ export function ConfigPanel(props: {
                   label={
                     <FormattedMessage
                       tagName="label"
-                      id="config.places.HIDE"
-                      defaultMessage="hide"
+                      id="config.places.FULL"
+                      defaultMessage="full"
                     />
                   }
                   name="checkboxRadioGroup"
-                  value="hide"
-                  checked={props.config.place === PlaceDisplay.HIDE}
+                  value="full"
+                  checked={props.config.place === PlaceDisplay.FULL}
                   onClick={() =>
-                    props.onChange({...props.config, place: PlaceDisplay.HIDE})
+                    props.onChange({...props.config, place: PlaceDisplay.FULL})
                   }
                 />
               </Form.Field>
