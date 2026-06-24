@@ -15,7 +15,7 @@ import {ProgressPill} from '../components/progress_pill';
 import {DataSourceEnum} from '../datasource/data_source';
 import {DonatsoChart} from '../donatso-chart';
 import {useGenealogyLoader} from '../hooks/use_genealogy_loader';
-import {useGoogleDriveAuthFlow} from '../hooks/use_google_drive_auth_flow';
+import {useGoogleDriveAuth} from '../hooks/use_google_drive_auth';
 import {useUrlState} from '../hooks/use_url_state';
 import {useWebMcpBridge} from '../hooks/use_webmcp_bridge';
 import {GoogleAuthModal} from '../menu/google_auth_modal';
@@ -105,7 +105,7 @@ export function ViewPage() {
     triggerAuthError,
     onAuthSuccess,
     onCancel,
-  } = useGoogleDriveAuthFlow({
+  } = useGoogleDriveAuth({
     onSignOut: clearData,
     onAuthSuccess: resetLoader,
   });

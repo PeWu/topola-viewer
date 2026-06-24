@@ -5,21 +5,22 @@ import {
   clearGoogleDriveCache,
   googleDriveService,
 } from '../datasource/google_drive_service';
-import {useGoogleAuth} from './use_google_auth';
 
 /**
- * Custom React hook that encapsulates the Google Drive OAuth authorization flow.
+ * Custom React hook that encapsulates the Google Drive OAuth authorization state and flow.
  * It manages token states, modal triggers, sign-out sessions, and navigation flows.
  */
-export function useGoogleDriveAuthFlow(options: {
+export function useGoogleDriveAuth(options?: {
   /** Callback triggered to clean up state when signing out. */
-  onSignOut: () => void;
+  onSignOut?: () => void;
   /** Callback triggered when authorization succeeds for the failed file. */
-  onAuthSuccess: () => void;
+  onAuthSuccess?: () => void;
 }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [failedFileId, setFailedFileId] = useState<string>();
-  const {hasGoogleToken, setHasGoogleToken} = useGoogleAuth();
+  const [hasGoogleToken, setHasGoogleToken] = useState(
+    () => !!googleDriveService.getAccessToken(),
+  );
   const navigate = useNavigate();
 
   /**
@@ -30,9 +31,11 @@ export function useGoogleDriveAuthFlow(options: {
     await googleDriveService.signOut();
     setHasGoogleToken(false);
     clearGoogleDriveCache();
-    options.onSignOut();
+    if (options?.onSignOut) {
+      options.onSignOut();
+    }
     navigate({pathname: '/'}, {replace: true});
-  }, [setHasGoogleToken, navigate, options]);
+  }, [navigate, options]);
 
   /**
    * Triggers the OAuth modal presentation for a failed file.
@@ -50,7 +53,9 @@ export function useGoogleDriveAuthFlow(options: {
       setShowAuthModal(false);
       setHasGoogleToken(true);
       if (fileId === failedFileId) {
-        options.onAuthSuccess();
+        if (options?.onAuthSuccess) {
+          options.onAuthSuccess();
+        }
       } else {
         // If a different file was selected/authorized, navigate to that one.
         navigate(
@@ -65,7 +70,7 @@ export function useGoogleDriveAuthFlow(options: {
         );
       }
     },
-    [failedFileId, navigate, setHasGoogleToken, options],
+    [failedFileId, navigate, options],
   );
 
   /**

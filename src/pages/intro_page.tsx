@@ -1,10 +1,6 @@
 import {useMemo} from 'react';
-import {useLocation, useNavigate} from 'react-router';
-import {
-  clearGoogleDriveCache,
-  googleDriveService,
-} from '../datasource/google_drive_service';
-import {useGoogleAuth} from '../hooks/use_google_auth';
+import {useLocation} from 'react-router';
+import {useGoogleDriveAuth} from '../hooks/use_google_drive_auth';
 import {Intro} from '../intro';
 import {TopBar} from '../menu/top_bar';
 import {getArguments} from '../util/url_args';
@@ -14,19 +10,12 @@ import {getArguments} from '../util/url_args';
  * It renders the intro text and lists examples alongside its own TopBar.
  */
 export function IntroPage() {
-  const {hasGoogleToken, setHasGoogleToken} = useGoogleAuth();
-  const navigate = useNavigate();
+  const {hasGoogleToken, setHasGoogleToken, onGoogleSignOut} =
+    useGoogleDriveAuth();
   const location = useLocation();
 
   const args = useMemo(() => getArguments(location), [location]);
   const standalone = args.standalone;
-
-  async function onGoogleSignOut() {
-    await googleDriveService.signOut();
-    setHasGoogleToken(false);
-    clearGoogleDriveCache();
-    navigate({pathname: '/'}, {replace: true});
-  }
 
   return (
     <>
