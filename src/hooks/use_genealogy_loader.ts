@@ -195,125 +195,135 @@ export function useGenealogyLoader(options: {
     loadedSelectionRef.current = undefined;
   }, []);
 
-  // Main data loading and updating side-effect
-  useEffect(() => {
-    (async () => {
-      if (location.pathname !== '/view') {
-        if (state !== AppState.INITIAL) {
-          setState(AppState.INITIAL);
-        }
-        setData(undefined);
-        return;
-      }
-
-      const args = getArguments(location);
-
-      if (!args.sourceSpec) {
-        navigate({pathname: '/'}, {replace: true});
-        return;
-      }
-
-      if (
+  const shouldTriggerNewLoad = useCallback(
+    (newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) => {
+      return (
         (state === AppState.INITIAL ||
-          isNewData(args.sourceSpec, args.selection)) &&
+          isNewData(newSourceSpec, newSelection)) &&
         state !== AppState.LOADING &&
         state !== AppState.LOADING_MORE
-      ) {
-        setState(AppState.LOADING);
-        setSourceSpec(args.sourceSpec);
-        loadedSelectionRef.current = args.selection;
-        const currentFetchId = ++fetchIdRef.current;
-        setLoadingStatus('Loading…');
-        try {
-          const data = await loadData(
-            args.sourceSpec,
-            args.selection,
-            (status) => {
-              if (isMountedRef.current) setLoadingStatus(status);
-            },
-          );
-          if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
-            return;
-          }
-          setLoadingStatus(
-            `Rendering chart (${data.chartData.indis.length.toLocaleString()} people)…`,
-          );
-          setData(data);
-          loadedSelectionRef.current = getSelection(
-            data.chartData,
-            args.selection,
-          );
-          setState(AppState.SHOWING_CHART);
-        } catch (error: unknown) {
-          if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
-            return;
-          }
-          if (error instanceof GoogleDriveAuthError) {
-            if (args.sourceSpec.source === DataSourceEnum.GOOGLE_DRIVE) {
-              onAuthError((args.sourceSpec as GoogleDriveSourceSpec).fileId);
-            }
-          } else {
-            setErrorMessage(getI18nMessage(error as Error, intl));
-          }
+      );
+    },
+    [state, isNewData],
+  );
+
+  const triggerNewLoad = useCallback(
+    async (newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) => {
+      setState(AppState.LOADING);
+      setSourceSpec(newSourceSpec);
+      loadedSelectionRef.current = newSelection;
+      const currentFetchId = ++fetchIdRef.current;
+      setLoadingStatus('Loading…');
+      try {
+        const data = await loadData(newSourceSpec, newSelection, (status) => {
+          if (isMountedRef.current) setLoadingStatus(status);
+        });
+        if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
+          return;
         }
-      } else if (
-        state === AppState.SHOWING_CHART ||
-        state === AppState.LOADING_MORE
-      ) {
-        const loadMoreFromWikitree =
-          args.sourceSpec.source === DataSourceEnum.WIKITREE &&
-          !!args.selection &&
-          (!loadedSelectionRef.current ||
-            loadedSelectionRef.current.id !== args.selection.id);
-        setState(
-          loadMoreFromWikitree ? AppState.LOADING_MORE : AppState.SHOWING_CHART,
+        setLoadingStatus(
+          `Rendering chart (${data.chartData.indis.length.toLocaleString()} people)…`,
         );
-        if (loadMoreFromWikitree && args.selection) {
-          const currentFetchId = ++fetchIdRef.current;
-          try {
-            const data = await loadWikiTree(args.selection.id, intl);
-            if (
-              !isMountedRef.current ||
-              fetchIdRef.current !== currentFetchId
-            ) {
-              return;
-            }
-            const newSelection = getSelection(data.chartData, args.selection);
-            setData(data);
-            loadedSelectionRef.current = newSelection;
-            setState(AppState.SHOWING_CHART);
-          } catch (error: unknown) {
-            if (
-              !isMountedRef.current ||
-              fetchIdRef.current !== currentFetchId
-            ) {
-              return;
-            }
-            setState(AppState.SHOWING_CHART);
-            displayErrorPopup(
-              intl.formatMessage(
-                {
-                  id: 'error.failed_wikitree_load_more',
-                  defaultMessage: 'Failed to load data from WikiTree. {error}',
-                },
-                {error: (error as Error).message || String(error)},
-              ),
-            );
+        setData(data);
+        loadedSelectionRef.current = getSelection(data.chartData, newSelection);
+        setState(AppState.SHOWING_CHART);
+      } catch (error: unknown) {
+        if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
+          return;
+        }
+        if (error instanceof GoogleDriveAuthError) {
+          if (newSourceSpec.source === DataSourceEnum.GOOGLE_DRIVE) {
+            onAuthError((newSourceSpec as GoogleDriveSourceSpec).fileId);
           }
+        } else {
+          setErrorMessage(getI18nMessage(error as Error, intl));
         }
       }
-    })();
+    },
+    [intl, loadData, onAuthError, setErrorMessage],
+  );
+
+  const shouldTriggerWikiTreeLoadMore = useCallback(
+    (newSourceSpec: DataSourceSpec, newSelection?: IndiInfo) => {
+      if (state !== AppState.SHOWING_CHART && state !== AppState.LOADING_MORE) {
+        return false;
+      }
+      return (
+        newSourceSpec.source === DataSourceEnum.WIKITREE &&
+        !!newSelection &&
+        (!loadedSelectionRef.current ||
+          loadedSelectionRef.current.id !== newSelection.id)
+      );
+    },
+    [state],
+  );
+
+  const triggerWikiTreeLoadMore = useCallback(
+    async (selection: IndiInfo) => {
+      setState(AppState.LOADING_MORE);
+      const currentFetchId = ++fetchIdRef.current;
+      try {
+        const data = await loadWikiTree(selection.id, intl);
+        if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
+          return;
+        }
+        const newSelection = getSelection(data.chartData, selection);
+        setData(data);
+        loadedSelectionRef.current = newSelection;
+        setState(AppState.SHOWING_CHART);
+      } catch (error: unknown) {
+        if (!isMountedRef.current || fetchIdRef.current !== currentFetchId) {
+          return;
+        }
+        setState(AppState.SHOWING_CHART);
+        displayErrorPopup(
+          intl.formatMessage(
+            {
+              id: 'error.failed_wikitree_load_more',
+              defaultMessage: 'Failed to load data from WikiTree. {error}',
+            },
+            {error: (error as Error).message || String(error)},
+          ),
+        );
+      }
+    },
+    [intl, displayErrorPopup],
+  );
+
+  // Main data loading and updating side-effect
+  useEffect(() => {
+    if (location.pathname !== '/view') {
+      if (state !== AppState.INITIAL) {
+        setState(AppState.INITIAL);
+      }
+      setData(undefined);
+      return;
+    }
+
+    const args = getArguments(location);
+    if (!args.sourceSpec) {
+      navigate({pathname: '/'}, {replace: true});
+      return;
+    }
+
+    if (shouldTriggerNewLoad(args.sourceSpec, args.selection)) {
+      triggerNewLoad(args.sourceSpec, args.selection);
+    } else if (
+      shouldTriggerWikiTreeLoadMore(args.sourceSpec, args.selection) &&
+      args.selection
+    ) {
+      triggerWikiTreeLoadMore(args.selection);
+    } else if (state === AppState.LOADING_MORE) {
+      setState(AppState.SHOWING_CHART);
+    }
   }, [
     location,
     state,
-    data,
     navigate,
-    intl,
-    isNewData,
-    loadData,
-    onAuthError,
-    setErrorMessage,
-    displayErrorPopup,
+    shouldTriggerNewLoad,
+    triggerNewLoad,
+    shouldTriggerWikiTreeLoadMore,
+    triggerWikiTreeLoadMore,
   ]);
 
   // Clean up object URLs created for uploaded images/files when the dataset
