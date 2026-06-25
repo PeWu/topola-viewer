@@ -154,6 +154,28 @@ div.zoom {
   padding: 0 15px 0 25px;
 }
 
+.details .ui.list .item > .list-icon-wrapper {
+  display: table-cell;
+  width: 20px;
+  text-align: center;
+  vertical-align: top;
+  padding-right: 4px;
+}
+
+.details .ui.list .item > .list-icon-wrapper > i.icon {
+  margin: 0;
+}
+
+
+.details .ui.list .item > .list-icon-wrapper + .content {
+  display: table-cell;
+  vertical-align: top;
+  padding-left: 8px;
+}
+
+
+
+
 .details .item-header {
   justify-content: space-between;
   display: flex;

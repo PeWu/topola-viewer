@@ -1,5 +1,5 @@
 import {FormattedMessage, useIntl} from 'react-intl';
-import {Divider, Header, List} from 'semantic-ui-react';
+import {Divider, Header, Icon, Item, List} from 'semantic-ui-react';
 import {getDate} from 'topola';
 import {formatDateOrRange} from '../../util/date_util';
 import {dereference, GedcomData} from '../../util/gedcom_util';
@@ -66,63 +66,81 @@ export function SourceHead(gedcom: GedcomData) {
 
   // Icons: https://react.semantic-ui.com/elements/icon/
   return (
-    <>
-      <Header sub>
-        <FormattedMessage id="head.source" defaultMessage="Data source" />
-      </Header>
-      <List>
-        {sour_name && (
-          <List.Item>
-            <List.Icon name="edit" />
-            <List.Content>{sour_name}</List.Content>
-          </List.Item>
-        )}
+    <Item>
+      <Item.Content>
+        <Header sub>
+          <FormattedMessage id="head.source" defaultMessage="Data source" />
+        </Header>
+        <List>
+          {sour_name && (
+            <List.Item>
+              <div className="list-icon-wrapper">
+                <Icon name="edit" />
+              </div>
+              <List.Content>{sour_name}</List.Content>
+            </List.Item>
+          )}
 
-        {date && (
-          <List.Item>
-            <List.Icon name="calendar" />
-            <List.Content>{dateFormatted}</List.Content>
-          </List.Item>
-        )}
-        {file && (
-          <List.Item>
-            <List.Icon name="file" />
-            <List.Content>{filename}</List.Content>
-          </List.Item>
-        )}
-        {name && (
-          <List.Item>
-            <List.Icon name="user" />
-            <List.Content>{name}</List.Content>
-          </List.Item>
-        )}
-        {adr1 && (
-          <List.Item>
-            <List.Icon name="marker" />
-            <List.Content>{location}</List.Content>
-          </List.Item>
-        )}
-        {phon && (
-          <List.Item>
-            <List.Icon name="phone" />
-            <List.Content>{phon}</List.Content>
-          </List.Item>
-        )}
-        {email && (
-          <List.Item>
-            <List.Icon name="mail" />
-            <List.Content>{email}</List.Content>
-          </List.Item>
-        )}
-        {copr && (
-          <List.Item>
-            <List.Icon name="copyright" />
-            <List.Content>{copr}</List.Content>
-          </List.Item>
-        )}
-      </List>
+          {date && (
+            <List.Item>
+              <div className="list-icon-wrapper">
+                <Icon name="calendar" />
+              </div>
+              <List.Content>{dateFormatted}</List.Content>
+            </List.Item>
+          )}
+          {file && (
+            <List.Item>
+              <div className="list-icon-wrapper">
+                <Icon name="file" />
+              </div>
+              <List.Content>{filename}</List.Content>
+            </List.Item>
+          )}
+          {name && (
+            <List.Item>
+              <div className="list-icon-wrapper">
+                <Icon name="user" />
+              </div>
+              <List.Content>{name}</List.Content>
+            </List.Item>
+          )}
+          {adr1 && (
+            <List.Item>
+              <div className="list-icon-wrapper">
+                <Icon name="marker" />
+              </div>
+              <List.Content>{location}</List.Content>
+            </List.Item>
+          )}
+          {phon && (
+            <List.Item>
+              <div className="list-icon-wrapper">
+                <Icon name="phone" />
+              </div>
+              <List.Content>{phon}</List.Content>
+            </List.Item>
+          )}
+          {email && (
+            <List.Item>
+              <div className="list-icon-wrapper">
+                <Icon name="mail" />
+              </div>
+              <List.Content>{email}</List.Content>
+            </List.Item>
+          )}
+          {copr && (
+            <List.Item>
+              <div className="list-icon-wrapper">
+                <Icon name="copyright" />
+              </div>
+              <List.Content>{copr}</List.Content>
+            </List.Item>
+          )}
+        </List>
 
-      <Divider />
-    </>
+        <Divider />
+      </Item.Content>
+    </Item>
   );
 }
