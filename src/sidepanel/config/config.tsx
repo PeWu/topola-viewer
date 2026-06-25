@@ -159,9 +159,7 @@ export function ConfigPanel(props: {
                 }
                 name="checkboxRadioGroup"
                 value="generation"
-                checked={
-                  props.config.color === ChartColors.COLOR_BY_GENERATION
-                }
+                checked={props.config.color === ChartColors.COLOR_BY_GENERATION}
                 onClick={() =>
                   props.onChange({
                     ...props.config,
@@ -211,9 +209,7 @@ export function ConfigPanel(props: {
                 name="checkboxRadioGroup"
                 value="hide"
                 checked={props.config.id === Ids.HIDE}
-                onClick={() =>
-                  props.onChange({...props.config, id: Ids.HIDE})
-                }
+                onClick={() => props.onChange({...props.config, id: Ids.HIDE})}
               />
             </Form.Field>
             <Form.Field className="no-margin">
@@ -229,9 +225,7 @@ export function ConfigPanel(props: {
                 name="checkboxRadioGroup"
                 value="show"
                 checked={props.config.id === Ids.SHOW}
-                onClick={() =>
-                  props.onChange({...props.config, id: Ids.SHOW})
-                }
+                onClick={() => props.onChange({...props.config, id: Ids.SHOW})}
               />
             </Form.Field>
           </Item.Content>
@@ -254,9 +248,7 @@ export function ConfigPanel(props: {
                 name="checkboxRadioGroup"
                 value="hide"
                 checked={props.config.sex === Sex.HIDE}
-                onClick={() =>
-                  props.onChange({...props.config, sex: Sex.HIDE})
-                }
+                onClick={() => props.onChange({...props.config, sex: Sex.HIDE})}
               />
             </Form.Field>
             <Form.Field className="no-margin">
@@ -272,9 +264,7 @@ export function ConfigPanel(props: {
                 name="checkboxRadioGroup"
                 value="show"
                 checked={props.config.sex === Sex.SHOW}
-                onClick={() =>
-                  props.onChange({...props.config, sex: Sex.SHOW})
-                }
+                onClick={() => props.onChange({...props.config, sex: Sex.SHOW})}
               />
             </Form.Field>
           </Item.Content>
