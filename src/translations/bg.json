@@ -22,6 +22,7 @@
   "menu.wikitree_popup": "Вписани в WikiTree",
   "menu.github": "Проект в GitHub",
   "menu.search.placeholder": "Търсене на лице",
+  "menu.search.placeholder_with_shortcut": "Търсене на лице (натиснете '/')",
   "menu.search.no_results": "Няма резултати",
   "intro.title": "Topola Genealogy",
   "intro.description": "Topola Genealogy е приложение за преглед на родословни дървета, която дава възможност за разглеждане структурата на семейство.",

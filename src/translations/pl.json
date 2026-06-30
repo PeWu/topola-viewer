@@ -22,6 +22,7 @@
   "menu.wikitree_popup": "Zalogowano do WikiTree",
   "menu.github": "Projekt na stronie GitHub",
   "menu.search.placeholder": "Szukaj osoby",
+  "menu.search.placeholder_with_shortcut": "Szukaj osoby (naciśnij '/')",
   "menu.search.no_results": "Brak wyników",
   "intro.title": "Topola Genealogy",
   "intro.description": "Topola Genealogy pozwala przeglądać drzewo genealogiczne w interaktywny sposób.",

@@ -10,6 +10,7 @@ import {MenuItem, MenuType} from './menu_item';
 import {SearchBar} from './search';
 import {UploadMenu} from './upload_menu';
 import {UrlMenu} from './url_menu';
+import {useSearch} from './use_search';
 import {WikiTreeLoginMenu, WikiTreeMenu} from './wikitree_menu';
 
 enum ScreenSize {
@@ -48,6 +49,12 @@ interface Props {
 export function TopBar(props: Props) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const {searchResults, searchString, setSearchString, handleResultSelect} =
+    useSearch({
+      data: props.data,
+      onSelection: props.eventHandlers?.onSelection,
+    });
 
   function changeView(view: string) {
     const search = queryString.parse(location.search);
@@ -155,11 +162,10 @@ export function TopBar(props: Props) {
               <Dropdown.Menu>{chartTypeItems}</Dropdown.Menu>
             </Dropdown>
             <SearchBar
-              data={props.data}
-              onSelection={
-                props.eventHandlers?.onSelection || (() => undefined)
-              }
-              {...props}
+              results={searchResults}
+              value={searchString}
+              onSearchChange={setSearchString}
+              onResultSelect={handleResultSelect}
             />
           </>
         );
@@ -352,9 +358,11 @@ export function TopBar(props: Props) {
         </div>
         {props.showingChart && props.data && (
           <SearchBar
-            data={props.data}
-            onSelection={props.eventHandlers?.onSelection || (() => undefined)}
-            {...props}
+            results={searchResults}
+            value={searchString}
+            onSearchChange={setSearchString}
+            onResultSelect={handleResultSelect}
+            hideShortcutHint={true}
           />
         )}
       </>
@@ -386,7 +394,7 @@ export function TopBar(props: Props) {
   }
 
   return (
-    <>
+    <div>
       <Menu
         as={Media}
         greaterThanOrEqual="large"
@@ -407,6 +415,6 @@ export function TopBar(props: Props) {
       >
         {mobileMenus()}
       </Menu>
-    </>
+    </div>
   );
 }

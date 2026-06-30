@@ -22,6 +22,7 @@
   "menu.wikitree_popup": "Přihlášeno do WikiTree",
   "menu.github": "GitHub projekt",
   "menu.search.placeholder": "Hledej osobu",
+  "menu.search.placeholder_with_shortcut": "Hledej osobu (stiskněte '/')",
   "menu.search.no_results": "Žádné výsledky",
   "intro.title": "Topola Genealogy",
   "intro.description": "Topola Genealogy vám umožňuje interaktivní prohlížení rodokmenu.",

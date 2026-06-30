@@ -22,6 +22,7 @@
   "menu.wikitree_popup": "Вы вошли в WikiTree",
   "menu.github": "Проект на сайте GitHub",
   "menu.search.placeholder": "Искать человека",
+  "menu.search.placeholder_with_shortcut": "Искать человека (нажмите '/')",
   "menu.search.no_results": "Нет результатов",
   "intro.title": "Topola Genealogy",
   "intro.description": "Topola Genealogy позволяет просматривать семейное древо в интерактивном режиме.",
