@@ -86,7 +86,7 @@ export const SearchBar = React.memo(function SearchBar(props: Props) {
   );
 
   return (
-    <div className="item" ref={wrapperRef}>
+    <div ref={wrapperRef}>
       <Search
         onSearchChange={(_, data) => props.onSearchChange(data.value || '')}
         onResultSelect={(_, data) => props.onResultSelect(data.result.id)}
