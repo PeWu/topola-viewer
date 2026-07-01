@@ -8,6 +8,17 @@ test.describe('Intro page visual validation @visual', () => {
   });
 
   test('intro-page', async ({page}) => {
+    // Wait for the async changelog content to load so React doesn't
+    // overwrite our placeholder after we inject it.
+    await page.waitForFunction(() => {
+      const headers = Array.from(document.querySelectorAll('h3'));
+      const whatsNew = headers.find((h) =>
+        h.textContent?.includes("What's new"),
+      );
+      const span = whatsNew?.nextElementSibling;
+      return span && span.innerHTML.trim() !== '';
+    });
+
     // Clean dynamic elements right before snapping the screenshot.
     await page.evaluate(() => {
       // 1. Overwrite dynamic footer versioning.
