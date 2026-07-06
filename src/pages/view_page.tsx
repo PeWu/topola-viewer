@@ -2,14 +2,14 @@ import {useCallback, useMemo} from 'react';
 import {useIntl} from 'react-intl';
 import {Loader, SidebarPushable, SidebarPusher} from 'semantic-ui-react';
 import {IndiInfo} from 'topola';
+import {Chart} from '../chart/chart';
 import {
-  Chart,
-  ChartType,
   downloadPdf,
   downloadPng,
   downloadSvg,
   printChart,
-} from '../chart';
+} from '../chart/chart_export';
+import {ChartType} from '../chart/chart_types';
 import {ErrorMessage, ErrorPopup} from '../components/error_display';
 import {ProgressPill} from '../components/progress_pill';
 import {DataSourceEnum} from '../datasource/data_source';

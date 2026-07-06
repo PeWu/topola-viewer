@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import * as H from 'history';
-import {ChartType} from '../chart';
+import {ChartType} from '../chart/chart_types';
 import {DataSourceEnum} from '../datasource/data_source';
 import {ChartColors, Ids, PlaceDisplay, Sex} from '../sidepanel/config/config';
 import {

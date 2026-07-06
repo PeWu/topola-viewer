@@ -1,7 +1,7 @@
 import * as H from 'history';
 import type {ParsedQuery} from 'query-string';
 import {IndiInfo} from 'topola';
-import {ChartType} from '../chart';
+import {ChartType} from '../chart/chart_types';
 import {DataSourceEnum} from '../datasource/data_source';
 import {EmbeddedSourceSpec} from '../datasource/embedded';
 import {GoogleDriveSourceSpec} from '../datasource/google_drive';
