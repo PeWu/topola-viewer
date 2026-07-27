@@ -40,7 +40,9 @@ test.describe('Chart export', () => {
     await page.goto('/#/view?url=https://example.org/family.ged');
   });
 
-  test('PDF page size matches the chart size regardless of zoom', async ({page}) => {
+  test('PDF page size matches the chart size regardless of zoom', async ({
+    page,
+  }) => {
     await expect(page.locator('#content')).toContainText('Bonifacy');
 
     // Zoom in so the live #chartSvg width/height are scaled and no longer equal
