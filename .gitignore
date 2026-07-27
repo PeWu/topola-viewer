@@ -7,3 +7,4 @@ test-results/
 .idea
 .vscode
 .env
+playwright.local.config.ts
