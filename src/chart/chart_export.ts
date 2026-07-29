@@ -95,21 +95,30 @@ function getStrippedSvg() {
   return svg;
 }
 
-function getSvgDimensions() {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const svg = document.getElementById('chartSvg')!;
-  return {
-    width: Number(svg.getAttribute('width')),
-    height: Number(svg.getAttribute('height')),
-  };
-}
-
 function getSvgContents() {
   return new XMLSerializer().serializeToString(getStrippedSvg());
 }
 
-async function getSvgContentsWithInlinedImages() {
+/**
+ * Returns the serialized chart SVG with a white background and all images
+ * inlined as data URLs, together with the chart's true (unscaled) width and
+ * height in pixels.
+ *
+ * The dimensions are read from the stripped SVG (i.e. with the d3-zoom scale
+ * divided out), NOT from the live `#chartSvg` element, whose `width`/`height`
+ * attributes carry the zoom-scaled values. Callers that need the real page
+ * size (e.g. PDF export) must use these returned dimensions rather than
+ * reading the live element, otherwise the output is sized to the on-screen
+ * zoomed viewport and ends up truncated.
+ */
+async function getSvgContentsWithInlinedImages(): Promise<{
+  contents: string;
+  width: number;
+  height: number;
+}> {
   const svg = getStrippedSvg();
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
 
   // Set white background because the default background of the SVG
   // is transparent, which causes issues when printing or exporting to PDF.
@@ -123,7 +132,8 @@ async function getSvgContentsWithInlinedImages() {
   svg.prepend(rect);
 
   await inlineImages(svg);
-  return new XMLSerializer().serializeToString(svg);
+  const contents = new XMLSerializer().serializeToString(svg);
+  return {contents, width, height};
 }
 
 /** Shows the print dialog to print the currently displayed chart. */
@@ -147,13 +157,13 @@ export function printChart() {
 }
 
 export async function downloadSvg() {
-  const contents = await getSvgContentsWithInlinedImages();
+  const {contents} = await getSvgContentsWithInlinedImages();
   const blob = new Blob([contents], {type: 'image/svg+xml'});
   saveAs(blob, 'topola.svg');
 }
 
 async function drawOnCanvas(): Promise<HTMLCanvasElement> {
-  const contents = await getSvgContentsWithInlinedImages();
+  const {contents} = await getSvgContentsWithInlinedImages();
   const blob = new Blob([contents], {type: 'image/svg+xml'});
   return drawImageOnCanvas(await loadImage(blob));
 }
@@ -168,13 +178,16 @@ export async function downloadPdf() {
   // Lazy load jspdf.
   const {default: jspdf} = await import('jspdf');
 
-  const {width, height} = getSvgDimensions();
+  // Use the chart's true (unscaled) dimensions, returned by the same call that
+  // serializes the SVG, so the PDF page and the drawn SVG always match. Reading
+  // the live `#chartSvg` attributes here would pick up d3-zoom's scaled values
+  // and produce a page sized to the on-screen viewport instead of the full tree.
+  const {contents, width, height} = await getSvgContentsWithInlinedImages();
   const doc = new jspdf({
     orientation: width > height ? 'l' : 'p',
     unit: 'pt',
     format: [width, height],
   });
-  const contents = await getSvgContentsWithInlinedImages();
   await doc.addSvgAsImage(contents, 0, 0, width, height);
   doc.save('topola.pdf');
 }
