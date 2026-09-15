@@ -217,9 +217,45 @@ build a Topola Genealogy Viewer package bundled together with a GEDCOM file.
 ## Docker Container Deployment
 
 Topola Viewer can be run locally or deployed to standard cloud environments
-using Docker.
+using Docker and Docker Compose.
 
-### Running Topola Viewer
+### Running with Docker Compose
+
+To pull and run the official published image
+(`ghcr.io/pewu/topola-viewer:latest`) using Docker Compose:
+
+```bash
+docker compose up
+```
+
+To build from local source and start:
+
+```bash
+docker compose -f docker-compose.build.yml up
+```
+
+To force a rebuild from source and start:
+
+```bash
+docker compose -f docker-compose.build.yml up --build
+```
+
+#### Custom Port and Static URL
+
+You can customize the host port (`PORT`, default: `8080`) and pre-load a static
+tree URL (`STATIC_URL`) using environment variables or a `.env` file:
+
+```bash
+PORT=3000 STATIC_URL=https://example.org/sample.ged docker compose up
+```
+
+Or when building from source:
+
+```bash
+PORT=3000 STATIC_URL=https://example.org/sample.ged docker compose -f docker-compose.build.yml up
+```
+
+### Running Topola Viewer with Docker
 
 To pull and run Topola Viewer:
 

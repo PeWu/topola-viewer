@@ -1,0 +1,8 @@
+services:
+  topola-viewer:
+    image: ghcr.io/pewu/topola-viewer:latest
+    container_name: topola-viewer
+    ports:
+      - '${PORT:-8080}:8080'
+    environment:
+      - STATIC_URL=${STATIC_URL:-}

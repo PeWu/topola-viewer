@@ -26,6 +26,10 @@ in the project:
 ### Build & Environment
 
 - **[.env](.env)**: Contains environment variables for the project.
+- **[docker-compose.yml](docker-compose.yml)**: Runs the published GHCR image
+  using Docker Compose.
+- **[docker-compose.build.yml](docker-compose.build.yml)**: Builds and runs the
+  application from local source using Docker Compose.
 - **[vite.config.mts](vite.config.mts)**: Configuration file for the Vite build
   tool.
 

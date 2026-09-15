@@ -1,0 +1,11 @@
+services:
+  topola-viewer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: topola-viewer
+    container_name: topola-viewer
+    ports:
+      - '${PORT:-8080}:8080'
+    environment:
+      - STATIC_URL=${STATIC_URL:-}
