@@ -1,11 +1,40 @@
 import {useEffect, useMemo, useRef} from 'react';
 import {useIntl} from 'react-intl';
-import {PlaceDisplay} from '../sidepanel/config/config';
+import {JsonGedcomData, propagateConfidence} from 'topola';
+import {Confidence, PlaceDisplay} from '../sidepanel/config/config';
 import {Media} from '../util/media';
 import {DEFAULT_PLACE_DISPLAY_COUNT, shortenPlace} from '../util/place_util';
 import {usePrevious} from '../util/previous-hook';
 import {ChartProps} from './chart_types';
 import {ChartWrapper, ZOOM_FACTOR} from './chart_wrapper';
+
+/** Removes QUAY confidence values so the chart shows no source quality. */
+function removeConfidence(data: JsonGedcomData): JsonGedcomData {
+  const strip = <T extends {confidence?: number}>(item: T): T => {
+    if (item.confidence === undefined) {
+      return item;
+    }
+    const {confidence: _, ...rest} = item;
+    if ('parentLinkConfidence' in rest) {
+      delete rest.parentLinkConfidence;
+    }
+    return rest as T;
+  };
+  const stripEvent = <T extends {confidence?: number}>(item?: T) =>
+    item && strip(item);
+  return {
+    ...data,
+    indis: data.indis.map((indi) => ({
+      ...strip(indi),
+      birth: stripEvent(indi.birth),
+      death: stripEvent(indi.death),
+    })),
+    fams: data.fams.map((fam) => ({
+      ...fam,
+      marriage: stripEvent(fam.marriage),
+    })),
+  };
+}
 
 export function Chart(props: ChartProps) {
   const chartWrapper = useRef(new ChartWrapper());
@@ -15,13 +44,29 @@ export function Chart(props: ChartProps) {
   const placeDisplay = props.placeDisplay ?? PlaceDisplay.FULL;
   const placeCount = props.placeCount ?? DEFAULT_PLACE_DISPLAY_COUNT;
 
+  const confidence = props.confidence ?? Confidence.SHOW;
+  // Propagated confidence depends on who is selected.
+  const confidenceStart =
+    confidence === Confidence.PROPAGATE ? props.selection.id : undefined;
+
+  const confidenceData = useMemo(() => {
+    if (confidence === Confidence.HIDE) {
+      return removeConfidence(props.data);
+    }
+    if (confidenceStart !== undefined) {
+      return propagateConfidence(props.data, confidenceStart);
+    }
+    return props.data;
+  }, [props.data, confidence, confidenceStart]);
+
   const processedData = useMemo(() => {
     if (placeDisplay === PlaceDisplay.FULL) {
-      return props.data;
+      return confidenceData;
     }
+    const data = confidenceData;
     return {
-      ...props.data,
-      indis: props.data.indis.map((indi) => ({
+      ...data,
+      indis: data.indis.map((indi) => ({
         ...indi,
         birth: indi.birth
           ? {
@@ -36,7 +81,7 @@ export function Chart(props: ChartProps) {
             }
           : undefined,
       })),
-      fams: props.data.fams.map((fam) => ({
+      fams: data.fams.map((fam) => ({
         ...fam,
         marriage: fam.marriage
           ? {
@@ -46,7 +91,7 @@ export function Chart(props: ChartProps) {
           : undefined,
       })),
     };
-  }, [props.data, placeDisplay, placeCount]);
+  }, [confidenceData, placeDisplay, placeCount]);
 
   useEffect(() => {
     const propsWithProcessedData: ChartProps = {...props, data: processedData};
@@ -57,7 +102,8 @@ export function Chart(props: ChartProps) {
         props.hideIds !== prevProps?.hideIds ||
         props.hideSex !== prevProps?.hideSex ||
         props.placeDisplay !== prevProps?.placeDisplay ||
-        props.placeCount !== prevProps?.placeCount;
+        props.placeCount !== prevProps?.placeCount ||
+        props.confidence !== prevProps?.confidence;
       const resetPosition =
         props.chartType !== prevProps?.chartType ||
         props.data !== prevProps.data ||
