@@ -20,7 +20,13 @@ import {useUrlState} from '../hooks/use_url_state';
 import {useWebMcpBridge} from '../hooks/use_webmcp_bridge';
 import {GoogleAuthModal} from '../menu/google_auth_modal';
 import {TopBar} from '../menu/top_bar';
-import {Config, Ids, Sex} from '../sidepanel/config/config';
+import {
+  Config,
+  Ids,
+  Occupations,
+  Sex,
+  Titles,
+} from '../sidepanel/config/config';
 import {SidePanel} from '../sidepanel/side-panel';
 import {analyticsEvent} from '../util/analytics';
 import {idToIndiMap, TopolaData} from '../util/gedcom_util';
@@ -43,10 +49,14 @@ function updateChartWithConfig(config: Config, data: TopolaData | undefined) {
   }
   const shouldHideIds = config.id === Ids.HIDE;
   const shouldHideSex = config.sex === Sex.HIDE;
+  const shouldShowOccupations = config.occupations === Occupations.SHOW;
+  const shouldShowTitles = config.titles === Titles.SHOW;
   const indiMap = idToIndiMap(data.chartData);
   indiMap.forEach((indi) => {
     indi.hideId = shouldHideIds;
     indi.hideSex = shouldHideSex;
+    indi.showOccupations = shouldShowOccupations;
+    indi.showTitles = shouldShowTitles;
   });
 }
 
@@ -183,6 +193,8 @@ export function ViewPage() {
         colors={config.color}
         hideIds={config.id}
         hideSex={config.sex}
+        occupations={config.occupations}
+        titles={config.titles}
         placeDisplay={config.place}
         placeCount={config.placeCount}
         onFirstRender={() => setLoadingStatus('')}
