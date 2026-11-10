@@ -2,7 +2,14 @@ import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import * as H from 'history';
 import {ChartType} from '../chart/chart_types';
 import {DataSourceEnum} from '../datasource/data_source';
-import {ChartColors, Ids, PlaceDisplay, Sex} from '../sidepanel/config/config';
+import {
+  ChartColors,
+  Ids,
+  Occupations,
+  PlaceDisplay,
+  Sex,
+  Titles,
+} from '../sidepanel/config/config';
 import {
   getArguments,
   getParamFromSearch,
@@ -119,6 +126,8 @@ describe('url_args', () => {
         sex: Sex.SHOW,
         place: PlaceDisplay.FULL,
         placeCount: 2,
+        occupations: Occupations.HIDE,
+        titles: Titles.HIDE,
       });
     });
 
@@ -272,13 +281,17 @@ describe('url_args', () => {
     });
 
     it('parses config object from query parameters', () => {
-      const args = getArguments(createLocation('?c=s&i=h&s=h&p=s&pn=5'));
+      const args = getArguments(
+        createLocation('?c=s&i=h&s=h&p=s&pn=5&o=s&t=s'),
+      );
       expect(args.config).toEqual({
         color: ChartColors.COLOR_BY_SEX,
         id: Ids.HIDE,
         sex: Sex.HIDE,
         place: PlaceDisplay.SHORT,
         placeCount: 5,
+        occupations: Occupations.SHOW,
+        titles: Titles.SHOW,
       });
     });
   });
