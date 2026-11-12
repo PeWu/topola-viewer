@@ -20,7 +20,13 @@ import {useUrlState} from '../hooks/use_url_state';
 import {useWebMcpBridge} from '../hooks/use_webmcp_bridge';
 import {GoogleAuthModal} from '../menu/google_auth_modal';
 import {TopBar} from '../menu/top_bar';
-import {Config, Ids, Sex} from '../sidepanel/config/config';
+import {
+  Config,
+  getGenerationsDown,
+  getGenerationsUp,
+  Ids,
+  Sex,
+} from '../sidepanel/config/config';
 import {SidePanel} from '../sidepanel/side-panel';
 import {analyticsEvent} from '../util/analytics';
 import {idToIndiMap, TopolaData} from '../util/gedcom_util';
@@ -185,6 +191,8 @@ export function ViewPage() {
         hideSex={config.sex}
         placeDisplay={config.place}
         placeCount={config.placeCount}
+        generationsUp={getGenerationsUp(config)}
+        generationsDown={getGenerationsDown(config)}
         onFirstRender={() => setLoadingStatus('')}
       />
     );

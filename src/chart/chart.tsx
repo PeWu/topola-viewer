@@ -1,6 +1,7 @@
 import {useEffect, useMemo, useRef} from 'react';
 import {useIntl} from 'react-intl';
 import {PlaceDisplay} from '../sidepanel/config/config';
+import {filterByGenerations} from '../util/generation_filter';
 import {Media} from '../util/media';
 import {DEFAULT_PLACE_DISPLAY_COUNT, shortenPlace} from '../util/place_util';
 import {usePrevious} from '../util/previous-hook';
@@ -15,13 +16,29 @@ export function Chart(props: ChartProps) {
   const placeDisplay = props.placeDisplay ?? PlaceDisplay.FULL;
   const placeCount = props.placeCount ?? DEFAULT_PLACE_DISPLAY_COUNT;
 
+  // Only the individuals within the generation limits around the selected
+  // person are passed to the chart, which makes large trees faster to render.
+  const limitedData = useMemo(
+    () =>
+      filterByGenerations(props.data, props.selection.id, {
+        up: props.generationsUp,
+        down: props.generationsDown,
+      }),
+    [
+      props.data,
+      props.selection.id,
+      props.generationsUp,
+      props.generationsDown,
+    ],
+  );
+
   const processedData = useMemo(() => {
     if (placeDisplay === PlaceDisplay.FULL) {
-      return props.data;
+      return limitedData;
     }
     return {
-      ...props.data,
-      indis: props.data.indis.map((indi) => ({
+      ...limitedData,
+      indis: limitedData.indis.map((indi) => ({
         ...indi,
         birth: indi.birth
           ? {
@@ -36,7 +53,7 @@ export function Chart(props: ChartProps) {
             }
           : undefined,
       })),
-      fams: props.data.fams.map((fam) => ({
+      fams: limitedData.fams.map((fam) => ({
         ...fam,
         marriage: fam.marriage
           ? {
@@ -46,7 +63,7 @@ export function Chart(props: ChartProps) {
           : undefined,
       })),
     };
-  }, [props.data, placeDisplay, placeCount]);
+  }, [limitedData, placeDisplay, placeCount]);
 
   useEffect(() => {
     const propsWithProcessedData: ChartProps = {...props, data: processedData};
@@ -57,10 +74,14 @@ export function Chart(props: ChartProps) {
         props.hideIds !== prevProps?.hideIds ||
         props.hideSex !== prevProps?.hideSex ||
         props.placeDisplay !== prevProps?.placeDisplay ||
-        props.placeCount !== prevProps?.placeCount;
+        props.placeCount !== prevProps?.placeCount ||
+        props.generationsUp !== prevProps?.generationsUp ||
+        props.generationsDown !== prevProps?.generationsDown;
       const resetPosition =
         props.chartType !== prevProps?.chartType ||
         props.data !== prevProps.data ||
+        props.generationsUp !== prevProps?.generationsUp ||
+        props.generationsDown !== prevProps?.generationsDown ||
         // This does not work as the objects are always different instances.
         //props.selection !== prevProps.selection;
         // Therefore, compare id and generation instead.

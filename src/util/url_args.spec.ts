@@ -6,6 +6,7 @@ import {
   ChartColors,
   configToArgs,
   DEFALUT_CONFIG,
+  GenerationLimit,
   Ids,
   PlaceDisplay,
   Sex,
@@ -126,6 +127,10 @@ describe('url_args', () => {
         sex: Sex.SHOW,
         place: PlaceDisplay.FULL,
         placeCount: 2,
+        generationsUp: GenerationLimit.ALL,
+        generationsUpCount: 3,
+        generationsDown: GenerationLimit.ALL,
+        generationsDownCount: 3,
       });
     });
 
@@ -286,7 +291,32 @@ describe('url_args', () => {
         sex: Sex.HIDE,
         place: PlaceDisplay.SHORT,
         placeCount: 5,
+        generationsUp: GenerationLimit.ALL,
+        generationsUpCount: 3,
+        generationsDown: GenerationLimit.ALL,
+        generationsDownCount: 3,
       });
+    });
+
+    it('parses generation limits from query parameters', () => {
+      const args = getArguments(createLocation('?gu=4&gd=0'));
+      expect(args.config).toMatchObject({
+        generationsUp: GenerationLimit.LIMITED,
+        generationsUpCount: 4,
+        generationsDown: GenerationLimit.LIMITED,
+        generationsDownCount: 0,
+      });
+      expect(configToArgs(args.config)).toMatchObject({gu: '4', gd: '0'});
+    });
+
+    it('ignores invalid generation limits', () => {
+      const args = getArguments(createLocation('?gu=-1&gd=abc'));
+      expect(args.config).toMatchObject({
+        generationsUp: GenerationLimit.ALL,
+        generationsDown: GenerationLimit.ALL,
+      });
+      // Removed from the URL.
+      expect(configToArgs(args.config)).toMatchObject({gu: null, gd: null});
     });
   });
 
