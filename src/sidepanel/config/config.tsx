@@ -85,20 +85,20 @@ export function argsToConfig(args: ParsedQuery<unknown>): Config {
   };
 }
 
+/**
+ * Returns the URL parameters for the given config. Parameters left at their
+ * default value are set to null so that they are removed from the URL;
+ * otherwise a previous value would stay in the URL and the setting could not
+ * be changed back to its default.
+ */
 export function configToArgs(config: Config): ParsedQuery {
-  const result: ParsedQuery = {};
-  const color = COLOR_ARG_INVERSE.get(config.color);
-  if (color) {
-    result.c = color;
-  }
-  const id = ID_ARG_INVERSE.get(config.id);
-  if (id) {
-    result.i = id;
-  }
-  const sex = SEX_ARG_INVERSE.get(config.sex);
-  if (sex) {
-    result.s = sex;
-  }
+  const result: ParsedQuery = {
+    c: COLOR_ARG_INVERSE.get(config.color) ?? null,
+    i: ID_ARG_INVERSE.get(config.id) ?? null,
+    s: SEX_ARG_INVERSE.get(config.sex) ?? null,
+    p: null,
+    pn: null,
+  };
   const place = PLACE_ARG_INVERSE.get(config.place);
   if (place && config.place !== PlaceDisplay.FULL) {
     result.p = place;
@@ -315,7 +315,7 @@ export function ConfigPanel(props: {
                   min={1}
                   max={10}
                   size="mini"
-                  style={{width: '4em', marginLeft: '1.5em'}}
+                  style={{width: '6em', marginLeft: '1.5em'}}
                   value={props.config.placeCount}
                   onChange={(_e, {value}) => {
                     const n = parseInt(value, 10);

@@ -2,7 +2,14 @@ import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import * as H from 'history';
 import {ChartType} from '../chart/chart_types';
 import {DataSourceEnum} from '../datasource/data_source';
-import {ChartColors, Ids, PlaceDisplay, Sex} from '../sidepanel/config/config';
+import {
+  ChartColors,
+  configToArgs,
+  DEFALUT_CONFIG,
+  Ids,
+  PlaceDisplay,
+  Sex,
+} from '../sidepanel/config/config';
 import {
   getArguments,
   getParamFromSearch,
@@ -290,6 +297,20 @@ describe('url_args', () => {
       hash: '#hash-val',
       state: null,
       key: '',
+    });
+
+    it('removes settings changed back to their default value', () => {
+      const loc = createLocation('?url=x&p=s&pn=3');
+      const updated = getUrlForArgs(
+        loc,
+        configToArgs({...DEFALUT_CONFIG, place: PlaceDisplay.FULL}),
+      );
+      expect(updated.search).not.toContain('p=');
+      expect(updated.search).not.toContain('pn=');
+      expect(updated.search).toContain('url=x');
+      expect(getArguments(updated as H.Location).config.place).toBe(
+        PlaceDisplay.FULL,
+      );
     });
 
     it('updates query parameter value and preserves pathname/hash', () => {
