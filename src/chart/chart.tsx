@@ -68,6 +68,14 @@ export function Chart(props: ChartProps) {
   useEffect(() => {
     const propsWithProcessedData: ChartProps = {...props, data: processedData};
     if (prevProps) {
+      // Collapsed branches are kept when settings change, but not when
+      // expanding all branches or loading another tree.
+      if (
+        props.expandAllRequest !== prevProps.expandAllRequest ||
+        props.data !== prevProps.data
+      ) {
+        chartWrapper.current.expandAll();
+      }
       const initialRender =
         props.chartType !== prevProps?.chartType ||
         props.colors !== prevProps?.colors ||
@@ -76,9 +84,12 @@ export function Chart(props: ChartProps) {
         props.placeDisplay !== prevProps?.placeDisplay ||
         props.placeCount !== prevProps?.placeCount ||
         props.generationsUp !== prevProps?.generationsUp ||
-        props.generationsDown !== prevProps?.generationsDown;
+        props.generationsDown !== prevProps?.generationsDown ||
+        // "Expand all branches": draw the chart again from scratch.
+        props.expandAllRequest !== prevProps?.expandAllRequest;
       const resetPosition =
         props.chartType !== prevProps?.chartType ||
+        props.expandAllRequest !== prevProps?.expandAllRequest ||
         props.data !== prevProps.data ||
         props.generationsUp !== prevProps?.generationsUp ||
         props.generationsDown !== prevProps?.generationsDown ||

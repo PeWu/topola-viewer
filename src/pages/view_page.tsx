@@ -1,4 +1,4 @@
-import {useCallback, useMemo} from 'react';
+import {useCallback, useMemo, useState} from 'react';
 import {useIntl} from 'react-intl';
 import {Loader, SidebarPushable, SidebarPusher} from 'semantic-ui-react';
 import {IndiInfo} from 'topola';
@@ -62,6 +62,8 @@ function updateChartWithConfig(config: Config, data: TopolaData | undefined) {
  * chart rendering (both D3 and Donatso), side panel settings, and Google Drive auth workflows.
  */
 export function ViewPage() {
+  // Incremented to expand all the branches collapsed in the chart.
+  const [expandAllRequest, setExpandAllRequest] = useState(0);
   const intl = useIntl();
 
   const {
@@ -193,6 +195,7 @@ export function ViewPage() {
         placeCount={config.placeCount}
         generationsUp={getGenerationsUp(config)}
         generationsDown={getGenerationsDown(config)}
+        expandAllRequest={expandAllRequest}
         onFirstRender={() => setLoadingStatus('')}
       />
     );
@@ -224,6 +227,7 @@ export function ViewPage() {
                 expanded={showSidePanel}
                 onToggle={onToggleSidePanel}
                 onConfigChange={onConfigChange}
+                onExpandAll={() => setExpandAllRequest((n) => n + 1)}
               />
               <SidebarPusher>{renderChart(selection)}</SidebarPusher>
             </SidebarPushable>

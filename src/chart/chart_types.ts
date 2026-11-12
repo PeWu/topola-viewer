@@ -34,6 +34,8 @@ export interface ChartProps {
   generationsUp?: number;
   /** Generations shown below the selected person (undefined: all). */
   generationsDown?: number;
+  /** Incremented to expand all the branches collapsed with [-] buttons. */
+  expandAllRequest?: number;
   /** Called once after the initial D3 layout and SVG render completes. */
   onFirstRender?: () => void;
 }

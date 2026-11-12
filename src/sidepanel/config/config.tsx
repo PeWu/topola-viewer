@@ -1,7 +1,15 @@
 import {ParsedQuery} from 'query-string';
 import {ReactNode} from 'react';
 import {FormattedMessage} from 'react-intl';
-import {Checkbox, Form, Header, Input, Item} from 'semantic-ui-react';
+import {
+  Button,
+  Checkbox,
+  Form,
+  Header,
+  Input,
+  Item,
+  Popup,
+} from 'semantic-ui-react';
 import {GedcomData} from '../../util/gedcom_util';
 import {DEFAULT_PLACE_DISPLAY_COUNT, PlaceDisplay} from '../../util/place_util';
 import {SourceHead} from '../head/head';
@@ -239,6 +247,8 @@ export function ConfigPanel(props: {
   gedcom: GedcomData;
   config: Config;
   onChange: (config: Config) => void;
+  /** Expands all the branches collapsed with the chart's [-] buttons. */
+  onExpandAll?: () => void;
 }) {
   return (
     <Form className="details">
@@ -499,6 +509,43 @@ export function ConfigPanel(props: {
             })
           }
         />
+        <Item>
+          <Item.Content>
+            <Header sub>
+              <FormattedMessage
+                id="config.branches"
+                defaultMessage="Branches"
+              />
+            </Header>
+            <Form.Field className="no-margin">
+              <Popup
+                position="bottom left"
+                content={
+                  <FormattedMessage
+                    id="config.expand_all.tooltip"
+                    defaultMessage="Shows again all the branches hidden with the [-] buttons of the chart."
+                  />
+                }
+                trigger={
+                  <Button
+                    basic
+                    size="small"
+                    disabled={!props.onExpandAll}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      props.onExpandAll?.();
+                    }}
+                  >
+                    <FormattedMessage
+                      id="config.expand_all"
+                      defaultMessage="Expand all branches"
+                    />
+                  </Button>
+                }
+              />
+            </Form.Field>
+          </Item.Content>
+        </Item>
       </Item.Group>
     </Form>
   );
