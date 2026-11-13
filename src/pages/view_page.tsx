@@ -1,4 +1,4 @@
-import {useCallback, useMemo} from 'react';
+import {useCallback, useMemo, useState} from 'react';
 import {useIntl} from 'react-intl';
 import {Loader, SidebarPushable, SidebarPusher} from 'semantic-ui-react';
 import {IndiInfo} from 'topola';
@@ -20,7 +20,13 @@ import {useUrlState} from '../hooks/use_url_state';
 import {useWebMcpBridge} from '../hooks/use_webmcp_bridge';
 import {GoogleAuthModal} from '../menu/google_auth_modal';
 import {TopBar} from '../menu/top_bar';
-import {Config, Ids, Sex} from '../sidepanel/config/config';
+import {
+  Config,
+  getGenerationsDown,
+  getGenerationsUp,
+  Ids,
+  Sex,
+} from '../sidepanel/config/config';
 import {SidePanel} from '../sidepanel/side-panel';
 import {analyticsEvent} from '../util/analytics';
 import {idToIndiMap, TopolaData} from '../util/gedcom_util';
@@ -56,6 +62,8 @@ function updateChartWithConfig(config: Config, data: TopolaData | undefined) {
  * chart rendering (both D3 and Donatso), side panel settings, and Google Drive auth workflows.
  */
 export function ViewPage() {
+  // Incremented to expand all the branches collapsed in the chart.
+  const [expandAllRequest, setExpandAllRequest] = useState(0);
   const intl = useIntl();
 
   const {
@@ -185,6 +193,9 @@ export function ViewPage() {
         hideSex={config.sex}
         placeDisplay={config.place}
         placeCount={config.placeCount}
+        generationsUp={getGenerationsUp(config)}
+        generationsDown={getGenerationsDown(config)}
+        expandAllRequest={expandAllRequest}
         onFirstRender={() => setLoadingStatus('')}
       />
     );
@@ -216,6 +227,7 @@ export function ViewPage() {
                 expanded={showSidePanel}
                 onToggle={onToggleSidePanel}
                 onConfigChange={onConfigChange}
+                onExpandAll={() => setExpandAllRequest((n) => n + 1)}
               />
               <SidebarPusher>{renderChart(selection)}</SidebarPusher>
             </SidebarPushable>

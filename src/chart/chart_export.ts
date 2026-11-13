@@ -91,6 +91,8 @@ function getStrippedSvg() {
   );
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   svg.querySelector('#chart')!.removeAttribute('transform');
+  // The [+]/[-] buttons are only useful on screen.
+  svg.querySelectorAll('.expander').forEach((expander) => expander.remove());
 
   return svg;
 }
