@@ -61,6 +61,26 @@ test.describe('Occupations and titles settings', () => {
     await expect(page).toHaveURL(/[?&]t=s(&|$)/);
   });
 
+  test('hides occupations and titles again', async ({page}) => {
+    await page.goto(`${URL}&o=s&t=s`);
+    const chart = page.getByTestId('chart');
+    await expect(chart).toContainText('Blacksmith');
+    await expect(chart).toContainText('Duke of Wellington');
+
+    await chooseSetting(page, 'Occupations', 'hide');
+    await expect(chart).not.toContainText('Blacksmith');
+    await expect(chart).toContainText('Duke of Wellington');
+    await expect(page).not.toHaveURL(/[?&]o=/);
+
+    await page
+      .locator('form.details .item')
+      .filter({hasText: 'Titles'})
+      .getByText('hide', {exact: true})
+      .click();
+    await expect(chart).not.toContainText('Duke of Wellington');
+    await expect(page).not.toHaveURL(/[?&]t=/);
+  });
+
   test('reads the settings from the URL', async ({page}) => {
     await page.goto(`${URL}&o=s&t=s`);
     const chart = page.getByTestId('chart');
