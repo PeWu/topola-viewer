@@ -140,14 +140,16 @@ export function configToArgs(config: Config): ParsedQuery {
   ) {
     result.pn = String(config.placeCount);
   }
-  const occupations = OCCUPATIONS_ARG_INVERSE.get(config.occupations);
-  if (occupations && config.occupations !== DEFALUT_CONFIG.occupations) {
-    result.o = occupations;
-  }
-  const titles = TITLES_ARG_INVERSE.get(config.titles);
-  if (titles && config.titles !== DEFALUT_CONFIG.titles) {
-    result.t = titles;
-  }
+  // Set to null when hidden (the default), so that a previous `o=s` or `t=s`
+  // is removed from the URL and the setting can be changed back to "hide".
+  result.o =
+    config.occupations !== DEFALUT_CONFIG.occupations
+      ? (OCCUPATIONS_ARG_INVERSE.get(config.occupations) ?? null)
+      : null;
+  result.t =
+    config.titles !== DEFALUT_CONFIG.titles
+      ? (TITLES_ARG_INVERSE.get(config.titles) ?? null)
+      : null;
   return result;
 }
 
