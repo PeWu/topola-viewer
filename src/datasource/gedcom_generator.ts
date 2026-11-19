@@ -1,13 +1,13 @@
 import {GedcomEntry} from 'parse-gedcom';
 import {
-  Date,
   DateOrRange,
-  JsonEvent,
-  JsonFam,
-  JsonGedcomData,
-  JsonImage,
-  JsonIndi,
-} from 'topola';
+  EventRecord,
+  FamilyRecord,
+  ModelData,
+  MediaRecord,
+  PersonRecord,
+  DateValue,
+} from 'topola/model';
 import {isValidDateOrRange} from '../util/date_util';
 import {GedcomData} from '../util/gedcom_util';
 
@@ -26,7 +26,7 @@ const MONTHS = new Map<number, string>([
   [12, 'DEC'],
 ]);
 
-function dateToGedcom(date: Date): string {
+function dateToGedcom(date: DateValue): string {
   const month = (date.month && MONTHS.get(date.month)) || undefined;
   return [date.qualifier, date.day, month, date.year]
     .filter((x) => x !== undefined)
@@ -72,7 +72,7 @@ function nameToGedcom(type: string, firstName?: string, lastName?: string) {
   };
 }
 
-function eventToGedcom(event: JsonEvent): GedcomEntry[] {
+function eventToGedcom(event: EventRecord): GedcomEntry[] {
   const result = [];
   if (isValidDateOrRange(event)) {
     result.push({
@@ -96,7 +96,7 @@ function eventToGedcom(event: JsonEvent): GedcomEntry[] {
 }
 
 function imageToGedcom(
-  image: JsonImage,
+  image: MediaRecord,
   fullSizePhotoUrl: string | undefined,
 ): GedcomEntry[] {
   return [
@@ -126,7 +126,7 @@ function imageToGedcom(
 }
 
 function indiToGedcom(
-  indi: JsonIndi,
+  indi: PersonRecord,
   fullSizePhotoUrl: Map<string, string>,
   personNames: {birth?: string; married?: string; aka?: string},
 ): GedcomEntry {
@@ -209,7 +209,7 @@ function indiToGedcom(
   return record;
 }
 
-function famToGedcom(fam: JsonFam): GedcomEntry {
+function famToGedcom(fam: FamilyRecord): GedcomEntry {
   const record: GedcomEntry = {
     level: 0,
     pointer: `@${fam.id}@`,
@@ -261,7 +261,7 @@ function famToGedcom(fam: JsonFam): GedcomEntry {
  * panel.
  */
 export function buildGedcom(
-  data: JsonGedcomData,
+  data: ModelData,
   fullSizePhotoUrls: Map<string, string>,
   personNames: Map<string, {birth?: string; married?: string; aka?: string}>,
 ): GedcomData {

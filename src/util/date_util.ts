@@ -1,5 +1,6 @@
 import {IntlShape} from 'react-intl';
-import {DateOrRange, DateRange, getDate, Date as TopolaDate} from 'topola';
+import {parseGedcomDate} from 'topola/gedcom';
+import {DateOrRange, DateRange, DateValue} from 'topola/model';
 
 const DATE_QUALIFIERS = new Map([
   ['abt', 'about'],
@@ -7,7 +8,7 @@ const DATE_QUALIFIERS = new Map([
   ['est', 'estimated'],
 ]);
 
-function formatDate(date: TopolaDate, intl: IntlShape) {
+function formatDate(date: DateValue, intl: IntlShape) {
   const hasDay = date.day !== undefined;
   const hasMonth = date.month !== undefined;
   const hasYear = date.year !== undefined;
@@ -102,12 +103,12 @@ export function formatDateOrRange(
 
 /** Formats a date given in GEDCOM format. */
 export function translateDate(gedcomDate: string, intl: IntlShape): string {
-  return formatDateOrRange(getDate(gedcomDate), intl);
+  return formatDateOrRange(parseGedcomDate(gedcomDate), intl);
 }
 
 export function compareTopolaDates(
-  date1: TopolaDate | undefined,
-  date2: TopolaDate | undefined,
+  date1: DateValue | undefined,
+  date2: DateValue | undefined,
 ): number {
   if (!date1 || !date1.year || !date2 || !date2.year) {
     return 0;
@@ -179,6 +180,6 @@ export function isDateRangeClosed(range: DateRange | undefined): boolean {
   return !!(range?.from && range?.to);
 }
 
-export function toDateObject(date: TopolaDate): Date {
+export function toDateObject(date: DateValue): Date {
   return new Date(date.year ?? 0, (date.month ?? 1) - 1, date.day ?? 1);
 }

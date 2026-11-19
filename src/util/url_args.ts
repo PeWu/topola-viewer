@@ -1,6 +1,5 @@
 import * as H from 'history';
 import type {ParsedQuery} from 'query-string';
-import {IndiInfo} from 'topola';
 import {ChartType} from '../chart/chart_types';
 import {DataSourceEnum} from '../datasource/data_source';
 import {EmbeddedSourceSpec} from '../datasource/embedded';
@@ -8,6 +7,7 @@ import {GoogleDriveSourceSpec} from '../datasource/google_drive';
 import {UploadSourceSpec, UrlSourceSpec} from '../datasource/load_data';
 import {WikiTreeSourceSpec} from '../datasource/wikitree';
 import {argsToConfig, Config} from '../sidepanel/config/config';
+import {IndiInfo} from './gedcom_util';
 
 export type DataSourceSpec =
   | UrlSourceSpec
@@ -115,6 +115,7 @@ export function getArguments(location: H.Location): Arguments {
     ['relatives', ChartType.Relatives],
     ['fancy', ChartType.Fancy],
     ['donatso', ChartType.Donatso],
+    ['transit', ChartType.Transit],
   ]);
 
   const hash = getParam('file');

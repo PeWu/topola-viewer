@@ -11,6 +11,7 @@ test.describe('Core SVG Canvas Layouts @visual', () => {
     {view: 'hourglass', selector: '#svgContainer', waitTime: 500},
     {view: 'relatives', selector: '#svgContainer', waitTime: 500},
     {view: 'fancy', selector: '#svgContainer', waitTime: 500},
+    {view: 'transit', selector: '#svgContainer', waitTime: 500},
     {view: 'donatso', selector: '#dotatsoSvgContainer', waitTime: 1500},
   ];
 

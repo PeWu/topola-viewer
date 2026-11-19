@@ -1,9 +1,9 @@
 import {useCallback, useMemo} from 'react';
 import {useLocation, useNavigate} from 'react-router';
-import {IndiInfo} from 'topola';
 import {PRIVATE_ID_PREFIX} from '../datasource/wikitree';
 import {Config, configToArgs} from '../sidepanel/config/config';
 import {analyticsEvent} from '../util/analytics';
+import {IndiInfo} from '../util/gedcom_util';
 import {getArguments, getUrlForArgs} from '../util/url_args';
 
 /**

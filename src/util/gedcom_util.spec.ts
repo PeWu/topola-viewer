@@ -1,5 +1,5 @@
 import {describe, expect, it} from '@jest/globals';
-import {JsonGedcomData} from 'topola';
+import {ModelData} from 'topola/model';
 import {
   findRelationshipPath,
   getAncestors,
@@ -156,7 +156,7 @@ describe('getName()', () => {
 });
 
 describe('Relationship algorithms', () => {
-  const sampleData: JsonGedcomData = {
+  const sampleData: ModelData = {
     indis: [
       {id: 'I1', fams: ['F1']},
       {id: 'I2', fams: ['F1'], famc: 'F2'},

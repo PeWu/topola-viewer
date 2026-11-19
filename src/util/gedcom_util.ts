@@ -1,15 +1,19 @@
 import {GedcomEntry, parse as parseGedcom} from 'parse-gedcom';
+import {gedcomEntriesToModel, parseGedcomDate} from 'topola/gedcom';
 import {
   DateOrRange,
-  gedcomEntriesToJson,
-  getDate,
-  JsonFam,
-  JsonGedcomData,
-  JsonImage,
-  JsonIndi,
-} from 'topola';
+  FamilyRecord,
+  ModelData,
+  MediaRecord,
+  PersonRecord,
+} from 'topola/model';
 import {compareDates} from './date_util';
 import {TopolaError} from './error';
+
+export interface IndiInfo {
+  id: string;
+  generation: number;
+}
 
 export interface GedcomData {
   /** The HEAD entry. */
@@ -23,7 +27,7 @@ export interface GedcomData {
 }
 
 export interface TopolaData {
-  chartData: JsonGedcomData;
+  chartData: ModelData;
   gedcom: GedcomData;
   images?: Map<string, string>;
 }
@@ -45,8 +49,8 @@ export function pointerToId(pointer: string): string {
 }
 
 /** Returns a map from individual ID to individual data object. */
-export function idToIndiMap(data: JsonGedcomData): Map<string, JsonIndi> {
-  const map = new Map<string, JsonIndi>();
+export function idToIndiMap(data: ModelData): Map<string, PersonRecord> {
+  const map = new Map<string, PersonRecord>();
   data.indis.forEach((indi) => {
     map.set(indi.id, indi);
   });
@@ -54,8 +58,8 @@ export function idToIndiMap(data: JsonGedcomData): Map<string, JsonIndi> {
 }
 
 /** Returns a map from family ID to family data object. */
-export function idToFamMap(data: JsonGedcomData): Map<string, JsonFam> {
-  const map = new Map<string, JsonFam>();
+export function idToFamMap(data: ModelData): Map<string, FamilyRecord> {
+  const map = new Map<string, FamilyRecord>();
   data.fams.forEach((fam) => {
     map.set(fam.id, fam);
   });
@@ -90,12 +94,12 @@ function strcmp(a: string, b: string) {
 }
 
 /** Birth date comparator for individuals. */
-function birthDatesComparator(gedcom: JsonGedcomData) {
+function birthDatesComparator(gedcom: ModelData) {
   const indiMap = idToIndiMap(gedcom);
 
   return (indiId1: string, indiId2: string) => {
-    const indi1: JsonIndi | undefined = indiMap.get(indiId1);
-    const indi2: JsonIndi | undefined = indiMap.get(indiId2);
+    const indi1: PersonRecord | undefined = indiMap.get(indiId1);
+    const indi2: PersonRecord | undefined = indiMap.get(indiId2);
     return (
       compareDates(indi1 && indi1.birth, indi2 && indi2.birth) ||
       strcmp(indiId1, indiId2)
@@ -104,12 +108,12 @@ function birthDatesComparator(gedcom: JsonGedcomData) {
 }
 
 /** Marriage date comparator for families. */
-function marriageDatesComparator(gedcom: JsonGedcomData) {
+function marriageDatesComparator(gedcom: ModelData) {
   const famMap = idToFamMap(gedcom);
 
   return (famId1: string, famId2: string) => {
-    const fam1: JsonFam | undefined = famMap.get(famId1);
-    const fam2: JsonFam | undefined = famMap.get(famId2);
+    const fam1: FamilyRecord | undefined = famMap.get(famId1);
+    const fam2: FamilyRecord | undefined = famMap.get(famId2);
     return (
       compareDates(fam1 && fam1.marriage, fam2 && fam2.marriage) ||
       strcmp(famId1, famId2)
@@ -122,13 +126,13 @@ function marriageDatesComparator(gedcom: JsonGedcomData) {
  * Does not modify the input objects.
  */
 function sortFamilyChildren(
-  fam: JsonFam,
+  fam: FamilyRecord,
   comparator: (id1: string, id2: string) => number,
-): JsonFam {
+): FamilyRecord {
   if (!fam.children) {
     return fam;
   }
-  const newChildren = fam.children.sort(comparator);
+  const newChildren = [...fam.children].sort(comparator);
   return Object.assign({}, fam, {children: newChildren});
 }
 
@@ -136,7 +140,7 @@ function sortFamilyChildren(
  * Sorts children by birth date.
  * Does not modify the input object.
  */
-function sortChildren(gedcom: JsonGedcomData): JsonGedcomData {
+function sortChildren(gedcom: ModelData): ModelData {
   const comparator = birthDatesComparator(gedcom);
   const newFams = gedcom.fams.map((fam) => sortFamilyChildren(fam, comparator));
   return Object.assign({}, gedcom, {fams: newFams});
@@ -147,17 +151,17 @@ function sortChildren(gedcom: JsonGedcomData): JsonGedcomData {
  * Does not modify the input objects.
  */
 function sortIndiSpouses(
-  indi: JsonIndi,
+  indi: PersonRecord,
   comparator: (id1: string, id2: string) => number,
-): JsonFam {
+): PersonRecord {
   if (!indi.fams) {
     return indi;
   }
-  const newFams = indi.fams.sort(comparator);
+  const newFams = [...indi.fams].sort(comparator);
   return Object.assign({}, indi, {fams: newFams});
 }
 
-function sortSpouses(gedcom: JsonGedcomData): JsonGedcomData {
+function sortSpouses(gedcom: ModelData): ModelData {
   const comparator = marriageDatesComparator(gedcom);
   const newIndis = gedcom.indis.map((indi) =>
     sortIndiSpouses(indi, comparator),
@@ -201,7 +205,7 @@ export function getData(entry: GedcomEntry) {
 }
 
 /** Sorts children and spouses. */
-export function normalizeGedcom(gedcom: JsonGedcomData): JsonGedcomData {
+export function normalizeGedcom(gedcom: ModelData): ModelData {
   return sortSpouses(sortChildren(gedcom));
 }
 
@@ -254,11 +258,11 @@ export function resolveFileUrl(
   return normalizedUrl;
 }
 
-function filterImage(indi: JsonIndi, images: Map<string, string>): JsonIndi {
+function filterImage(indi: PersonRecord, images: Map<string, string>): PersonRecord {
   if (!indi.images || indi.images.length === 0) {
     return indi;
   }
-  const newImages: JsonImage[] = [];
+  const newImages: MediaRecord[] = [];
   indi.images.forEach((image) => {
     const resolvedUrl = resolveFileUrl(image.url, images);
     const normalizedUrl = image.url.replace(/\\/g, '/');
@@ -277,9 +281,9 @@ function filterImage(indi: JsonIndi, images: Map<string, string>): JsonIndi {
  * Does not modify the input object.
  */
 function filterImages(
-  gedcom: JsonGedcomData,
+  gedcom: ModelData,
   images: Map<string, string>,
-): JsonGedcomData {
+): ModelData {
   const newIndis = gedcom.indis.map((indi) => filterImage(indi, images));
   return Object.assign({}, gedcom, {indis: newIndis});
 }
@@ -315,7 +319,7 @@ export async function convertGedcom(
 
   await yieldToEventLoop(onProgress, 'Step 2/4: building family graph…');
 
-  const json = gedcomEntriesToJson(entries);
+  const json = gedcomEntriesToModel(entries);
 
   if (
     !json ||
@@ -453,7 +457,7 @@ export function mapToSource(
     title: title?.data || abbr?.data,
     author: author?.data,
     page: page?.data,
-    date: date ? getDate(date.data) : undefined,
+    date: date ? parseGedcomDate(date.data) : undefined,
     publicationInfo: publicationInfo?.data,
   };
 }
@@ -462,8 +466,8 @@ export function mapToSource(
 export function findRelationshipPath(
   indiId1: string,
   indiId2: string,
-  indiMap: Map<string, JsonIndi>,
-  famMap: Map<string, JsonFam>,
+  indiMap: Map<string, PersonRecord>,
+  famMap: Map<string, FamilyRecord>,
 ): string[] {
   const getNeighbors = (id: string): string[] => {
     const indi = indiMap.get(id);
@@ -544,8 +548,8 @@ export function findRelationshipPath(
 export function getAncestors(
   indiId: string,
   generations: number,
-  indiMap: Map<string, JsonIndi>,
-  famMap: Map<string, JsonFam>,
+  indiMap: Map<string, PersonRecord>,
+  famMap: Map<string, FamilyRecord>,
 ): string[] {
   const result: string[] = [];
   const queue: {id: string; gen: number}[] = [{id: indiId, gen: 0}];
@@ -584,8 +588,8 @@ export function getAncestors(
 export function getDescendants(
   indiId: string,
   generations: number,
-  indiMap: Map<string, JsonIndi>,
-  famMap: Map<string, JsonFam>,
+  indiMap: Map<string, PersonRecord>,
+  famMap: Map<string, FamilyRecord>,
 ): string[] {
   const result: string[] = [];
   const queue: {id: string; gen: number}[] = [{id: indiId, gen: 0}];

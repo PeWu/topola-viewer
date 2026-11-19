@@ -1,7 +1,6 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {IntlShape} from 'react-intl';
 import {useLocation, useNavigate} from 'react-router';
-import {IndiInfo} from 'topola';
 import {DataSourceEnum, SourceSelection} from '../datasource/data_source';
 import {EmbeddedSourceSpec} from '../datasource/embedded';
 import {
@@ -28,7 +27,7 @@ import {
 } from '../datasource/wikitree';
 import {AppState} from '../pages/view_page';
 import {getI18nMessage} from '../util/error_i18n';
-import {TopolaData} from '../util/gedcom_util';
+import {IndiInfo, TopolaData} from '../util/gedcom_util';
 import {DataSourceSpec, getArguments} from '../util/url_args';
 
 /**

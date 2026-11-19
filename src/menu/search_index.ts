@@ -5,7 +5,7 @@ import lunrFr from 'lunr-languages/lunr.fr';
 import lunrIt from 'lunr-languages/lunr.it';
 import lunrRu from 'lunr-languages/lunr.ru';
 import lunrStemmer from 'lunr-languages/lunr.stemmer.support';
-import {JsonFam, JsonGedcomData, JsonIndi} from 'topola';
+import {FamilyRecord, ModelData, PersonRecord} from 'topola/model';
 import {idToFamMap, idToIndiMap} from '../util/gedcom_util';
 
 lunrStemmer(lunr);
@@ -18,7 +18,7 @@ const MAX_RESULTS = 8;
 
 export interface SearchResult {
   id: string;
-  indi: JsonIndi;
+  indi: PersonRecord;
 }
 
 export interface SearchIndex {
@@ -44,9 +44,9 @@ function compare(a: lunr.Index.Result, b: lunr.Index.Result) {
 
 /** Returns all last names of all husbands as a space-separated string. */
 function getHusbandLastName(
-  indi: JsonIndi,
-  indiMap: Map<string, JsonIndi>,
-  famMap: Map<string, JsonFam>,
+  indi: PersonRecord,
+  indiMap: Map<string, PersonRecord>,
+  famMap: Map<string, FamilyRecord>,
 ): string {
   return (indi.fams || [])
     .map((famId) => famMap.get(famId))
@@ -58,10 +58,10 @@ function getHusbandLastName(
 
 class LunrSearchIndex implements SearchIndex {
   private index!: lunr.Index;
-  private indiMap: Map<string, JsonIndi>;
-  private famMap: Map<string, JsonFam>;
+  private indiMap: Map<string, PersonRecord>;
+  private famMap: Map<string, FamilyRecord>;
 
-  constructor(data: JsonGedcomData) {
+  constructor(data: ModelData) {
     this.indiMap = idToIndiMap(data);
     this.famMap = idToFamMap(data);
   }
@@ -157,7 +157,7 @@ class LunrSearchIndex implements SearchIndex {
 }
 
 /** Builds a search index from data. */
-export function buildSearchIndex(data: JsonGedcomData): SearchIndex {
+export function buildSearchIndex(data: ModelData): SearchIndex {
   const index = new LunrSearchIndex(data);
   index.initialize();
   return index;

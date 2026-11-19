@@ -1,7 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import {IntlShape, useIntl} from 'react-intl';
 import {Search, SearchResultProps} from 'semantic-ui-react';
-import {JsonIndi} from 'topola';
+import {PersonRecord} from 'topola/model';
 import {formatDateOrRange} from '../util/date_util';
 import {SearchResult} from './search_index';
 import {
@@ -25,7 +25,7 @@ function getNameLine(result: SearchResult) {
   );
 }
 
-function getDescriptionLine(indi: JsonIndi, currentIntl: IntlShape) {
+function getDescriptionLine(indi: PersonRecord, currentIntl: IntlShape) {
   const birthDate = formatDateOrRange(indi.birth, currentIntl);
   const deathDate = formatDateOrRange(indi.death, currentIntl);
   if (!deathDate) {

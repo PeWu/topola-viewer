@@ -9,30 +9,31 @@ import {
 } from 'family-chart';
 import {useEffect, useRef} from 'react';
 import {IntlShape, useIntl} from 'react-intl';
-import {IndiInfo, JsonFam, JsonGedcomData} from 'topola';
+import {FamilyRecord, ModelData} from 'topola/model';
 import {formatDateOrRange} from './util/date_util';
+import {IndiInfo} from './util/gedcom_util';
 import {usePrevious} from './util/previous-hook';
 
 export interface DonatsoChartProps {
-  data: JsonGedcomData;
+  data: ModelData;
   selection: IndiInfo;
   onSelection: (indiInfo: IndiInfo) => void;
   /** Called once after the initial chart render completes. */
   onFirstRender?: () => void;
 }
 
-function getOtherSpouse(fam: JsonFam, indi: string) {
+function getOtherSpouse(fam: FamilyRecord, indi: string) {
   return fam.husb === indi ? fam.wife : fam.husb;
 }
 
-function convertData(data: JsonGedcomData, intl: IntlShape): Datum[] {
-  const famMap = new Map<string, JsonFam>();
+function convertData(data: ModelData, intl: IntlShape): Datum[] {
+  const famMap = new Map<string, FamilyRecord>();
   data.fams.forEach((fam) => famMap.set(fam.id, fam));
   return data.indis.map((indi) => {
     const famc = (indi.famc && famMap.get(indi.famc)) || undefined;
     const fams = (indi.fams || [])
       .map((fam) => famMap.get(fam))
-      .filter((fam): fam is JsonFam => fam !== undefined);
+      .filter((fam): fam is FamilyRecord => fam !== undefined);
     const father = famc?.husb;
     const mother = famc?.wife;
     const parents = [father, mother].filter((x) => !!x);

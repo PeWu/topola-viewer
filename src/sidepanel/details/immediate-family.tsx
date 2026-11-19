@@ -1,7 +1,7 @@
 import {GedcomEntry} from 'parse-gedcom';
 import {FormattedMessage} from 'react-intl';
 import {Header, Item} from 'semantic-ui-react';
-import {getDate} from 'topola';
+import {parseGedcomDate} from 'topola/gedcom';
 import {compareDates} from '../../util/date_util';
 import {GedcomData, pointerToId, resolveDate} from '../../util/gedcom_util';
 import {PersonLink} from './person-link';
@@ -37,7 +37,7 @@ function mapSpousalFamily(
     const childEntry = gedcom.indis[pointerToId(childSub.data)];
     const birt = childEntry?.tree.find((sub) => sub.tag === 'BIRT');
     const dateSub = birt ? resolveDate(birt) : undefined;
-    const parsedDate = dateSub ? getDate(dateSub.data) : undefined;
+    const parsedDate = dateSub ? parseGedcomDate(dateSub.data) : undefined;
     return {
       childEntry,
       parsedDate,

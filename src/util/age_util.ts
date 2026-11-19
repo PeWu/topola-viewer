@@ -1,6 +1,6 @@
 import {IntlShape} from 'react-intl';
-import {DateOrRange, getDate} from 'topola';
-import {Date as TopolaDate} from 'topola/dist/data';
+import {parseGedcomDate} from 'topola/gedcom';
+import {DateOrRange, DateValue} from 'topola/model';
 import {
   areDateRangesOverlapped,
   compareDates,
@@ -11,8 +11,8 @@ import {
 } from './date_util';
 
 function formatExactAge(
-  birthDate: TopolaDate,
-  deathDate: TopolaDate,
+  birthDate: DateValue,
+  deathDate: DateValue,
   intl: IntlShape,
 ): string {
   const ageInYears = calcDateDifferenceInYears(birthDate, deathDate);
@@ -31,8 +31,8 @@ function formatExactAge(
 }
 
 function formatAgeMoreThan(
-  birthDate: TopolaDate,
-  deathDate: TopolaDate,
+  birthDate: DateValue,
+  deathDate: DateValue,
   intl: IntlShape,
 ): string {
   const ageInYears = calcDateDifferenceInYears(birthDate, deathDate);
@@ -47,8 +47,8 @@ function formatAgeMoreThan(
 }
 
 function formatAgeLessThan(
-  birthDate: TopolaDate,
-  deathDate: TopolaDate,
+  birthDate: DateValue,
+  deathDate: DateValue,
   intl: IntlShape,
 ): string {
   const ageInYears = calcDateDifferenceInYears(birthDate, deathDate);
@@ -63,10 +63,10 @@ function formatAgeLessThan(
 }
 
 function formatAgeBetween(
-  birthDateFrom: TopolaDate,
-  birthDateTo: TopolaDate,
-  deathDateFrom: TopolaDate,
-  deathDateTo: TopolaDate,
+  birthDateFrom: DateValue,
+  birthDateTo: DateValue,
+  deathDateFrom: DateValue,
+  deathDateTo: DateValue,
   intl: IntlShape,
 ): string {
   const ageInYearsFrom = calcDateDifferenceInYears(birthDateTo, deathDateFrom);
@@ -109,8 +109,8 @@ function canCalculateAge(
 }
 
 function calcDateDifferenceInYears(
-  firstDate: TopolaDate,
-  secondDate: TopolaDate,
+  firstDate: DateValue,
+  secondDate: DateValue,
 ): number {
   const firstDateObject = toDateObject(firstDate);
   const secondDateObject = toDateObject(secondDate);
@@ -139,8 +139,8 @@ export function calcAge(
   intl: IntlShape,
 ): string | undefined {
   if (birthGedcomDate && deathGedcomDate) {
-    const birthDateOrRange = getDate(birthGedcomDate);
-    const deathDateOrRange = getDate(deathGedcomDate);
+    const birthDateOrRange = parseGedcomDate(birthGedcomDate);
+    const deathDateOrRange = parseGedcomDate(deathGedcomDate);
     if (canCalculateAge(birthDateOrRange, deathDateOrRange)) {
       if (birthDateOrRange?.date) {
         if (deathDateOrRange?.date) {

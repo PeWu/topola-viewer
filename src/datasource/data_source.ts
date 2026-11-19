@@ -1,5 +1,4 @@
-import {IndiInfo} from 'topola';
-import {TopolaData} from '../util/gedcom_util';
+import {IndiInfo, TopolaData} from '../util/gedcom_util';
 
 /** Supported data sources. */
 export enum DataSourceEnum {

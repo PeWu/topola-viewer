@@ -4,9 +4,14 @@ const config: Config.InitialOptions = {
   roots: ["<rootDir>/src"],
   testEnvironment: "node",
   transform: {
-    "^.+.tsx?$": "<rootDir>/tests/import_meta_transformer.js",
+    "^.+\\.[tj]sx?$": "<rootDir>/tests/import_meta_transformer.js",
   },
+  transformIgnorePatterns: [
+    "/node_modules/(?!(topola)/)",
+  ],
   moduleNameMapper: {
+    "^topola$": "<rootDir>/node_modules/topola/dist/index.js",
+    "^topola/(.*)$": "<rootDir>/node_modules/topola/dist/$1/index.js",
     "d3-array": "<rootDir>/node_modules/d3-array/dist/d3-array.js",
     "d3-color": "<rootDir>/node_modules/d3-color/dist/d3-color.js",
     "d3-ease": "<rootDir>/node_modules/d3-ease/dist/d3-ease.js",

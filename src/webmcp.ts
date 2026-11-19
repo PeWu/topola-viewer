@@ -1,4 +1,4 @@
-import {JsonEvent, JsonFam, JsonGedcomData, JsonIndi} from 'topola';
+import {EventRecord, FamilyRecord, ModelData, PersonRecord} from 'topola/model';
 import {buildSearchIndex, SearchIndex, SearchResult} from './menu/search_index';
 import {
   findRelationshipPath,
@@ -75,9 +75,9 @@ function textMcpResponse(text: string) {
 export class WebMcpBridge {
   private detailIndi: string | null = null;
   private searchIndex: SearchIndex | null = null;
-  private chartData: JsonGedcomData | null = null;
-  private indiMap: Map<string, JsonIndi> = new Map();
-  private famMap: Map<string, JsonFam> = new Map();
+  private chartData: ModelData | null = null;
+  private indiMap: Map<string, PersonRecord> = new Map();
+  private famMap: Map<string, FamilyRecord> = new Map();
   private setSelectionCallback: ((id: string) => void) | null = null;
   private toolsRegistered = false;
 
@@ -215,7 +215,7 @@ export class WebMcpBridge {
     };
   }
 
-  private getEvent(event: JsonEvent | undefined): DatePlace | undefined {
+  private getEvent(event: EventRecord | undefined): DatePlace | undefined {
     if (!event) {
       return undefined;
     }

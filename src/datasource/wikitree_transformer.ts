@@ -1,12 +1,12 @@
 import {IntlShape} from 'react-intl';
 import {
-  Date,
   DateOrRange,
-  JsonEvent,
-  JsonFam,
-  JsonImage,
-  JsonIndi,
-} from 'topola';
+  EventRecord,
+  FamilyRecord,
+  MediaRecord,
+  PersonRecord,
+  DateValue,
+} from 'topola/model';
 import {StringUtils} from 'turbocommons-ts';
 import {Person} from 'wikitree-js';
 import {PRIVATE_ID_PREFIX} from './wikitree_api';
@@ -85,9 +85,9 @@ function getSpouses(people: Person[]) {
  *
  * @param people List of Person records to convert.
  * @param intl Intl shape for localization.
- * @returns List of JsonIndi objects.
+ * @returns List of PersonRecord objects.
  */
-export function convertIndis(people: Person[], intl: IntlShape): JsonIndi[] {
+export function convertIndis(people: Person[], intl: IntlShape): PersonRecord[] {
   const families = getFamilies(people);
   return people.map((person) => {
     const indi = convertPerson(person, intl);
@@ -100,15 +100,15 @@ export function convertIndis(people: Person[], intl: IntlShape): JsonIndi[] {
  * Converts relationships of a list of WikiTree Person records into Topola family records.
  *
  * @param people List of Person records to convert.
- * @returns List of JsonFam objects.
+ * @returns List of FamilyRecord objects.
  */
-export function convertFams(people: Person[]): JsonFam[] {
+export function convertFams(people: Person[]): FamilyRecord[] {
   // Map from numerical id to human-readable id.
   const idToName = new Map(people.map((person) => [person.Id, person.Name]));
   const children = getChildren(people);
   const spouses = getSpouses(people);
   return Array.from(spouses.entries()).map(([key, value]) => {
-    const fam: JsonFam = {
+    const fam: FamilyRecord = {
       id: key,
     };
     const wife = value.wife && idToName.get(value.wife);
@@ -137,8 +137,8 @@ export function convertFams(people: Person[]): JsonFam[] {
   });
 }
 
-function extractNames(person: Person, intl: IntlShape): Partial<JsonIndi> {
-  const result: Partial<JsonIndi> = {};
+function extractNames(person: Person, intl: IntlShape): Partial<PersonRecord> {
+  const result: Partial<PersonRecord> = {};
   if (person.Name.startsWith(PRIVATE_ID_PREFIX)) {
     result.hideId = true;
     result.firstName = intl.formatMessage({
@@ -158,10 +158,10 @@ function extractNames(person: Person, intl: IntlShape): Partial<JsonIndi> {
 }
 
 function extractDates(person: Person): {
-  birth?: JsonEvent;
-  death?: JsonEvent;
+  birth?: EventRecord;
+  death?: EventRecord;
 } {
-  const result: {birth?: JsonEvent; death?: JsonEvent} = {};
+  const result: {birth?: EventRecord; death?: EventRecord} = {};
   if (
     (person.BirthDate && person.BirthDate !== '0000-00-00') ||
     person.BirthLocation ||
@@ -189,7 +189,7 @@ function extractDates(person: Person): {
   return result;
 }
 
-function extractImages(person: Person): JsonImage[] | undefined {
+function extractImages(person: Person): MediaRecord[] | undefined {
   if (person.PhotoData) {
     return [
       {
@@ -201,8 +201,8 @@ function extractImages(person: Person): JsonImage[] | undefined {
   return undefined;
 }
 
-function convertPerson(person: Person, intl: IntlShape): JsonIndi {
-  const indi: JsonIndi = Object.assign(
+function convertPerson(person: Person, intl: IntlShape): PersonRecord {
+  const indi: PersonRecord = Object.assign(
     {id: person.Name},
     extractNames(person, intl),
     extractDates(person),
@@ -281,7 +281,7 @@ function parseDate(date: string, dataStatus?: string): DateOrRange | undefined {
   if (!matchedDate) {
     return {date: {text: date}};
   }
-  const parsedDate: Date = {};
+  const parsedDate: DateValue = {};
   if (matchedDate[1] !== '0000') {
     parsedDate.year = ~~matchedDate[1];
   }

@@ -1,6 +1,6 @@
 import {FormattedMessage, useIntl} from 'react-intl';
 import {Divider, Header, Icon, Item, List} from 'semantic-ui-react';
-import {getDate} from 'topola';
+import {parseGedcomDate} from 'topola/gedcom';
 import {formatDateOrRange} from '../../util/date_util';
 import {dereference, GedcomData} from '../../util/gedcom_util';
 
@@ -18,7 +18,7 @@ export function SourceHead(gedcom: GedcomData) {
   const date = head.tree.find((entry) => entry.tag === 'DATE'); // Creation date
   const intl = useIntl();
   const dateFormatted = date
-    ? formatDateOrRange(getDate(date.data), intl)
+    ? formatDateOrRange(parseGedcomDate(date.data), intl)
     : null; // Formatted creation date
 
   const file = head.tree.find((entry) => entry.tag === 'FILE')?.data; // File path

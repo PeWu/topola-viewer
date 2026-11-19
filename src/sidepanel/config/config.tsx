@@ -1,11 +1,13 @@
 import {ParsedQuery} from 'query-string';
 import {FormattedMessage} from 'react-intl';
 import {Checkbox, Form, Header, Input, Item} from 'semantic-ui-react';
+import type {ColorTarget} from 'topola/toolkit';
 import {GedcomData} from '../../util/gedcom_util';
 import {DEFAULT_PLACE_DISPLAY_COUNT, PlaceDisplay} from '../../util/place_util';
 import {SourceHead} from '../head/head';
 
 export {PlaceDisplay};
+export type {ColorTarget};
 
 export enum ChartColors {
   NO_COLOR,
@@ -23,8 +25,73 @@ export enum Sex {
   SHOW,
 }
 
+export const DEFAULT_FONT_FAMILY = 'Montserrat';
+
+export const ALLOWED_FONTS = [
+  'Montserrat',
+  'Roboto',
+  'Open Sans',
+  'Lato',
+  'Lora',
+  'Merriweather',
+] as const;
+
+export type AllowedFont = (typeof ALLOWED_FONTS)[number];
+
+export function isAllowedFont(value: string | undefined): value is AllowedFont {
+  return (
+    value !== undefined && (ALLOWED_FONTS as readonly string[]).includes(value)
+  );
+}
+
+const GOOGLE_FONT_STYLESHEETS: Readonly<Record<AllowedFont, string>> = {
+  Montserrat:
+    'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap',
+  Roboto:
+    'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&display=swap',
+  'Open Sans':
+    'https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,700;1,400&display=swap',
+  Lato: 'https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=swap',
+  Lora: 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&display=swap',
+  Merriweather:
+    'https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap',
+};
+
+const SERIF_FONTS: ReadonlySet<AllowedFont> = new Set(['Lora', 'Merriweather']);
+
+export function getFontFamilyStack(font: AllowedFont): string {
+  const quoted = font.includes(' ') ? `'${font}'` : font;
+  return SERIF_FONTS.has(font)
+    ? `${quoted}, Georgia, serif`
+    : `${quoted}, verdana, arial, sans-serif`;
+}
+
+export function ensureGoogleFontLoaded(font: AllowedFont): void {
+  if (typeof document === 'undefined' || font === DEFAULT_FONT_FAMILY) {
+    return;
+  }
+  const id = `topola-google-font-${font.toLowerCase().replace(/\s+/g, '-')}`;
+  if (document.getElementById(id)) {
+    return;
+  }
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.crossOrigin = 'anonymous';
+  link.href = GOOGLE_FONT_STYLESHEETS[font];
+  document.head.appendChild(link);
+
+  const quoted = font.includes(' ') ? `"${font}"` : font;
+  if (document.fonts?.load) {
+    void document.fonts.load(`400 12px ${quoted}`).catch(() => undefined);
+    void document.fonts.load(`700 12px ${quoted}`).catch(() => undefined);
+  }
+}
+
 export interface Config {
   color: ChartColors;
+  colorTarget: ColorTarget;
+  fontFamily: AllowedFont;
   id: Ids;
   sex: Sex;
   place: PlaceDisplay;
@@ -33,6 +100,8 @@ export interface Config {
 
 export const DEFALUT_CONFIG: Config = {
   color: ChartColors.COLOR_BY_GENERATION,
+  colorTarget: 'background',
+  fontFamily: DEFAULT_FONT_FAMILY,
   id: Ids.SHOW,
   sex: Sex.SHOW,
   place: PlaceDisplay.FULL,
@@ -46,6 +115,14 @@ const COLOR_ARG = new Map<string, ChartColors>([
 ]);
 const COLOR_ARG_INVERSE = new Map<ChartColors, string>();
 COLOR_ARG.forEach((v, k) => COLOR_ARG_INVERSE.set(v, k));
+
+const COLOR_TARGET_ARG = new Map<string, ColorTarget>([
+  ['b', 'background'],
+  ['f', 'frame'],
+  ['n', 'name'],
+]);
+const COLOR_TARGET_ARG_INVERSE = new Map<ColorTarget, string>();
+COLOR_TARGET_ARG.forEach((v, k) => COLOR_TARGET_ARG_INVERSE.set(v, k));
 
 const ID_ARG = new Map<string, Ids>([
   ['h', Ids.HIDE],
@@ -75,9 +152,13 @@ export function argsToConfig(args: ParsedQuery<unknown>): Config {
     return typeof value === 'string' ? value : undefined;
   };
 
+  const rawFont = getParam('ff');
   const placeCount = parseInt(getParam('pn') ?? '', 10);
   return {
     color: COLOR_ARG.get(getParam('c') ?? '') ?? DEFALUT_CONFIG.color,
+    colorTarget:
+      COLOR_TARGET_ARG.get(getParam('ct') ?? '') ?? DEFALUT_CONFIG.colorTarget,
+    fontFamily: isAllowedFont(rawFont) ? rawFont : DEFALUT_CONFIG.fontFamily,
     id: ID_ARG.get(getParam('i') ?? '') ?? DEFALUT_CONFIG.id,
     sex: SEX_ARG.get(getParam('s') ?? '') ?? DEFALUT_CONFIG.sex,
     place: PLACE_ARG.get(getParam('p') ?? '') ?? DEFALUT_CONFIG.place,
@@ -91,6 +172,12 @@ export function configToArgs(config: Config): ParsedQuery {
   if (color) {
     result.c = color;
   }
+  result.ct =
+    config.colorTarget !== DEFALUT_CONFIG.colorTarget
+      ? (COLOR_TARGET_ARG_INVERSE.get(config.colorTarget) ?? null)
+      : null;
+  result.ff =
+    config.fontFamily !== DEFALUT_CONFIG.fontFamily ? config.fontFamily : null;
   const id = ID_ARG_INVERSE.get(config.id);
   if (id) {
     result.i = id;
@@ -100,15 +187,12 @@ export function configToArgs(config: Config): ParsedQuery {
     result.s = sex;
   }
   const place = PLACE_ARG_INVERSE.get(config.place);
-  if (place && config.place !== PlaceDisplay.FULL) {
-    result.p = place;
-  }
-  if (
+  result.p = place && config.place !== PlaceDisplay.FULL ? place : null;
+  result.pn =
     config.place === PlaceDisplay.SHORT &&
     config.placeCount !== DEFALUT_CONFIG.placeCount
-  ) {
-    result.pn = String(config.placeCount);
-  }
+      ? String(config.placeCount)
+      : null;
   return result;
 }
 
@@ -188,6 +272,107 @@ export function ConfigPanel(props: {
                   })
                 }
               />
+            </Form.Field>
+          </Item.Content>
+        </Item>
+        <Item>
+          <Item.Content>
+            <Header sub>
+              <FormattedMessage
+                id="config.colorTarget"
+                defaultMessage="Color style"
+              />
+            </Header>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.colorTarget.background"
+                    defaultMessage="background"
+                  />
+                }
+                name="colorTargetRadioGroup"
+                value="background"
+                checked={props.config.colorTarget === 'background'}
+                onClick={() =>
+                  props.onChange({
+                    ...props.config,
+                    colorTarget: 'background',
+                  })
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.colorTarget.frame"
+                    defaultMessage="frame"
+                  />
+                }
+                name="colorTargetRadioGroup"
+                value="frame"
+                checked={props.config.colorTarget === 'frame'}
+                onClick={() =>
+                  props.onChange({
+                    ...props.config,
+                    colorTarget: 'frame',
+                  })
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.colorTarget.name"
+                    defaultMessage="name"
+                  />
+                }
+                name="colorTargetRadioGroup"
+                value="name"
+                checked={props.config.colorTarget === 'name'}
+                onClick={() =>
+                  props.onChange({
+                    ...props.config,
+                    colorTarget: 'name',
+                  })
+                }
+              />
+            </Form.Field>
+          </Item.Content>
+        </Item>
+        <Item>
+          <Item.Content>
+            <Header sub>
+              <FormattedMessage id="config.font" defaultMessage="Font" />
+            </Header>
+            <Form.Field className="no-margin">
+              <select
+                aria-label="Font"
+                value={props.config.fontFamily}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (isAllowedFont(next)) {
+                    props.onChange({
+                      ...props.config,
+                      fontFamily: next,
+                    });
+                  }
+                }}
+              >
+                {ALLOWED_FONTS.map((font) => (
+                  <option key={font} value={font}>
+                    {font}
+                  </option>
+                ))}
+              </select>
             </Form.Field>
           </Item.Content>
         </Item>

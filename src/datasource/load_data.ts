@@ -1,9 +1,14 @@
 import {Buffer} from 'buffer';
 import {strFromU8, unzip, Unzipped} from 'fflate';
-import {IndiInfo, JsonGedcomData} from 'topola';
+import {ModelData} from 'topola/model';
 import {analyticsEvent} from '../util/analytics';
 import {TopolaError} from '../util/error';
-import {convertGedcom, getSoftware, TopolaData} from '../util/gedcom_util';
+import {
+  convertGedcom,
+  getSoftware,
+  IndiInfo,
+  TopolaData,
+} from '../util/gedcom_util';
 import {DataSource, DataSourceEnum, SourceSelection} from './data_source';
 import {getStoredGedcom} from './gedcom_store';
 
@@ -12,7 +17,7 @@ import {getStoredGedcom} from './gedcom_store';
  * or with an individual taken from the data and generation 0.
  */
 export function getSelection(
-  data: JsonGedcomData,
+  data: ModelData,
   selection?: IndiInfo,
 ): IndiInfo {
   // If ID is not given or it doesn't exist in the data, use the first ID in

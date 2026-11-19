@@ -49,21 +49,28 @@ export function Chart(props: ChartProps) {
   }, [props.data, placeDisplay, placeCount]);
 
   useEffect(() => {
+    const wrapper = chartWrapper.current;
+    return () => {
+      wrapper.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
     const propsWithProcessedData: ChartProps = {...props, data: processedData};
     if (prevProps) {
       const initialRender =
-        props.chartType !== prevProps?.chartType ||
-        props.colors !== prevProps?.colors ||
-        props.hideIds !== prevProps?.hideIds ||
-        props.hideSex !== prevProps?.hideSex ||
-        props.placeDisplay !== prevProps?.placeDisplay ||
-        props.placeCount !== prevProps?.placeCount;
-      const resetPosition =
-        props.chartType !== prevProps?.chartType ||
         props.data !== prevProps.data ||
-        // This does not work as the objects are always different instances.
-        //props.selection !== prevProps.selection;
-        // Therefore, compare id and generation instead.
+        props.chartType !== prevProps.chartType ||
+        props.colors !== prevProps.colors ||
+        props.colorTarget !== prevProps.colorTarget ||
+        props.fontFamily !== prevProps.fontFamily ||
+        props.hideIds !== prevProps.hideIds ||
+        props.hideSex !== prevProps.hideSex ||
+        props.placeDisplay !== prevProps.placeDisplay ||
+        props.placeCount !== prevProps.placeCount;
+      const resetPosition =
+        props.chartType !== prevProps.chartType ||
+        props.data !== prevProps.data ||
         props.selection.id !== prevProps.selection.id ||
         props.selection.generation !== prevProps.selection.generation;
       chartWrapper.current.renderChart(propsWithProcessedData, intl, {
@@ -76,10 +83,6 @@ export function Chart(props: ChartProps) {
         resetPosition: true,
       });
       // Clear the loading pill now that the chart SVG is in the DOM.
-      // This fires before the D3 fade-in animation completes (~400ms), which
-      // is intentional: the chart is visible and interactive at this point,
-      // and keeping the pill visible during the animation would create a
-      // confusing overlap.
       props.onFirstRender?.();
     }
   });

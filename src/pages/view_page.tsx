@@ -1,7 +1,6 @@
-import {useCallback, useMemo} from 'react';
+import {useCallback} from 'react';
 import {useIntl} from 'react-intl';
 import {Loader, SidebarPushable, SidebarPusher} from 'semantic-ui-react';
-import {IndiInfo} from 'topola';
 import {Chart} from '../chart/chart';
 import {
   downloadPdf,
@@ -20,10 +19,9 @@ import {useUrlState} from '../hooks/use_url_state';
 import {useWebMcpBridge} from '../hooks/use_webmcp_bridge';
 import {GoogleAuthModal} from '../menu/google_auth_modal';
 import {TopBar} from '../menu/top_bar';
-import {Config, Ids, Sex} from '../sidepanel/config/config';
 import {SidePanel} from '../sidepanel/side-panel';
 import {analyticsEvent} from '../util/analytics';
-import {idToIndiMap, TopolaData} from '../util/gedcom_util';
+import {IndiInfo} from '../util/gedcom_util';
 
 export enum AppState {
   INITIAL,
@@ -34,26 +32,9 @@ export enum AppState {
 }
 
 /**
- * Updates the chart data nodes with custom display parameters (such as hiding IDs or genders)
- * in place prior to rendering D3 canvas.
- */
-function updateChartWithConfig(config: Config, data: TopolaData | undefined) {
-  if (data === undefined) {
-    return;
-  }
-  const shouldHideIds = config.id === Ids.HIDE;
-  const shouldHideSex = config.sex === Sex.HIDE;
-  const indiMap = idToIndiMap(data.chartData);
-  indiMap.forEach((indi) => {
-    indi.hideId = shouldHideIds;
-    indi.hideSex = shouldHideSex;
-  });
-}
-
-/**
  * ViewPage is the page component that orchestrates the genealogy chart workspace.
  * It manages asynchronous data loading, configuration parameters derived from the URL,
- * chart rendering (both D3 and Donatso), side panel settings, and Google Drive auth workflows.
+ * chart rendering (both Topola 4 and Donatso), side panel settings, and Google Drive auth workflows.
  */
 export function ViewPage() {
   const intl = useIntl();
@@ -110,22 +91,18 @@ export function ViewPage() {
     onAuthSuccess: resetLoader,
   });
 
-  useMemo(() => {
-    updateChartWithConfig(config, data);
-  }, [config, data]);
-
   useWebMcpBridge(data, detailIndi, onSelection);
 
   function onPrint() {
     analyticsEvent('print');
-    printChart();
+    void printChart();
   }
 
   async function onDownloadPdf() {
     analyticsEvent('download_pdf');
     try {
       await downloadPdf();
-    } catch (e) {
+    } catch (_e) {
       displayErrorPopup(
         intl.formatMessage({
           id: 'error.failed_pdf',
@@ -141,7 +118,7 @@ export function ViewPage() {
     analyticsEvent('download_png');
     try {
       await downloadPng();
-    } catch (e) {
+    } catch (_e) {
       displayErrorPopup(
         intl.formatMessage({
           id: 'error.failed_png',
@@ -155,7 +132,7 @@ export function ViewPage() {
 
   function onDownloadSvg() {
     analyticsEvent('download_svg');
-    downloadSvg();
+    void downloadSvg();
   }
 
   function renderChart(selection: IndiInfo) {
@@ -181,6 +158,8 @@ export function ViewPage() {
         onDetailSelection={onDetailSelection}
         freezeAnimation={freezeAnimation}
         colors={config.color}
+        colorTarget={config.colorTarget}
+        fontFamily={config.fontFamily}
         hideIds={config.id}
         hideSex={config.sex}
         placeDisplay={config.place}

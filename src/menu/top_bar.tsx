@@ -2,8 +2,9 @@ import queryString from 'query-string';
 import {FormattedMessage} from 'react-intl';
 import {Link, useLocation, useNavigate} from 'react-router';
 import {Dropdown, Icon, Menu} from 'semantic-ui-react';
-import {IndiInfo, JsonGedcomData} from 'topola';
+import {ModelData} from 'topola/model';
 import {isGoogleDriveConfigured} from '../datasource/google_drive_service';
+import {IndiInfo} from '../util/gedcom_util';
 import {Media} from '../util/media';
 import {isOnWikitreeDomain} from '../util/wikitree_util';
 import {GoogleDriveMenu} from './google_drive_menu';
@@ -31,7 +32,7 @@ interface Props {
   /** True if the application is currently showing a chart. */
   showingChart: boolean;
   /** Data used for the search index. */
-  data?: JsonGedcomData;
+  data?: ModelData;
   standalone: boolean;
   /** Whether to show the "All relatives" chart type in the menu. */
   allowAllRelativesChart?: boolean;
@@ -105,6 +106,13 @@ export function TopBar(props: Props) {
           <FormattedMessage
             id="menu.fancy"
             defaultMessage="Fancy tree (experimental)"
+          />
+        </Dropdown.Item>
+        <Dropdown.Item onClick={() => changeView('transit')}>
+          <Icon name="subway" />
+          <FormattedMessage
+            id="menu.transit"
+            defaultMessage="Transit map (experimental)"
           />
         </Dropdown.Item>
       </>

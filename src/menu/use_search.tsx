@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {IndiInfo, JsonGedcomData} from 'topola';
+import {ModelData} from 'topola/model';
 import {analyticsEvent} from '../util/analytics';
+import {IndiInfo} from '../util/gedcom_util';
 import {buildSearchIndex, SearchIndex, SearchResult} from './search_index';
 import {useSearchShortcut} from './use_search_shortcut';
 
@@ -19,7 +20,7 @@ function scheduleIdleTask(callback: () => void, timeout = 5000): () => void {
 
 interface UseSearchProps {
   /** Data used for the search index. */
-  data?: JsonGedcomData;
+  data?: ModelData;
   /** Callback triggered when a search result is selected. */
   onSelection?: (indiInfo: IndiInfo) => void;
 }

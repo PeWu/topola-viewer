@@ -2,7 +2,14 @@ import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import * as H from 'history';
 import {ChartType} from '../chart/chart_types';
 import {DataSourceEnum} from '../datasource/data_source';
-import {ChartColors, Ids, PlaceDisplay, Sex} from '../sidepanel/config/config';
+import {
+  ChartColors,
+  configToArgs,
+  DEFAULT_FONT_FAMILY,
+  Ids,
+  PlaceDisplay,
+  Sex,
+} from '../sidepanel/config/config';
 import {
   getArguments,
   getParamFromSearch,
@@ -115,6 +122,8 @@ describe('url_args', () => {
       expect(args.showSidePanel).toBe(true); // default on desktop
       expect(args.config).toEqual({
         color: ChartColors.COLOR_BY_GENERATION,
+        colorTarget: 'background',
+        fontFamily: DEFAULT_FONT_FAMILY,
         id: Ids.SHOW,
         sex: Sex.SHOW,
         place: PlaceDisplay.FULL,
@@ -131,6 +140,9 @@ describe('url_args', () => {
       );
       expect(getArguments(createLocation('?view=donatso')).chartType).toBe(
         ChartType.Donatso,
+      );
+      expect(getArguments(createLocation('?view=transit')).chartType).toBe(
+        ChartType.Transit,
       );
       expect(getArguments(createLocation('?view=unknown')).chartType).toBe(
         ChartType.Hourglass,
@@ -272,14 +284,40 @@ describe('url_args', () => {
     });
 
     it('parses config object from query parameters', () => {
-      const args = getArguments(createLocation('?c=s&i=h&s=h&p=s&pn=5'));
+      const args = getArguments(
+        createLocation('?c=s&ct=f&ff=Lora&i=h&s=h&p=s&pn=5'),
+      );
       expect(args.config).toEqual({
         color: ChartColors.COLOR_BY_SEX,
+        colorTarget: 'frame',
+        fontFamily: 'Lora',
         id: Ids.HIDE,
         sex: Sex.HIDE,
         place: PlaceDisplay.SHORT,
         placeCount: 5,
       });
+    });
+
+    it('rejects non-allowlisted fontFamily and unknown colorTarget values', () => {
+      const args = getArguments(
+        createLocation(
+          '?ct=invalid&ff=EvilFont;background:url(javascript:alert(1))',
+        ),
+      );
+      expect(args.config.colorTarget).toBe('background');
+      expect(args.config.fontFamily).toBe(DEFAULT_FONT_FAMILY);
+
+      const serialized = configToArgs({
+        ...args.config,
+        colorTarget: 'name',
+        fontFamily: 'Open Sans',
+      });
+      expect(serialized.ct).toBe('n');
+      expect(serialized.ff).toBe('Open Sans');
+
+      const resetSerialized = configToArgs(args.config);
+      expect(resetSerialized.ct).toBeNull();
+      expect(resetSerialized.ff).toBeNull();
     });
   });
 

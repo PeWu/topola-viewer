@@ -2,7 +2,8 @@ import flatMap from 'array.prototype.flatmap';
 import {GedcomEntry} from 'parse-gedcom';
 import {IntlShape, useIntl} from 'react-intl';
 import {Header, Item} from 'semantic-ui-react';
-import {DateOrRange, getDate} from 'topola';
+import {parseGedcomDate} from 'topola/gedcom';
+import {DateOrRange} from 'topola/model';
 import {calcAge} from '../../util/age_util';
 import {compareDates, formatDateOrRange} from '../../util/date_util';
 import {
@@ -269,7 +270,7 @@ function toIndiEvent(
   return [
     {
       tag: entry.tag,
-      date: date ? getDate(date.data) : undefined,
+      date: date ? parseGedcomDate(date.data) : undefined,
       type: resolveType(entry),
       age: getAge(entry, indi, gedcom, intl),
       place: eventPlace(entry),
@@ -295,7 +296,7 @@ function toFamilyEvents(
     const date = resolveDate(familyEvent) || null;
     return {
       tag: familyEvent.tag,
-      date: date ? getDate(date.data) : undefined,
+      date: date ? parseGedcomDate(date.data) : undefined,
       type: resolveType(familyEvent),
       personLink: getSpouse(indi, family, gedcom),
       place: eventPlace(familyEvent),

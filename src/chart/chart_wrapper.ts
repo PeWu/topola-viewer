@@ -10,16 +10,81 @@ import {
   zoomTransform,
 } from 'd3-zoom';
 import {IntlShape} from 'react-intl';
-import {ChartHandle, ChartInfo, createChart} from 'topola';
 import {
-  chartColors,
-  ChartProps,
-  getChartType,
-  getRendererType,
-} from './chart_types';
+  ANIMATION_FADE_MS,
+  ANIMATION_MOVE_MS,
+  ChartConfig,
+  ClickInfo,
+  createChart,
+  LayoutResult,
+  Slot,
+  StyleScheme,
+  Chart as TopolaChart,
+  ViewState,
+} from 'topola/core';
+import {
+  createModelGraph,
+  ModelData,
+  ModelGraph,
+  PersonRecord,
+} from 'topola/model';
+import {
+  createDetailedNodePlugin,
+  createFancyConfig,
+  DEFAULT_FANCY_THEME,
+  FancyTheme,
+  generationScheme,
+  quayScheme,
+  sexScheme,
+} from 'topola/presets';
+import {TextBoxTheme} from 'topola/toolkit';
+import {PRIVATE_ID_PREFIX} from '../datasource/wikitree_api';
+import {
+  ChartColors,
+  DEFAULT_FONT_FAMILY,
+  ensureGoogleFontLoaded,
+  getFontFamilyStack,
+  Ids,
+  Sex,
+} from '../sidepanel/config/config';
+import {ChartProps, ChartType} from './chart_types';
+import {createTransitConfig, TransitLabels, TransitTheme} from './transit_look';
 
 /** How much to zoom when using the +/- buttons. */
 const ZOOM_FACTOR = 1.3;
+
+type ViewerChartTheme = TextBoxTheme & FancyTheme & TransitTheme;
+
+function transitLabels(intl: IntlShape): TransitLabels {
+  return {
+    title: intl.formatMessage({
+      id: 'transit.title',
+      defaultMessage: 'Family transit map',
+    }),
+    zone: (relativeGeneration) =>
+      intl.formatMessage(
+        {id: 'transit.zone', defaultMessage: 'Zone {zone}'},
+        {
+          zone:
+            relativeGeneration > 0
+              ? `+${relativeGeneration}`
+              : String(relativeGeneration).replace('-', '\u2212'),
+        },
+      ),
+    person: intl.formatMessage({
+      id: 'transit.person',
+      defaultMessage: 'Person',
+    }),
+    marriage: intl.formatMessage({
+      id: 'transit.marriage',
+      defaultMessage: 'Marriage',
+    }),
+    otherMarriage: intl.formatMessage({
+      id: 'transit.other_marriage',
+      defaultMessage: 'Another marriage of the same person',
+    }),
+  };
+}
 
 /**
  * Called when the view is dragged with the mouse.
@@ -74,7 +139,7 @@ function getScrollbarAwareSize(
 function calculateScaleExtent(
   parent: Element,
   scale: number,
-  chartInfo: ChartInfo,
+  layout: Pick<LayoutResult, 'size'>,
 ): [number, number] {
   const [availWidth, availHeight] = getScrollbarAwareSize(parent);
 
@@ -82,25 +147,64 @@ function calculateScaleExtent(
   const zoomOutFactor = min([
     1,
     scale,
-    availWidth / chartInfo.size[0],
-    availHeight / chartInfo.size[1],
+    availWidth / layout.size[0],
+    availHeight / layout.size[1],
   ])!;
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return [max([0.1, zoomOutFactor])!, 2];
 }
 
+function buildSchemes(
+  colors: ChartColors | undefined,
+  graph: ModelGraph,
+): StyleScheme[] {
+  switch (colors) {
+    case ChartColors.NO_COLOR:
+      return [quayScheme(graph)];
+    case ChartColors.COLOR_BY_SEX:
+      return [sexScheme(graph), quayScheme(graph)];
+    case ChartColors.COLOR_BY_GENERATION:
+    default:
+      return [generationScheme(), quayScheme(graph)];
+  }
+}
+
 export class ChartWrapper {
-  private chart?: ChartHandle;
-  /** Animation is in progress. */
-  private animating = false;
-  /** Rendering is required after the current animation finishes. */
-  private rerenderRequired = false;
+  private chart?: TopolaChart<ViewerChartTheme>;
   /** The d3 zoom behavior object. */
   private zoomBehavior?: ZoomBehavior<Element, unknown>;
-  /** Props that will be used for rerendering. */
-  private rerenderProps?: ChartProps;
-  private rerenderResetPosition?: boolean;
+  private graph?: ModelGraph;
+  private lastData?: ModelData;
+  private lastChartType?: ChartType;
+  private lastStartIndi?: string;
+  private latestProps?: ChartProps;
+  private collapsed = new Set<`${string}:${Slot}`>();
+  /** Whether the next layout should scroll the start person into view. */
+  private resetPositionOnLayout = false;
+
+  /**
+   * Keeps the viewport in step with the chart. The chart reports every layout
+   * here, also the ones it starts itself, e.g. when its font has loaded.
+   */
+  private readonly handleLayout = (
+    layout: LayoutResult,
+    info: {animated: boolean},
+  ) => {
+    this.syncViewport(layout, {
+      animate: info.animated,
+      resetPosition: this.resetPositionOnLayout,
+    });
+    this.resetPositionOnLayout = false;
+  };
+
+  private viewState(props: ChartProps): ViewState {
+    return {
+      startIndi: props.selection.id,
+      baseGeneration: props.selection.generation,
+      collapsed: this.collapsed,
+    };
+  }
 
   zoom(factor: number) {
     const parent = select('#svgContainer') as Selection<
@@ -112,10 +216,214 @@ export class ChartWrapper {
     this.zoomBehavior?.scaleBy(parent, factor);
   }
 
+  dispose() {
+    this.chart?.dispose();
+    this.chart = undefined;
+  }
+
+  private handlePersonClick = (info: ClickInfo) => {
+    const props = this.latestProps;
+    if (!props) {
+      return;
+    }
+    const selection = {id: info.id, generation: info.generation};
+    if (info.modifiers.shiftKey) {
+      // Shift+click updates the details tab without changing the root selection in the chart.
+      props.onDetailSelection(selection);
+    } else {
+      props.onSelection(selection);
+    }
+  };
+
+  private handleExpanderClick = ({
+    nodeId,
+    slot,
+  }: {
+    nodeId: string;
+    slot: Slot;
+  }) => {
+    if (!this.chart || !this.latestProps) {
+      return;
+    }
+    const key: `${string}:${Slot}` = `${nodeId}:${slot}`;
+    if (this.collapsed.has(key)) {
+      this.collapsed.delete(key);
+    } else {
+      this.collapsed.add(key);
+    }
+    const shouldAnimate =
+      !this.latestProps.freezeAnimation &&
+      this.latestProps.chartType !== ChartType.Fancy;
+    this.chart.patchConfig({animate: shouldAnimate});
+    this.chart.update(this.viewState(this.latestProps));
+  };
+
+  /** In the transit map, clicking a marriage folds or unfolds its children. */
+  private handleFamilyClick = (info: ClickInfo) => {
+    this.handleExpanderClick({nodeId: info.nodeId, slot: 'children'});
+  };
+
+  private buildConfig(
+    props: ChartProps,
+    graph: ModelGraph,
+    intl: IntlShape,
+    animate: boolean,
+  ): ChartConfig<ViewerChartTheme> {
+    const locale = intl.locale;
+    const fontFamily = getFontFamilyStack(
+      props.fontFamily ?? DEFAULT_FONT_FAMILY,
+    );
+    const colorTarget = props.colorTarget ?? 'background';
+    const schemes = buildSchemes(props.colors, graph);
+
+    if (props.chartType === ChartType.Fancy) {
+      const fancy = createFancyConfig({
+        model: graph,
+        schemes,
+        animate: false,
+        expanders: false,
+        updateSvgSize: false,
+        theme: {
+          ...DEFAULT_FANCY_THEME,
+          fontFamily,
+          colorTarget,
+        },
+        onPersonClick: this.handlePersonClick,
+        onLayout: this.handleLayout,
+      });
+      return fancy as ChartConfig<ViewerChartTheme>;
+    }
+
+    const hideId = (person: PersonRecord) =>
+      props.hideIds === Ids.HIDE ||
+      Boolean(person.hideId) ||
+      person.id.startsWith(PRIVATE_ID_PREFIX);
+    const hideSex = props.hideSex === Sex.HIDE;
+
+    if (props.chartType === ChartType.Transit) {
+      const transit = createTransitConfig({
+        graph,
+        locale,
+        labels: transitLabels(intl),
+        schemes,
+        coloredLines: props.colors !== ChartColors.NO_COLOR,
+        fontFamily,
+        colorTarget,
+        hideId,
+        hideSex,
+        animate,
+        onPersonClick: this.handlePersonClick,
+        onFamilyClick: this.handleFamilyClick,
+        onExpanderClick: this.handleExpanderClick,
+        onLayout: this.handleLayout,
+      });
+      return transit as ChartConfig<ViewerChartTheme>;
+    }
+
+    const nodePlugin = createDetailedNodePlugin({
+      model: graph,
+      locale,
+      hideId,
+      hideSex,
+    });
+
+    return {
+      graph,
+      chart:
+        props.chartType === ChartType.Relatives ? 'relatives' : 'hourglass',
+      direction: 'down',
+      expanders: true,
+      animate,
+      updateSvgSize: false,
+      nodePlugin,
+      schemes,
+      theme: {
+        fontFamily,
+        colorTarget,
+        generationSpacing: 34,
+      },
+      onPersonClick: this.handlePersonClick,
+      onExpanderClick: this.handleExpanderClick,
+      onLayout: this.handleLayout,
+    };
+  }
+
+  private syncViewport(
+    layout: LayoutResult,
+    options: {animate: boolean; resetPosition: boolean},
+  ) {
+    const svg = select('#chartSvg');
+    const parent = select('#svgContainer').node() as Element | null;
+    if (!parent) {
+      return;
+    }
+    const scale = zoomTransform(parent).k;
+    const extent: [number, number] = calculateScaleExtent(
+      parent,
+      scale,
+      layout,
+    );
+
+    this.zoomBehavior = zoom()
+      .scaleExtent(extent)
+      .translateExtent([[0, 0], layout.size])
+      .on('zoom', (event) => zoomed(layout.size, event));
+
+    select(parent).on('scroll', scrolled).call(this.zoomBehavior);
+
+    const scrollTopTween = (scrollTop: number) => () => {
+      const i = interpolateNumber(parent.scrollTop, scrollTop);
+      return (t: number) => {
+        parent.scrollTop = i(t);
+      };
+    };
+    const scrollLeftTween = (scrollLeft: number) => () => {
+      const i = interpolateNumber(parent.scrollLeft, scrollLeft);
+      return (t: number) => {
+        parent.scrollLeft = i(t);
+      };
+    };
+
+    const dx = parent.clientWidth / 2 - layout.origin[0] * scale;
+    const dy = parent.clientHeight / 2 - layout.origin[1] * scale;
+    const offsetX = max([0, (parent.clientWidth - layout.size[0] * scale) / 2]);
+    const offsetY = max([
+      0,
+      (parent.clientHeight - layout.size[1] * scale) / 2,
+    ]);
+
+    // Interrupt any in-flight viewport transition so rapid clicks stay synchronized.
+    svg.interrupt();
+
+    if (options.animate) {
+      const svgTransition = svg
+        .transition()
+        .delay(ANIMATION_FADE_MS)
+        .duration(ANIMATION_MOVE_MS);
+      svgTransition
+        .attr('transform', `translate(${offsetX}, ${offsetY})`)
+        .attr('width', layout.size[0] * scale)
+        .attr('height', layout.size[1] * scale);
+      if (options.resetPosition) {
+        svgTransition
+          .tween('scrollLeft', scrollLeftTween(-dx))
+          .tween('scrollTop', scrollTopTween(-dy));
+      }
+    } else {
+      svg
+        .attr('transform', `translate(${offsetX}, ${offsetY})`)
+        .attr('width', layout.size[0] * scale)
+        .attr('height', layout.size[1] * scale);
+      if (options.resetPosition) {
+        parent.scrollLeft = -dx;
+        parent.scrollTop = -dy;
+      }
+    }
+  }
+
   /**
-   * Renders the chart or performs a transition animation to a new state.
-   * If indiInfo is not given, it means that it is the initial render and no
-   * animation is performed.
+   * Renders the chart or performs a transition animation to a new state,
+   * retaining a single Topola 4 `Chart` instance across config toggles.
    */
   renderChart(
     props: ChartProps,
@@ -125,138 +433,69 @@ export class ChartWrapper {
       resetPosition: false,
     },
   ) {
+    this.latestProps = props;
+
     // Nothing changed — the SVG is already correct. Skip re-render.
-    // This prevents repeated full D3 layout passes (500ms+ each) that happen
-    // when React re-renders for unrelated state changes.
     if (!args.initialRender && !args.resetPosition) {
       return;
     }
 
-    // Wait for animation to finish if animation is in progress.
-    if (!args.initialRender && this.animating) {
-      this.rerenderRequired = true;
-      this.rerenderProps = props;
-      this.rerenderResetPosition = args.resetPosition;
-      return;
-    }
-
     // Freeze changing selection after initial rendering.
-    if (!args.initialRender && props.freezeAnimation) {
+    if (this.chart && !args.initialRender && props.freezeAnimation) {
       return;
     }
 
-    if (args.initialRender || !this.chart) {
-      (select('#chart').node() as HTMLElement).innerHTML = '';
-      this.chart = createChart({
-        json: props.data,
-        chartType: getChartType(props.chartType),
-        renderer: getRendererType(props.chartType),
-        svgSelector: '#chart',
-        indiCallback: (info) => {
-          // ths is called when an individual is selected in the chart
-          if (info.modifiers?.shiftKey) {
-            // If the shift key is pressed, we just update the details tab without changing the selection in the chart.
-            // This allows users to quickly view details of multiple individuals without losing their place in the chart.
-            props.onDetailSelection(info);
-          } else {
-            // If the shift key is not pressed, we update the selection in the chart as usual.
-            props.onSelection(info);
-          }
-        },
-        colors:
-          props.colors !== undefined
-            ? chartColors.get(props.colors)
-            : undefined,
-        animate: true,
-        updateSvgSize: false,
-        locale: intl.locale,
+    ensureGoogleFontLoaded(props.fontFamily ?? DEFAULT_FONT_FAMILY);
+
+    if (!this.graph || this.lastData !== props.data) {
+      this.graph = createModelGraph(props.data);
+      this.lastData = props.data;
+    }
+
+    if (
+      this.lastChartType !== props.chartType ||
+      this.lastStartIndi !== props.selection.id
+    ) {
+      this.collapsed.clear();
+      this.lastChartType = props.chartType;
+      this.lastStartIndi = props.selection.id;
+    }
+
+    const isFirstMount = !this.chart;
+    const shouldAnimate =
+      !isFirstMount &&
+      !args.initialRender &&
+      props.chartType !== ChartType.Fancy;
+
+    // The viewport follows from handleLayout.
+    this.resetPositionOnLayout = args.resetPosition;
+    const viewState = this.viewState(props);
+    let chart = this.chart;
+    if (!chart) {
+      const containerNode = select('#chart').node() as HTMLElement | null;
+      if (containerNode) {
+        containerNode.innerHTML = '';
+      }
+      chart = createChart<ViewerChartTheme>({
+        svg: '#chart',
+        config: this.buildConfig(props, this.graph, intl, false),
       });
+      this.chart = chart;
+      chart.update(viewState);
+    } else if (args.initialRender) {
+      // A different look or different data: nothing of the old config stays.
+      chart.setConfig(
+        this.buildConfig(props, this.graph, intl, false),
+        viewState,
+      );
     } else {
-      this.chart.setData(props.data);
-    }
-    const chartInfo = this.chart.render({
-      startIndi: props.selection.id,
-      baseGeneration: props.selection.generation,
-    });
-    const svg = select('#chartSvg');
-    const parent = select('#svgContainer').node() as Element;
-    const scale = zoomTransform(parent).k;
-    const extent: [number, number] = calculateScaleExtent(
-      parent,
-      scale,
-      chartInfo,
-    );
-
-    this.zoomBehavior = zoom()
-      .scaleExtent(extent)
-      .translateExtent([[0, 0], chartInfo.size])
-      .on('zoom', (event) => zoomed(chartInfo.size, event));
-
-    select(parent).on('scroll', scrolled).call(this.zoomBehavior);
-
-    const scrollTopTween = (scrollTop: number) => {
-      return () => {
-        const i = interpolateNumber(parent.scrollTop, scrollTop);
-        return (t: number) => {
-          parent.scrollTop = i(t);
-        };
-      };
-    };
-    const scrollLeftTween = (scrollLeft: number) => {
-      return () => {
-        const i = interpolateNumber(parent.scrollLeft, scrollLeft);
-        return (t: number) => {
-          parent.scrollLeft = i(t);
-        };
-      };
-    };
-
-    const dx = parent.clientWidth / 2 - chartInfo.origin[0] * scale;
-    const dy = parent.clientHeight / 2 - chartInfo.origin[1] * scale;
-    const offsetX = max([
-      0,
-      (parent.clientWidth - chartInfo.size[0] * scale) / 2,
-    ]);
-    const offsetY = max([
-      0,
-      (parent.clientHeight - chartInfo.size[1] * scale) / 2,
-    ]);
-    const svgTransition = svg.transition().delay(200).duration(500);
-    const transition = args.initialRender ? svg : svgTransition;
-    transition.attr('transform', `translate(${offsetX}, ${offsetY})`);
-    transition.attr('width', chartInfo.size[0] * scale);
-    transition.attr('height', chartInfo.size[1] * scale);
-    if (args.resetPosition) {
-      if (args.initialRender) {
-        parent.scrollLeft = -dx;
-        parent.scrollTop = -dy;
-      } else {
-        svgTransition
-          .tween('scrollLeft', scrollLeftTween(-dx))
-          .tween('scrollTop', scrollTopTween(-dy));
-      }
+      chart.patchConfig({animate: shouldAnimate});
+      chart.update(viewState);
     }
 
-    // After the animation is finished, rerender the chart if required.
-    this.animating = true;
-    chartInfo.animationPromise.then(() => {
-      this.animating = false;
-      if (this.rerenderRequired) {
-        this.rerenderRequired = false;
-        // Use `this.rerenderProps` instead of the props in scope because
-        // the props may have been updated in the meantime.
-        if (this.rerenderProps) {
-          this.renderChart(this.rerenderProps, intl, {
-            initialRender: false,
-            resetPosition: !!this.rerenderResetPosition,
-          });
-        } else {
-          console.error(
-            'Rerender required after animation, but rerenderProps was not set.',
-          );
-        }
-      }
-    });
+    if (props.chartType !== ChartType.Fancy) {
+      chart.patchConfig({animate: true});
+    }
   }
 }
 

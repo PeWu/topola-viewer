@@ -3,6 +3,11 @@ import 'd3-transition';
 import {zoomTransform} from 'd3-zoom';
 import {saveAs} from 'file-saver';
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Cache of fetched font URLs mapped to `data:font/woff2;base64,...` data URLs. */
+const fontDataUrlCache = new Map<string, Promise<string | null>>();
+
 /** Loads blob as data URL. */
 function loadAsDataUrl(blob: Blob): Promise<string> {
   const reader = new FileReader();
@@ -12,9 +17,197 @@ function loadAsDataUrl(blob: Blob): Promise<string> {
   });
 }
 
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+}
+
+function inferFontMimeType(url: string, contentType: string | null): string {
+  const cleanUrl = url.split(/[?#]/)[0].toLowerCase();
+  if (cleanUrl.endsWith('.woff2') || contentType?.includes('woff2')) {
+    return 'font/woff2';
+  }
+  if (cleanUrl.endsWith('.woff') || contentType?.includes('woff')) {
+    return 'font/woff';
+  }
+  if (cleanUrl.endsWith('.ttf') || contentType?.includes('ttf')) {
+    return 'font/ttf';
+  }
+  return 'font/woff2';
+}
+
+function fetchFontAsDataUrl(resolvedUrl: string): Promise<string | null> {
+  const cached = fontDataUrlCache.get(resolvedUrl);
+  if (cached) {
+    return cached;
+  }
+  const pending = (async () => {
+    try {
+      const response = await fetch(resolvedUrl);
+      if (!response.ok) {
+        return null;
+      }
+      const buffer = await response.arrayBuffer();
+      const mime = inferFontMimeType(
+        resolvedUrl,
+        response.headers.get('content-type'),
+      );
+      return `data:${mime};base64,${arrayBufferToBase64(buffer)}`;
+    } catch (e) {
+      console.warn('Failed to load font:', e);
+      return null;
+    }
+  })();
+  fontDataUrlCache.set(resolvedUrl, pending);
+  return pending;
+}
+
+interface CollectedFontFaceRule {
+  cssText: string;
+  baseUrl: string;
+}
+
+async function collectDocumentFontFaceRules(): Promise<
+  CollectedFontFaceRule[]
+> {
+  if (typeof document === 'undefined' || !document.styleSheets) {
+    return [];
+  }
+  const collected: CollectedFontFaceRule[] = [];
+  for (const sheet of Array.from(document.styleSheets)) {
+    const baseUrl = sheet.href || document.baseURI;
+    try {
+      const rules = sheet.cssRules;
+      for (const rule of Array.from(rules)) {
+        if (rule.type === CSSRule.FONT_FACE_RULE) {
+          collected.push({cssText: rule.cssText, baseUrl});
+        }
+      }
+    } catch (_e) {
+      if (sheet.href) {
+        try {
+          const resp = await fetch(sheet.href);
+          if (resp.ok) {
+            const css = await resp.text();
+            const matches = css.match(/@font-face\s*\{[^}]*\}/gi) ?? [];
+            for (const block of matches) {
+              collected.push({cssText: block, baseUrl: sheet.href});
+            }
+          }
+        } catch (_fetchErr) {
+          // Ignore inaccessible cross-origin stylesheet.
+        }
+      }
+    }
+  }
+  return collected;
+}
+
+function extractRuleFontFamily(ruleCss: string): string | null {
+  const match = /font-family\s*:\s*([^;}]+)/i.exec(ruleCss);
+  if (!match) {
+    return null;
+  }
+  return match[1]
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .toLowerCase();
+}
+
+/**
+ * Inspects active `@font-face` rules in `document.styleSheets` matching the
+ * chart's font stack, fetches `.woff2` font files, and embeds them as
+ * `data:font/woff2;base64,...` rules inside the SVG's `<style>` element so
+ * standalone `.svg` files and `<img src="blob:...svg">` PNG exports preserve
+ * exact web font metrics.
+ */
+export async function inlineFonts(svg: Element): Promise<void> {
+  const styleElements = Array.from(svg.querySelectorAll('style'));
+  const svgStyleText = styleElements
+    .map((el) => el.textContent ?? '')
+    .join('\n')
+    .toLowerCase();
+
+  const rules = await collectDocumentFontFaceRules();
+  if (rules.length === 0) {
+    return;
+  }
+
+  const matchingRules = rules.filter((r) => {
+    if (!/src\s*:/i.test(r.cssText)) {
+      return false;
+    }
+    const family = extractRuleFontFamily(r.cssText);
+    if (!family) {
+      return false;
+    }
+    return !svgStyleText || svgStyleText.includes(family);
+  });
+
+  if (matchingRules.length === 0) {
+    return;
+  }
+
+  const inlinedBlocks = await Promise.all(
+    matchingRules.map(async ({cssText, baseUrl}) => {
+      const urlRegex = /url\(\s*(?:"([^"]+)"|'([^']+)'|([^)\s]+))\s*\)/gi;
+      const replacements = new Map<string, string>();
+      let match: RegExpExecArray | null;
+      while ((match = urlRegex.exec(cssText)) !== null) {
+        const fullMatch = match[0];
+        const rawUrl = match[1] ?? match[2] ?? match[3] ?? '';
+        if (!rawUrl || /^data:/i.test(rawUrl)) {
+          continue;
+        }
+        try {
+          const resolvedUrl = new URL(rawUrl, baseUrl).href;
+          const dataUrl = await fetchFontAsDataUrl(resolvedUrl);
+          if (dataUrl) {
+            replacements.set(fullMatch, `url("${dataUrl}")`);
+          }
+        } catch (_e) {
+          // Leave malformed URL unchanged.
+        }
+      }
+      if (replacements.size === 0 && !/url\(\s*["']?data:/i.test(cssText)) {
+        return null;
+      }
+      let updated = cssText;
+      replacements.forEach((replacement, original) => {
+        updated = updated.split(original).join(replacement);
+      });
+      return updated;
+    }),
+  );
+
+  const validBlocks = inlinedBlocks.filter(
+    (block): block is string => block !== null,
+  );
+  if (validBlocks.length === 0) {
+    return;
+  }
+
+  const targetStyle = styleElements[0];
+  if (targetStyle) {
+    targetStyle.textContent = `${validBlocks.join('\n')}\n${
+      targetStyle.textContent ?? ''
+    }`;
+  } else {
+    const newStyle = document.createElementNS(SVG_NS, 'style');
+    newStyle.textContent = validBlocks.join('\n');
+    svg.prepend(newStyle);
+  }
+}
+
 async function inlineImage(image: SVGImageElement) {
   const href = image.href.baseVal;
-  if (!href) {
+  if (!href || /^data:/i.test(href)) {
     return;
   }
   try {
@@ -40,9 +233,17 @@ async function inlineImages(svg: Element): Promise<void> {
 /** Loads a blob into an image object. */
 function loadImage(blob: Blob): Promise<HTMLImageElement> {
   const image = new Image();
-  image.src = URL.createObjectURL(blob);
-  return new Promise<HTMLImageElement>((resolve, _reject) => {
-    image.addEventListener('load', () => resolve(image));
+  const objectUrl = URL.createObjectURL(blob);
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    image.addEventListener('load', () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    });
+    image.addEventListener('error', (err) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(err);
+    });
+    image.src = objectUrl;
   });
 }
 
@@ -95,14 +296,10 @@ function getStrippedSvg() {
   return svg;
 }
 
-function getSvgContents() {
-  return new XMLSerializer().serializeToString(getStrippedSvg());
-}
-
 /**
- * Returns the serialized chart SVG with a white background and all images
- * inlined as data URLs, together with the chart's true (unscaled) width and
- * height in pixels.
+ * Returns the serialized chart SVG with a white background and all images and
+ * active web fonts inlined as data URLs, together with the chart's true
+ * (unscaled) width and height in pixels.
  *
  * The dimensions are read from the stripped SVG (i.e. with the d3-zoom scale
  * divided out), NOT from the live `#chartSvg` element, whose `width`/`height`
@@ -111,7 +308,7 @@ function getSvgContents() {
  * reading the live element, otherwise the output is sized to the on-screen
  * zoomed viewport and ends up truncated.
  */
-async function getSvgContentsWithInlinedImages(): Promise<{
+export async function getSvgContentsWithInlinedImages(): Promise<{
   contents: string;
   width: number;
   height: number;
@@ -122,8 +319,7 @@ async function getSvgContentsWithInlinedImages(): Promise<{
 
   // Set white background because the default background of the SVG
   // is transparent, which causes issues when printing or exporting to PDF.
-  const svgNs = 'http://www.w3.org/2000/svg';
-  const rect = document.createElementNS(svgNs, 'rect');
+  const rect = document.createElementNS(SVG_NS, 'rect');
   rect.setAttribute('x', '0');
   rect.setAttribute('y', '0');
   rect.setAttribute('width', '100%');
@@ -131,20 +327,21 @@ async function getSvgContentsWithInlinedImages(): Promise<{
   rect.setAttribute('fill', 'white');
   svg.prepend(rect);
 
-  await inlineImages(svg);
+  await Promise.all([inlineImages(svg), inlineFonts(svg)]);
   const contents = new XMLSerializer().serializeToString(svg);
   return {contents, width, height};
 }
 
 /** Shows the print dialog to print the currently displayed chart. */
-export function printChart() {
+export async function printChart() {
+  const {contents} = await getSvgContentsWithInlinedImages();
   const printWindow = document.createElement('iframe');
   printWindow.style.position = 'absolute';
   printWindow.style.top = '-1000px';
   printWindow.style.left = '-1000px';
   printWindow.onload = () => {
     printWindow.contentDocument?.open();
-    printWindow.contentDocument?.write(getSvgContents());
+    printWindow.contentDocument?.write(contents);
     printWindow.contentDocument?.close();
     // Doesn't work on Firefox without the setTimeout.
     setTimeout(() => {
