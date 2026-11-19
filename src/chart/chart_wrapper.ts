@@ -11,6 +11,7 @@ import {
 } from 'd3-zoom';
 import {IntlShape} from 'react-intl';
 import {ChartHandle, ChartInfo, createChart} from 'topola';
+import {Occupations, Titles} from '../sidepanel/config/config';
 import {
   chartColors,
   ChartProps,
@@ -170,6 +171,8 @@ export class ChartWrapper {
         animate: true,
         updateSvgSize: false,
         locale: intl.locale,
+        showOccupations: props.occupations === Occupations.SHOW,
+        showTitles: props.titles === Titles.SHOW,
       });
     } else {
       this.chart.setData(props.data);

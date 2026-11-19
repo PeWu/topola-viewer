@@ -183,6 +183,8 @@ export function ViewPage() {
         colors={config.color}
         hideIds={config.id}
         hideSex={config.sex}
+        occupations={config.occupations}
+        titles={config.titles}
         placeDisplay={config.place}
         placeCount={config.placeCount}
         onFirstRender={() => setLoadingStatus('')}
