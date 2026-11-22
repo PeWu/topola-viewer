@@ -11,6 +11,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v7
+    - name: Checkout v4 branch
+      uses: actions/checkout@v7
+      with:
+        ref: v4
+        path: _v4
     - name: Use Node.js
       uses: actions/setup-node@v6
       with:
@@ -22,10 +27,22 @@ jobs:
         VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
+    - name: Build v4 preview
+      working-directory: _v4
+      run: |
+        npm ci
+        npm run build
+      env:
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
+    - name: Bundle v4 into dist/v4
+      run: cp -r _v4/dist dist/v4
+
     - name: Deploy
       run: |
         git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-        npm run deploy -- -u "github-actions-bot <support+actions@github.com>"
+        npx gh-pages -d dist -u "github-actions-bot <support+actions@github.com>"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}

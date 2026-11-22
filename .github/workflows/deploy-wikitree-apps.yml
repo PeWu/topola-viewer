@@ -11,6 +11,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v7
+    - name: Checkout v4 branch
+      uses: actions/checkout@v7
+      with:
+        ref: v4
+        path: _v4
     - name: Use Node.js
       uses: actions/setup-node@v6
       with:
@@ -22,12 +27,24 @@ jobs:
         VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
+    - name: Build v4 preview
+      working-directory: _v4
+      run: |
+        npm ci
+        npm run build
+      env:
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
+    - name: Bundle v4 into dist/v4
+      run: cp -r _v4/dist dist/v4
+
     - name: Install lftp
       run: sudo apt-get install -y lftp
     - name: Set up ssh
       run: |
         mkdir ~/.ssh
         echo 'apps-sftp.wikitree.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFr/n45SqtcLL2xou61C6UdmSeCYrQ01UlvS7ZzleFOD' >> ~/.ssh/known_hosts
-    - run: npm run deploy-wikitree
+    - run: ./deploy-wikitree.sh
       env:
         LFTP_PASSWORD: ${{ secrets.WIKITREE_PASSWORD }}
