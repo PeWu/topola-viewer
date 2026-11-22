@@ -1,12 +1,12 @@
 import {GedcomEntry} from 'parse-gedcom';
 import {
   DateOrRange,
+  DateValue,
   EventRecord,
   FamilyRecord,
-  ModelData,
   MediaRecord,
+  ModelData,
   PersonRecord,
-  DateValue,
 } from 'topola/model';
 import {isValidDateOrRange} from '../util/date_util';
 import {GedcomData} from '../util/gedcom_util';

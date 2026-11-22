@@ -5,14 +5,14 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, v4 ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, v4 ]
 
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout repository

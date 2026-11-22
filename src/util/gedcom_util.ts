@@ -3,8 +3,8 @@ import {gedcomEntriesToModel, parseGedcomDate} from 'topola/gedcom';
 import {
   DateOrRange,
   FamilyRecord,
-  ModelData,
   MediaRecord,
+  ModelData,
   PersonRecord,
 } from 'topola/model';
 import {compareDates} from './date_util';
@@ -258,7 +258,10 @@ export function resolveFileUrl(
   return normalizedUrl;
 }
 
-function filterImage(indi: PersonRecord, images: Map<string, string>): PersonRecord {
+function filterImage(
+  indi: PersonRecord,
+  images: Map<string, string>,
+): PersonRecord {
   if (!indi.images || indi.images.length === 0) {
     return indi;
   }

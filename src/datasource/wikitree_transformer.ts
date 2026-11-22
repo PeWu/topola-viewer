@@ -1,11 +1,11 @@
 import {IntlShape} from 'react-intl';
 import {
   DateOrRange,
+  DateValue,
   EventRecord,
   FamilyRecord,
   MediaRecord,
   PersonRecord,
-  DateValue,
 } from 'topola/model';
 import {StringUtils} from 'turbocommons-ts';
 import {Person} from 'wikitree-js';
@@ -87,7 +87,10 @@ function getSpouses(people: Person[]) {
  * @param intl Intl shape for localization.
  * @returns List of PersonRecord objects.
  */
-export function convertIndis(people: Person[], intl: IntlShape): PersonRecord[] {
+export function convertIndis(
+  people: Person[],
+  intl: IntlShape,
+): PersonRecord[] {
   const families = getFamilies(people);
   return people.map((person) => {
     const indi = convertPerson(person, intl);

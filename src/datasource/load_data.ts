@@ -16,10 +16,7 @@ import {getStoredGedcom} from './gedcom_store';
  * Returns a valid IndiInfo object, either with the given indi and generation
  * or with an individual taken from the data and generation 0.
  */
-export function getSelection(
-  data: ModelData,
-  selection?: IndiInfo,
-): IndiInfo {
+export function getSelection(data: ModelData, selection?: IndiInfo): IndiInfo {
   // If ID is not given or it doesn't exist in the data, use the first ID in
   // the data.
   const id =
