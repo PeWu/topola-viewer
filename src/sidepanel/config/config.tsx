@@ -23,12 +23,21 @@ export enum Sex {
   SHOW,
 }
 
+/** How to show QUAY source quality in the chart. */
+export enum Confidence {
+  HIDE,
+  SHOW,
+  /** Also pass weak parent links on to relatives beyond them. */
+  PROPAGATE,
+}
+
 export interface Config {
   color: ChartColors;
   id: Ids;
   sex: Sex;
   place: PlaceDisplay;
   placeCount: number;
+  confidence: Confidence;
 }
 
 export const DEFALUT_CONFIG: Config = {
@@ -37,6 +46,7 @@ export const DEFALUT_CONFIG: Config = {
   sex: Sex.SHOW,
   place: PlaceDisplay.FULL,
   placeCount: DEFAULT_PLACE_DISPLAY_COUNT,
+  confidence: Confidence.SHOW,
 };
 
 const COLOR_ARG = new Map<string, ChartColors>([
@@ -69,6 +79,14 @@ const PLACE_ARG = new Map<string, PlaceDisplay>([
 const PLACE_ARG_INVERSE = new Map<PlaceDisplay, string>();
 PLACE_ARG.forEach((v, k) => PLACE_ARG_INVERSE.set(v, k));
 
+const CONFIDENCE_ARG = new Map<string, Confidence>([
+  ['h', Confidence.HIDE],
+  ['s', Confidence.SHOW],
+  ['p', Confidence.PROPAGATE],
+]);
+const CONFIDENCE_ARG_INVERSE = new Map<Confidence, string>();
+CONFIDENCE_ARG.forEach((v, k) => CONFIDENCE_ARG_INVERSE.set(v, k));
+
 export function argsToConfig(args: ParsedQuery<unknown>): Config {
   const getParam = (name: string) => {
     const value = args[name];
@@ -82,6 +100,8 @@ export function argsToConfig(args: ParsedQuery<unknown>): Config {
     sex: SEX_ARG.get(getParam('s') ?? '') ?? DEFALUT_CONFIG.sex,
     place: PLACE_ARG.get(getParam('p') ?? '') ?? DEFALUT_CONFIG.place,
     placeCount: placeCount >= 1 ? placeCount : DEFALUT_CONFIG.placeCount,
+    confidence:
+      CONFIDENCE_ARG.get(getParam('q') ?? '') ?? DEFALUT_CONFIG.confidence,
   };
 }
 
@@ -108,6 +128,10 @@ export function configToArgs(config: Config): ParsedQuery {
     config.placeCount !== DEFALUT_CONFIG.placeCount
   ) {
     result.pn = String(config.placeCount);
+  }
+  const confidence = CONFIDENCE_ARG_INVERSE.get(config.confidence);
+  if (confidence && config.confidence !== DEFALUT_CONFIG.confidence) {
+    result.q = confidence;
   }
   return result;
 }
@@ -344,6 +368,79 @@ export function ConfigPanel(props: {
                 }
               />
             </Form.Field>
+          </Item.Content>
+        </Item>
+        <Item>
+          <Item.Content>
+            <Header sub>
+              <FormattedMessage
+                id="config.confidence"
+                defaultMessage="Source quality"
+              />
+            </Header>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.confidence.HIDE"
+                    defaultMessage="hide"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="hide"
+                checked={props.config.confidence === Confidence.HIDE}
+                onClick={() =>
+                  props.onChange({...props.config, confidence: Confidence.HIDE})
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.confidence.SHOW"
+                    defaultMessage="show"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="show"
+                checked={props.config.confidence === Confidence.SHOW}
+                onClick={() =>
+                  props.onChange({...props.config, confidence: Confidence.SHOW})
+                }
+              />
+            </Form.Field>
+            <Form.Field className="no-margin">
+              <Checkbox
+                radio
+                label={
+                  <FormattedMessage
+                    tagName="label"
+                    id="config.confidence.PROPAGATE"
+                    defaultMessage="show, and pass weak parent links on to everyone beyond them"
+                  />
+                }
+                name="checkboxRadioGroup"
+                value="propagate"
+                checked={props.config.confidence === Confidence.PROPAGATE}
+                onClick={() =>
+                  props.onChange({
+                    ...props.config,
+                    confidence: Confidence.PROPAGATE,
+                  })
+                }
+              />
+            </Form.Field>
+            <Item.Description>
+              <FormattedMessage
+                id="config.confidence.legend"
+                defaultMessage="Uses the best QUAY rating among a fact's sources. Dashed border: secondary source (2). Dotted, faded box: questionable (1) or unreliable (0). A ? follows dates backed only by weak sources."
+              />
+            </Item.Description>
           </Item.Content>
         </Item>
       </Item.Group>

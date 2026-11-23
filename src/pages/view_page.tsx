@@ -185,6 +185,7 @@ export function ViewPage() {
         hideSex={config.sex}
         placeDisplay={config.place}
         placeCount={config.placeCount}
+        confidence={config.confidence}
         onFirstRender={() => setLoadingStatus('')}
       />
     );

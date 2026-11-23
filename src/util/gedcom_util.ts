@@ -34,6 +34,8 @@ export interface Source {
   page?: string;
   date?: DateOrRange;
   publicationInfo?: string;
+  /** GEDCOM QUAY value of the citation (0-3). */
+  quality?: number;
 }
 
 /**
@@ -449,12 +451,18 @@ export function mapToSource(
 
   const date = sourceData ? resolveDate(sourceData) : undefined;
 
+  const quay = sourceEntryReference.tree.find(
+    (subEntry) => 'QUAY' === subEntry.tag,
+  );
+  const quality = quay ? parseInt(quay.data, 10) : NaN;
+
   return {
     title: title?.data || abbr?.data,
     author: author?.data,
     page: page?.data,
     date: date ? getDate(date.data) : undefined,
     publicationInfo: publicationInfo?.data,
+    quality: quality >= 0 && quality <= 3 ? quality : undefined,
   };
 }
 
