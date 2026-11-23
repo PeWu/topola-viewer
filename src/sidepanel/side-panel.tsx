@@ -10,6 +10,7 @@ interface SidePanelProps {
   selectedIndiId: string;
   config: Config;
   onConfigChange: (config: Config) => void;
+  onExpandAll?: () => void;
   expanded: boolean;
   onToggle: () => void;
 }
@@ -19,6 +20,7 @@ export function SidePanel({
   selectedIndiId,
   config,
   onConfigChange,
+  onExpandAll,
   expanded,
   onToggle,
 }: SidePanelProps) {
@@ -49,6 +51,7 @@ export function SidePanel({
           gedcom={data.gedcom}
           config={config}
           onChange={onConfigChange}
+          onExpandAll={onExpandAll}
         />
       ),
     },

@@ -2,7 +2,15 @@ import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import * as H from 'history';
 import {ChartType} from '../chart/chart_types';
 import {DataSourceEnum} from '../datasource/data_source';
-import {ChartColors, Ids, PlaceDisplay, Sex} from '../sidepanel/config/config';
+import {
+  ChartColors,
+  configToArgs,
+  DEFALUT_CONFIG,
+  GenerationLimit,
+  Ids,
+  PlaceDisplay,
+  Sex,
+} from '../sidepanel/config/config';
 import {
   getArguments,
   getParamFromSearch,
@@ -119,6 +127,10 @@ describe('url_args', () => {
         sex: Sex.SHOW,
         place: PlaceDisplay.FULL,
         placeCount: 2,
+        generationsUp: GenerationLimit.ALL,
+        generationsUpCount: 3,
+        generationsDown: GenerationLimit.ALL,
+        generationsDownCount: 3,
       });
     });
 
@@ -279,7 +291,32 @@ describe('url_args', () => {
         sex: Sex.HIDE,
         place: PlaceDisplay.SHORT,
         placeCount: 5,
+        generationsUp: GenerationLimit.ALL,
+        generationsUpCount: 3,
+        generationsDown: GenerationLimit.ALL,
+        generationsDownCount: 3,
       });
+    });
+
+    it('parses generation limits from query parameters', () => {
+      const args = getArguments(createLocation('?gu=4&gd=0'));
+      expect(args.config).toMatchObject({
+        generationsUp: GenerationLimit.LIMITED,
+        generationsUpCount: 4,
+        generationsDown: GenerationLimit.LIMITED,
+        generationsDownCount: 0,
+      });
+      expect(configToArgs(args.config)).toMatchObject({gu: '4', gd: '0'});
+    });
+
+    it('ignores invalid generation limits', () => {
+      const args = getArguments(createLocation('?gu=-1&gd=abc'));
+      expect(args.config).toMatchObject({
+        generationsUp: GenerationLimit.ALL,
+        generationsDown: GenerationLimit.ALL,
+      });
+      // Removed from the URL.
+      expect(configToArgs(args.config)).toMatchObject({gu: null, gd: null});
     });
   });
 
@@ -290,6 +327,20 @@ describe('url_args', () => {
       hash: '#hash-val',
       state: null,
       key: '',
+    });
+
+    it('removes settings changed back to their default value', () => {
+      const loc = createLocation('?url=x&p=s&pn=3');
+      const updated = getUrlForArgs(
+        loc,
+        configToArgs({...DEFALUT_CONFIG, place: PlaceDisplay.FULL}),
+      );
+      expect(updated.search).not.toContain('p=');
+      expect(updated.search).not.toContain('pn=');
+      expect(updated.search).toContain('url=x');
+      expect(getArguments(updated as H.Location).config.place).toBe(
+        PlaceDisplay.FULL,
+      );
     });
 
     it('updates query parameter value and preserves pathname/hash', () => {
