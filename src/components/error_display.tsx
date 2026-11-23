@@ -1,18 +1,23 @@
+import {Alert, Portal} from '@mantine/core';
 import {FormattedMessage} from 'react-intl';
-import {Message, Portal} from 'semantic-ui-react';
 
 /** Shows an error message in the middle of the screen. */
 export function ErrorMessage(props: {message?: string}) {
   return (
-    <Message negative className="error" data-testid="error-message">
-      <Message.Header>
+    <Alert
+      color="red"
+      title={
         <FormattedMessage
           id="error.failed_to_load_file"
           defaultMessage={'Failed to load file'}
         />
-      </Message.Header>
-      <p>{props.message}</p>
-    </Message>
+      }
+      className="error"
+      data-testid="error-message"
+      style={{maxWidth: 600, margin: 'auto'}}
+    >
+      {props.message}
+    </Alert>
   );
 }
 
@@ -26,19 +31,28 @@ export interface ErrorPopupProps {
  * Shows a dismissable error message in the bottom left corner of the screen.
  */
 export function ErrorPopup(props: ErrorPopupProps) {
+  if (!props.open) {
+    return null;
+  }
   return (
-    <Portal open={props.open} onClose={props.onDismiss}>
-      <Message
-        negative
+    <Portal>
+      <Alert
+        color="red"
+        withCloseButton
+        onClose={props.onDismiss}
+        title={<FormattedMessage id="error.error" defaultMessage={'Error'} />}
         className="errorPopup"
-        onDismiss={props.onDismiss}
         data-testid="error-popup"
+        style={{
+          position: 'fixed',
+          left: 40,
+          bottom: 40,
+          zIndex: 1000,
+          maxWidth: 400,
+        }}
       >
-        <Message.Header>
-          <FormattedMessage id="error.error" defaultMessage={'Error'} />
-        </Message.Header>
-        <p>{props.message}</p>
-      </Message>
+        {props.message}
+      </Alert>
     </Portal>
   );
 }

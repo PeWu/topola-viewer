@@ -1,6 +1,6 @@
+import {Text} from '@mantine/core';
 import {GedcomEntry} from 'parse-gedcom';
 import {FormattedMessage} from 'react-intl';
-import {Header, Item} from 'semantic-ui-react';
 import {parseGedcomDate} from 'topola/gedcom';
 import {compareDates} from '../../util/date_util';
 import {GedcomData, pointerToId, resolveDate} from '../../util/gedcom_util';
@@ -113,15 +113,24 @@ export function ImmediateFamily(props: Props) {
   }
 
   return (
-    <Item>
-      <Item.Content>
+    <div className="item">
+      <div className="content">
         <div className="item-header">
-          <Header as="span" size="small">
+          <Text
+            span
+            className="header"
+            fw={700}
+            style={{
+              fontSize: '15px',
+              lineHeight: 1.2857,
+              color: 'rgba(0, 0, 0, 0.87)',
+            }}
+          >
             <FormattedMessage
               id="family.immediate_family"
               defaultMessage="Immediate Family"
             />
-          </Header>
+          </Text>
         </div>
         {hasParents && (
           <div className="parents-block">
@@ -212,7 +221,7 @@ export function ImmediateFamily(props: Props) {
             </div>
           );
         })}
-      </Item.Content>
-    </Item>
+      </div>
+    </div>
   );
 }

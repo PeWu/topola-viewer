@@ -1,8 +1,8 @@
+import {Button, Group, Modal, Stack, TextInput} from '@mantine/core';
 import queryString from 'query-string';
 import {useEffect, useRef, useState} from 'react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import {useLocation, useNavigate} from 'react-router';
-import {Button, Form, Header, Input, Modal} from 'semantic-ui-react';
 import {getLoggedInUserName, navigateToLoginPage} from 'wikitree-js';
 import {analyticsEvent} from '../util/analytics';
 import {WIKITREE_TOPOLA_URL} from '../util/wikitree_util';
@@ -17,14 +17,14 @@ interface Props {
 export function WikiTreeMenu(props: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [wikiTreeId, setWikiTreeId] = useState('');
-  const inputRef = useRef<Input>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     if (dialogOpen) {
       setWikiTreeId('');
-      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [dialogOpen]);
 
@@ -57,24 +57,33 @@ export function WikiTreeMenu(props: Props) {
   function wikiTreeIdModal() {
     return (
       <Modal
-        open={dialogOpen}
+        opened={dialogOpen}
         onClose={() => setDialogOpen(false)}
         centered={false}
+        size="lg"
+        withCloseButton={false}
+        title={
+          <Group gap="xs">
+            <img
+              src={wikitreeLogo}
+              alt="WikiTree logo"
+              style={{width: '32px', height: '32px'}}
+            />
+            <FormattedMessage
+              id="select_wikitree_id.title"
+              defaultMessage="Select WikiTree ID"
+            />
+          </Group>
+        }
       >
-        <Header>
-          <img
-            src={wikitreeLogo}
-            alt="WikiTree logo"
-            style={{width: '32px', height: '32px'}}
-          />
-          <FormattedMessage
-            id="select_wikitree_id.title"
-            defaultMessage="Select WikiTree ID"
-          />
-        </Header>
-        <Modal.Content>
-          <Form onSubmit={handleSelectId}>
-            <p>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSelectId();
+          }}
+        >
+          <Stack gap="md">
+            <p style={{margin: 0}}>
               <FormattedMessage
                 id="select_wikitree_id.comment"
                 defaultMessage={
@@ -109,35 +118,39 @@ export function WikiTreeMenu(props: Props) {
                 }}
               />
             </p>
-            <Input
-              fluid
+            <TextInput
               value={wikiTreeId}
-              onChange={(_, data) => setWikiTreeId(data.value)}
+              onChange={(e) => setWikiTreeId(e.currentTarget.value)}
               ref={inputRef}
+              data-autofocus
             />
-          </Form>
-        </Modal.Content>
-        <Modal.Actions>
-          <Button secondary onClick={() => setDialogOpen(false)}>
-            <FormattedMessage
-              id="select_wikitree_id.cancel"
-              defaultMessage="Cancel"
-            />
-          </Button>
-          <Button primary onClick={handleSelectId}>
-            <FormattedMessage
-              id="select_wikitree_id.load"
-              defaultMessage="Load"
-            />
-          </Button>
-        </Modal.Actions>
+            <Group justify="flex-end" gap="xs">
+              <Button variant="default" onClick={() => setDialogOpen(false)}>
+                <FormattedMessage
+                  id="select_wikitree_id.cancel"
+                  defaultMessage="Cancel"
+                />
+              </Button>
+              <Button type="submit">
+                <FormattedMessage
+                  id="select_wikitree_id.load"
+                  defaultMessage="Load"
+                />
+              </Button>
+            </Group>
+          </Stack>
+        </form>
       </Modal>
     );
   }
 
   return (
     <>
-      <MenuItem menuType={props.menuType} onClick={() => setDialogOpen(true)}>
+      <MenuItem
+        menuType={props.menuType}
+        onClick={() => setDialogOpen(true)}
+        closeMenuOnClick={false}
+      >
         <img src={wikitreeLogo} alt="WikiTree logo" className="menu-icon" />
         <FormattedMessage
           id="menu.select_wikitree_id"

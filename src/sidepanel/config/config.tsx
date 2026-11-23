@@ -1,6 +1,6 @@
+import {Radio, Stack, Text} from '@mantine/core';
 import {ParsedQuery} from 'query-string';
 import {FormattedMessage} from 'react-intl';
-import {Checkbox, Form, Header, Input, Item} from 'semantic-ui-react';
 import type {ColorTarget} from 'topola/toolkit';
 import {GedcomData} from '../../util/gedcom_util';
 import {DEFAULT_PLACE_DISPLAY_COUNT, PlaceDisplay} from '../../util/place_util';
@@ -199,339 +199,291 @@ export function configToArgs(config: Config): ParsedQuery {
 export function ConfigPanel(props: {
   gedcom: GedcomData;
   config: Config;
-  onChange: (config: Config) => void;
+  onChange: (patch: Partial<Config>) => void;
 }) {
   return (
-    <Form className="details">
-      <Item.Group>
+    <form className="details" onSubmit={(e) => e.preventDefault()}>
+      <Stack gap={14}>
         {SourceHead(props.gedcom)}
-        <Item>
-          <Item.Content>
-            <Header sub>
-              <FormattedMessage id="config.colors" defaultMessage="Colors" />
-            </Header>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+        <div className="item" style={{padding: '0 15px 0 25px'}}>
+          <Text className="sub-header" size="xs" fw={700} tt="uppercase" mb={4}>
+            <FormattedMessage id="config.colors" defaultMessage="Colors" />
+          </Text>
+          <Radio.Group
+            value={
+              props.config.color === ChartColors.NO_COLOR
+                ? 'none'
+                : props.config.color === ChartColors.COLOR_BY_GENERATION
+                  ? 'generation'
+                  : 'gender'
+            }
+            onChange={(val) => {
+              const color =
+                val === 'none'
+                  ? ChartColors.NO_COLOR
+                  : val === 'generation'
+                    ? ChartColors.COLOR_BY_GENERATION
+                    : ChartColors.COLOR_BY_SEX;
+              props.onChange({color});
+            }}
+          >
+            <Stack gap={4}>
+              <Radio
+                value="none"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.colors.NO_COLOR"
                     defaultMessage="none"
                   />
                 }
-                name="checkboxRadioGroup"
-                value="none"
-                checked={props.config.color === ChartColors.NO_COLOR}
-                onClick={() =>
-                  props.onChange({
-                    ...props.config,
-                    color: ChartColors.NO_COLOR,
-                  })
-                }
               />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+              <Radio
+                value="generation"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.colors.COLOR_BY_GENERATION"
                     defaultMessage="by generation"
                   />
                 }
-                name="checkboxRadioGroup"
-                value="generation"
-                checked={props.config.color === ChartColors.COLOR_BY_GENERATION}
-                onClick={() =>
-                  props.onChange({
-                    ...props.config,
-                    color: ChartColors.COLOR_BY_GENERATION,
-                  })
-                }
               />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+              <Radio
+                value="gender"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.colors.COLOR_BY_SEX"
                     defaultMessage="by sex"
                   />
                 }
-                name="checkboxRadioGroup"
-                value="gender"
-                checked={props.config.color === ChartColors.COLOR_BY_SEX}
-                onClick={() =>
-                  props.onChange({
-                    ...props.config,
-                    color: ChartColors.COLOR_BY_SEX,
-                  })
-                }
               />
-            </Form.Field>
-          </Item.Content>
-        </Item>
-        <Item>
-          <Item.Content>
-            <Header sub>
-              <FormattedMessage
-                id="config.colorTarget"
-                defaultMessage="Color style"
-              />
-            </Header>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+            </Stack>
+          </Radio.Group>
+        </div>
+
+        <div className="item" style={{padding: '0 15px 0 25px'}}>
+          <Text className="sub-header" size="xs" fw={700} tt="uppercase" mb={4}>
+            <FormattedMessage
+              id="config.colorTarget"
+              defaultMessage="Color style"
+            />
+          </Text>
+          <Radio.Group
+            value={props.config.colorTarget}
+            onChange={(val) => {
+              if (val === 'background' || val === 'frame' || val === 'name') {
+                props.onChange({colorTarget: val});
+              }
+            }}
+          >
+            <Stack gap={4}>
+              <Radio
+                value="background"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.colorTarget.background"
                     defaultMessage="background"
                   />
                 }
-                name="colorTargetRadioGroup"
-                value="background"
-                checked={props.config.colorTarget === 'background'}
-                onClick={() =>
-                  props.onChange({
-                    ...props.config,
-                    colorTarget: 'background',
-                  })
-                }
               />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+              <Radio
+                value="frame"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.colorTarget.frame"
                     defaultMessage="frame"
                   />
                 }
-                name="colorTargetRadioGroup"
-                value="frame"
-                checked={props.config.colorTarget === 'frame'}
-                onClick={() =>
-                  props.onChange({
-                    ...props.config,
-                    colorTarget: 'frame',
-                  })
-                }
               />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+              <Radio
+                value="name"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.colorTarget.name"
                     defaultMessage="name"
                   />
                 }
-                name="colorTargetRadioGroup"
-                value="name"
-                checked={props.config.colorTarget === 'name'}
-                onClick={() =>
-                  props.onChange({
-                    ...props.config,
-                    colorTarget: 'name',
-                  })
-                }
               />
-            </Form.Field>
-          </Item.Content>
-        </Item>
-        <Item>
-          <Item.Content>
-            <Header sub>
-              <FormattedMessage id="config.font" defaultMessage="Font" />
-            </Header>
-            <Form.Field className="no-margin">
-              <select
-                aria-label="Font"
-                value={props.config.fontFamily}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  if (isAllowedFont(next)) {
-                    props.onChange({
-                      ...props.config,
-                      fontFamily: next,
-                    });
-                  }
-                }}
-              >
-                {ALLOWED_FONTS.map((font) => (
-                  <option key={font} value={font}>
-                    {font}
-                  </option>
-                ))}
-              </select>
-            </Form.Field>
-          </Item.Content>
-        </Item>
-        <Item>
-          <Item.Content>
-            <Header sub>
-              <FormattedMessage id="config.ids" defaultMessage="IDs" />
-            </Header>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+            </Stack>
+          </Radio.Group>
+        </div>
+
+        <div className="item" style={{padding: '0 15px 0 25px'}}>
+          <Text className="sub-header" size="xs" fw={700} tt="uppercase" mb={4}>
+            <FormattedMessage id="config.font" defaultMessage="Font" />
+          </Text>
+          <select
+            aria-label="Font"
+            value={props.config.fontFamily}
+            style={{
+              width: '100%',
+              padding: '6px 10px',
+              fontSize: '13px',
+              lineHeight: 1.2,
+              color: 'rgba(0, 0, 0, 0.87)',
+              backgroundColor: '#fff',
+              border: '1px solid rgba(34, 36, 38, 0.15)',
+              borderRadius: 4,
+            }}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (isAllowedFont(next)) {
+                props.onChange({fontFamily: next});
+              }
+            }}
+          >
+            {ALLOWED_FONTS.map((font) => (
+              <option key={font} value={font}>
+                {font}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="item" style={{padding: '0 15px 0 25px'}}>
+          <Text className="sub-header" size="xs" fw={700} tt="uppercase" mb={4}>
+            <FormattedMessage id="config.ids" defaultMessage="IDs" />
+          </Text>
+          <Radio.Group
+            value={props.config.id === Ids.HIDE ? 'hide' : 'show'}
+            onChange={(val) =>
+              props.onChange({id: val === 'hide' ? Ids.HIDE : Ids.SHOW})
+            }
+          >
+            <Stack gap={4}>
+              <Radio
+                value="hide"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.ids.HIDE"
                     defaultMessage="hide"
                   />
                 }
-                name="checkboxRadioGroup"
-                value="hide"
-                checked={props.config.id === Ids.HIDE}
-                onClick={() => props.onChange({...props.config, id: Ids.HIDE})}
               />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+              <Radio
+                value="show"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.ids.SHOW"
                     defaultMessage="show"
                   />
                 }
-                name="checkboxRadioGroup"
-                value="show"
-                checked={props.config.id === Ids.SHOW}
-                onClick={() => props.onChange({...props.config, id: Ids.SHOW})}
               />
-            </Form.Field>
-          </Item.Content>
-        </Item>
-        <Item>
-          <Item.Content>
-            <Header sub>
-              <FormattedMessage id="config.sex" defaultMessage="Sex" />
-            </Header>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+            </Stack>
+          </Radio.Group>
+        </div>
+
+        <div className="item" style={{padding: '0 15px 0 25px'}}>
+          <Text className="sub-header" size="xs" fw={700} tt="uppercase" mb={4}>
+            <FormattedMessage id="config.sex" defaultMessage="Sex" />
+          </Text>
+          <Radio.Group
+            value={props.config.sex === Sex.HIDE ? 'hide' : 'show'}
+            onChange={(val) =>
+              props.onChange({sex: val === 'hide' ? Sex.HIDE : Sex.SHOW})
+            }
+          >
+            <Stack gap={4}>
+              <Radio
+                value="hide"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.sex.HIDE"
                     defaultMessage="hide"
                   />
                 }
-                name="checkboxRadioGroup"
-                value="hide"
-                checked={props.config.sex === Sex.HIDE}
-                onClick={() => props.onChange({...props.config, sex: Sex.HIDE})}
               />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+              <Radio
+                value="show"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.sex.SHOW"
                     defaultMessage="show"
                   />
                 }
-                name="checkboxRadioGroup"
-                value="show"
-                checked={props.config.sex === Sex.SHOW}
-                onClick={() => props.onChange({...props.config, sex: Sex.SHOW})}
               />
-            </Form.Field>
-          </Item.Content>
-        </Item>
-        <Item>
-          <Item.Content>
-            <Header sub>
-              <FormattedMessage id="config.places" defaultMessage="Places" />
-            </Header>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+            </Stack>
+          </Radio.Group>
+        </div>
+
+        <div className="item" style={{padding: '0 15px 0 25px'}}>
+          <Text className="sub-header" size="xs" fw={700} tt="uppercase" mb={4}>
+            <FormattedMessage id="config.places" defaultMessage="Places" />
+          </Text>
+          <Radio.Group
+            value={
+              props.config.place === PlaceDisplay.HIDE
+                ? 'hide'
+                : props.config.place === PlaceDisplay.SHORT
+                  ? 'short'
+                  : 'full'
+            }
+            onChange={(val) => {
+              const place =
+                val === 'hide'
+                  ? PlaceDisplay.HIDE
+                  : val === 'short'
+                    ? PlaceDisplay.SHORT
+                    : PlaceDisplay.FULL;
+              props.onChange({place});
+            }}
+          >
+            <Stack gap={4}>
+              <Radio
+                value="hide"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.places.HIDE"
                     defaultMessage="hide"
                   />
                 }
-                name="checkboxRadioGroup"
-                value="hide"
-                checked={props.config.place === PlaceDisplay.HIDE}
-                onClick={() =>
-                  props.onChange({...props.config, place: PlaceDisplay.HIDE})
-                }
               />
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
-                label={
-                  <FormattedMessage
-                    tagName="label"
-                    id="config.places.SHORT"
-                    defaultMessage="short"
-                  />
-                }
-                name="checkboxRadioGroup"
-                value="short"
-                checked={props.config.place === PlaceDisplay.SHORT}
-                onClick={() =>
-                  props.onChange({...props.config, place: PlaceDisplay.SHORT})
-                }
-              />
-              {props.config.place === PlaceDisplay.SHORT && (
-                <Input
-                  type="number"
-                  min={1}
-                  max={10}
-                  size="mini"
-                  style={{width: '4em', marginLeft: '1.5em'}}
-                  value={props.config.placeCount}
-                  onChange={(_e, {value}) => {
-                    const n = parseInt(value, 10);
-                    if (n >= 1) {
-                      props.onChange({...props.config, placeCount: n});
-                    }
-                  }}
+              <div style={{display: 'flex', alignItems: 'center'}}>
+                <Radio
+                  value="short"
+                  label={
+                    <FormattedMessage
+                      id="config.places.SHORT"
+                      defaultMessage="short"
+                    />
+                  }
                 />
-              )}
-            </Form.Field>
-            <Form.Field className="no-margin">
-              <Checkbox
-                radio
+                {props.config.place === PlaceDisplay.SHORT && (
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    style={{
+                      width: '4em',
+                      marginLeft: '1.5em',
+                      padding: '6px 10px',
+                      fontSize: '11px',
+                      lineHeight: 1.2,
+                      color: 'rgba(0, 0, 0, 0.87)',
+                      border: '1px solid rgba(34, 36, 38, 0.15)',
+                      borderRadius: 4,
+                    }}
+                    value={props.config.placeCount}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value, 10);
+                      if (n >= 1) {
+                        props.onChange({placeCount: n});
+                      }
+                    }}
+                  />
+                )}
+              </div>
+              <Radio
+                value="full"
                 label={
                   <FormattedMessage
-                    tagName="label"
                     id="config.places.FULL"
                     defaultMessage="full"
                   />
                 }
-                name="checkboxRadioGroup"
-                value="full"
-                checked={props.config.place === PlaceDisplay.FULL}
-                onClick={() =>
-                  props.onChange({...props.config, place: PlaceDisplay.FULL})
-                }
               />
-            </Form.Field>
-          </Item.Content>
-        </Item>
-      </Item.Group>
-    </Form>
+            </Stack>
+          </Radio.Group>
+        </div>
+      </Stack>
+    </form>
   );
 }

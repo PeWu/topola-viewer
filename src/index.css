@@ -1,5 +1,70 @@
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
 body, html {
   height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
+body {
+  font-size: 14px;
+  line-height: 1.4285em;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  line-height: 1.28571429em;
+  margin: calc(28px - 0.14285714em) 0em 14px;
+  font-weight: 700;
+  padding: 0em;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 15px;
+}
+
+h1:first-child, h2:first-child, h3:first-child, h4:first-child, h5:first-child {
+  margin-top: 0em;
+}
+
+h1:last-child, h2:last-child, h3:last-child, h4:last-child, h5:last-child {
+  margin-bottom: 0em;
+}
+
+p {
+  margin: 0em 0em 1em;
+  line-height: 1.4285em;
+}
+
+p:first-child {
+  margin-top: 0em;
+}
+
+p:last-child {
+  margin-bottom: 0em;
+}
+
+a {
+  color: #4183c4;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #1e70bf;
+  text-decoration: none;
+}
+
+ul {
+  margin: 1em 0em;
+  padding-left: 40px;
 }
 
 .node {
@@ -38,19 +103,92 @@ p.comment {
   margin-top: 16px;
 }
 
+.error,
 div.ui.error.message {
   margin: auto;
 }
 
+.errorPopup,
 div.ui.errorPopup.message {
   left: 40px;
   bottom: 40px;
   position: fixed;
 }
 
+.intro,
 div.ui.card.intro {
   width: 770px;
   margin: auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  background-color: #2185d0;
+  border: none;
+  box-shadow: none;
+  position: relative;
+  z-index: 101;
+  padding: 0;
+}
+
+.topbar-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  height: 42px;
+  padding: 0 16px;
+  background: none;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.topbar > div:last-child .topbar-item {
+  border-right: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.topbar-item:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.topbar-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.topbar-title,
+.topbar--title {
+  font-weight: 700;
+  font-size: 15px;
+  height: 42px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  color: #ffffff;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.topbar a,
+.topbar a:hover {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.topbar-title a,
+.topbar--title a {
+  color: #ffffff;
+  text-decoration: none;
 }
 
 .version {
@@ -117,13 +255,16 @@ div.zoom {
   border-bottom-right-radius: 4px;
 }
 
+.loading-more,
 .ui.loader.loading-more {
   position: absolute;
   top: auto;
   bottom: 0px;
   left: 25px;
+  z-index: 10;
 }
 
+.blockImage,
 .content .ui.image.blockImage {
   display: block;
 }
@@ -133,48 +274,38 @@ div.zoom {
   cursor: pointer;
 }
 
+.topbar-item > img.menu-icon,
+.mantine-Menu-item img.menu-icon,
 .ui.menu .item>img:not(.ui).menu-icon {
   width: 24px;
   height: 24px;
-  margin-right: 5px
-}
-
-.ui.top.attached.menu {
-  margin-top: 0px;
+  margin-right: 5px;
 }
 
 .details {
   padding: 15px 0px;
-  border-bottom: 1px solid rgba(34,36,38,.15);
   overflow-y: auto;
-  height: calc(100% - 43px);
+  height: 100%;
 }
 
+.details .items .item .content,
 .details .ui.items .item .content {
   padding: 0 15px 0 25px;
 }
 
-.details .ui.list .item > .list-icon-wrapper {
-  display: table-cell;
-  width: 20px;
-  text-align: center;
-  vertical-align: top;
-  padding-right: 4px;
+.details .items.divided > .item {
+  border-top: 1px solid rgba(34, 36, 38, 0.15);
+  padding: 14px 0;
 }
 
-.details .ui.list .item > .list-icon-wrapper > i.icon {
-  margin: 0;
+.details .items.divided > .item:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 
-
-.details .ui.list .item > .list-icon-wrapper + .content {
-  display: table-cell;
-  vertical-align: top;
-  padding-left: 8px;
+.details .items.divided > .item:last-child {
+  padding-bottom: 0;
 }
-
-
-
 
 .details .item-header {
   justify-content: space-between;
@@ -196,6 +327,7 @@ div.zoom {
   margin: 0;
 }
 
+.mantine-Tabs-tab,
 .ui.tabular.menu a {
   text-transform: uppercase;
 }
@@ -228,30 +360,6 @@ div.zoom {
   height: 100%;
 }
 
-.event-extras .ui.attached.menu {
-  border: none;
-  min-height: auto;
-}
-
-.event-extras .ui.attached.segment.tab {
-  border: none;
-}
-
-.event-extras .ui.tabular.menu .item {
-  border: none;
-}
-
-.event-extras .ui.menu .active.item .icon{
-  background-color: #1b1c1d;
-  color: #ffffff;
-}
-
-.event-extras .ui.attached.segment.active.tab{
-  word-break: normal;
-  overflow-wrap: anywhere;
-  max-width: 289px;
-  padding: 14px 0px 0px;
-}
 
 #dotatsoSvgContainer {
   flex: 1 1 auto;
@@ -300,6 +408,13 @@ div.zoom {
   stroke: black;
 }
 
+.pushable {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
 #content .pusher {
   height: 100%;
   display: flex;
@@ -316,25 +431,46 @@ div.zoom {
 }
 
 #sidebar {
-  overflow: hidden;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
   height: 100%;
+  overflow: hidden;
+  z-index: 100;
+  background-color: #fff;
+  box-shadow: 0px 0px 20px rgba(34, 36, 38, 0.15);
+}
+
+#sidebar.wide {
+  width: 350px;
+}
+
+#sidebar.very.thin {
+  width: 60px;
 }
 
 #sideTabs {
   height: 100%;
 }
 
-#sideTabs > .ui.tabular.menu{
-  padding-left: 60px;
-}
-
 #sideToggle {
   position: absolute;
   background: inherit;
   top: 0;
-  height: 42px;
+  height: 43px;
   border-radius: 0;
   width: 60px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+#sidebar.wide #sideToggle {
+  border-bottom: 1px solid var(--mantine-color-default-border);
 }
 
 #sideToggle:hover {
@@ -400,14 +536,10 @@ div.zoom {
     transform: none;
   }
 
-  /* Substitute the right arrow with a down arrow. */
-  #sidebar.wide i.icon.arrow.right:before {
-    content: "\f063";
-  }
-
-  /* Substitute the left arrow with an up arrow. */
-  #sidebar.very.thin i.icon.arrow.left:before {
-    content: "\f062";
+  /* Rotate arrow down/up on mobile screens. */
+  #sidebar.wide #sideToggle svg,
+  #sidebar.very.thin #sideToggle svg {
+    transform: rotate(90deg);
   }
 
   #content #sidebar.wide ~ .pusher {

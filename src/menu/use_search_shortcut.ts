@@ -84,7 +84,7 @@ function isModalActive(event: KeyboardEvent): boolean {
 
   for (const root of roots) {
     const modals = root.querySelectorAll(
-      'dialog[open], .ui.modal.visible.active',
+      'dialog[open], .mantine-Modal-content, .ui.modal.visible.active',
     );
 
     for (const modal of Array.from(modals)) {

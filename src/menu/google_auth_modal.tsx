@@ -1,6 +1,7 @@
+import {Alert, Button, Group, Modal, Stack} from '@mantine/core';
+import {IconAlertCircle, IconBrandGoogleDrive} from '@tabler/icons-react';
 import {useEffect, useRef, useState} from 'react';
 import {FormattedMessage} from 'react-intl';
-import {Button, Header, Icon, Message, Modal} from 'semantic-ui-react';
 import {googleDriveService} from '../datasource/google_drive_service';
 
 interface Props {
@@ -128,62 +129,75 @@ export function GoogleAuthModal(props: Props) {
   }
 
   return (
-    <Modal open={true} onClose={props.onCancel} centered={true} size="tiny">
-      <Header>
-        <Icon name="google drive" />
-        <FormattedMessage
-          id="google_auth.title"
-          defaultMessage="Google Drive Access Required"
-        />
-      </Header>
-      <Modal.Content>
-        <p>
+    <Modal
+      opened={true}
+      onClose={props.onCancel}
+      centered={true}
+      size={540}
+      withCloseButton={false}
+      title={
+        <Group gap="xs">
+          <IconBrandGoogleDrive size={22} />
+          <FormattedMessage
+            id="google_auth.title"
+            defaultMessage="Google Drive Access Required"
+          />
+        </Group>
+      }
+    >
+      <Stack gap="md">
+        <p style={{margin: 0}}>
           <FormattedMessage
             id="google_auth.instructions"
             defaultMessage="To view this file, you must authenticate and select the file from your Google Drive to grant permissions."
           />
         </p>
         {showPickerInstructions && (
-          <Message warning>
-            <Message.Header>
+          <Alert
+            color="yellow"
+            icon={<IconAlertCircle size={18} />}
+            title={
               <FormattedMessage
                 id="google_auth.picker_instructions_header"
                 defaultMessage="Permissions Required"
               />
-            </Message.Header>
-            <p>
-              <FormattedMessage
-                id="google_auth.picker_instructions"
-                defaultMessage="The application does not have permission to read this file. Please select it in the file browser popup to grant access. If this is a shared file that doesn't show up, try adding a shortcut to your Drive first."
-              />
-            </p>
-          </Message>
+            }
+          >
+            <FormattedMessage
+              id="google_auth.picker_instructions"
+              defaultMessage="The application does not have permission to read this file. Please select it in the file browser popup to grant access. If this is a shared file that doesn't show up, try adding a shortcut to your Drive first."
+            />
+          </Alert>
         )}
         {errorMessage && (
-          <Message negative>
-            <p>{errorMessage}</p>
-          </Message>
+          <Alert color="red" icon={<IconAlertCircle size={18} />}>
+            {errorMessage}
+          </Alert>
         )}
-      </Modal.Content>
-      <Modal.Actions>
-        <Button secondary onClick={props.onCancel}>
-          <FormattedMessage id="google_auth.cancel" defaultMessage="Cancel" />
-        </Button>
-        {showPickerInstructions && (
-          <Button basic onClick={handleSwitchAccount} loading={loading}>
+        <Group justify="flex-end" gap="xs">
+          <Button variant="default" onClick={props.onCancel}>
+            <FormattedMessage id="google_auth.cancel" defaultMessage="Cancel" />
+          </Button>
+          {showPickerInstructions && (
+            <Button
+              variant="outline"
+              onClick={handleSwitchAccount}
+              loading={loading}
+            >
+              <FormattedMessage
+                id="google_auth.switch_account_button"
+                defaultMessage="Switch Account"
+              />
+            </Button>
+          )}
+          <Button onClick={handleConnect} loading={loading}>
             <FormattedMessage
-              id="google_auth.switch_account_button"
-              defaultMessage="Switch Account"
+              id="google_auth.grant_button"
+              defaultMessage="Grant Access & Select File"
             />
           </Button>
-        )}
-        <Button primary onClick={handleConnect} loading={loading}>
-          <FormattedMessage
-            id="google_auth.grant_button"
-            defaultMessage="Grant Access & Select File"
-          />
-        </Button>
-      </Modal.Actions>
+        </Group>
+      </Stack>
     </Modal>
   );
 }

@@ -1,15 +1,7 @@
+import {Alert, Card, Modal, Skeleton, Text} from '@mantine/core';
+import {IconAlertCircle, IconPhotoFilled} from '@tabler/icons-react';
 import {SyntheticEvent, useState} from 'react';
 import {FormattedMessage} from 'react-intl';
-import {
-  Card,
-  Container,
-  Icon,
-  Image,
-  Label,
-  Message,
-  Modal,
-  Placeholder,
-} from 'semantic-ui-react';
 import {isBrowserLoadable} from '../../util/gedcom_util';
 
 interface Props {
@@ -27,26 +19,48 @@ export function WrappedImage(props: Props) {
   if (!isBrowserLoadable(props.url)) {
     return (
       <Card
-        centered
-        style={{width: '100%', maxWidth: '290px', margin: '0 auto 14px'}}
+        withBorder={false}
+        padding={14}
+        radius={4}
+        style={{
+          width: '100%',
+          maxWidth: '290px',
+          margin: '0 auto',
+          textAlign: 'center',
+          backgroundColor: '#f9f9f9',
+          boxShadow: '0px 1px 3px 0px #d4d4d5, 0px 0px 0px 1px #d4d4d5',
+        }}
       >
-        <Card.Content textAlign="center" style={{backgroundColor: '#f9f9f9'}}>
-          <Icon
-            name="image"
-            size="huge"
-            color="grey"
-            style={{marginBottom: '10px', opacity: 0.6}}
+        <IconPhotoFilled
+          size={56}
+          color="#767676"
+          style={{margin: '0 auto 10px', opacity: 0.6}}
+        />
+        <Text
+          fw={700}
+          style={{
+            fontSize: '14px',
+            lineHeight: 1.2857,
+            color: 'rgba(0, 0, 0, 0.85)',
+            wordBreak: 'break-all',
+          }}
+        >
+          {props.title || props.filename}
+        </Text>
+        <Text
+          fs="italic"
+          style={{
+            fontSize: '14px',
+            lineHeight: 1.2,
+            color: 'rgba(0, 0, 0, 0.4)',
+            marginTop: 5,
+          }}
+        >
+          <FormattedMessage
+            id="media.not_uploaded"
+            defaultMessage="File not uploaded"
           />
-          <Card.Header style={{fontSize: '14px', wordBreak: 'break-all'}}>
-            {props.title || props.filename}
-          </Card.Header>
-          <Card.Meta style={{marginTop: '5px', fontStyle: 'italic'}}>
-            <FormattedMessage
-              id="media.not_uploaded"
-              defaultMessage="File not uploaded"
-            />
-          </Card.Meta>
-        </Card.Content>
+        </Text>
       </Card>
     );
   }
@@ -56,7 +70,7 @@ export function WrappedImage(props: Props) {
   }
   return (
     <>
-      <Image
+      <img
         className={imageLoaded ? 'loaded-image-thumbnail' : 'hidden-image'}
         onClick={() => setImageOpen(true)}
         onLoad={() => {
@@ -72,44 +86,86 @@ export function WrappedImage(props: Props) {
         }}
         src={props.url}
         alt={props.title || props.filename}
-        centered={true}
+        style={{
+          display: imageLoaded ? 'block' : 'none',
+          margin: '0 auto',
+          maxWidth: '100%',
+        }}
       />
-      <Placeholder
-        className={!imageLoaded ? 'image-placeholder' : 'hidden-image'}
-      >
-        <Placeholder.Image square />
-      </Placeholder>
+      {!imageLoaded && (
+        <Skeleton height={200} width={200} style={{margin: '0 auto'}} />
+      )}
       {imageFailed && (
-        <Container fluid textAlign="center">
-          <Message negative compact>
-            <Message.Header>
-              <FormattedMessage
-                id="error.failed_to_load_image"
-                defaultMessage={'Failed to load image file'}
-              />
-            </Message.Header>
-          </Message>
-        </Container>
+        <Alert
+          color="red"
+          icon={<IconAlertCircle size={16} />}
+          title={
+            <FormattedMessage
+              id="error.failed_to_load_image"
+              defaultMessage="Failed to load image file"
+            />
+          }
+          style={{maxWidth: 290, margin: '8px auto'}}
+        />
       )}
       <Modal
-        basic
-        size="large"
-        closeIcon={<Icon name="close" color="red" />}
-        open={imageOpen}
+        opened={imageOpen}
         onClose={() => setImageOpen(false)}
-        onOpen={() => setImageOpen(true)}
+        title={props.title}
+        size="xl"
         centered={false}
+        styles={{
+          content: {
+            backgroundColor: 'transparent',
+            boxShadow: 'none',
+            color: '#ffffff',
+          },
+          header: {
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
+          },
+          title: {
+            fontSize: '20px',
+            fontWeight: 700,
+            color: '#ffffff',
+          },
+          close: {
+            color: '#db2828',
+          },
+        }}
       >
-        <Modal.Header>{props.title}</Modal.Header>
-        <Modal.Content image>
-          <Image
+        <div
+          style={{
+            display: 'table',
+            margin: '0 auto',
+          }}
+        >
+          <img
             className="modal-image"
             src={props.url}
             alt={props.title || props.filename}
-            label={<Label attached="bottom" content={props.filename} />}
-            wrapped
+            style={{
+              maxWidth: '100%',
+              maxHeight: '75vh',
+              objectFit: 'contain',
+              display: 'block',
+            }}
           />
-        </Modal.Content>
+          <div
+            style={{
+              backgroundColor: '#e8e8e8',
+              color: 'rgba(0, 0, 0, 0.6)',
+              fontWeight: 700,
+              fontSize: '12px',
+              padding: '7px 14px',
+              borderRadius: '0 0 4px 4px',
+              width: '100%',
+            }}
+          >
+            {props.filename}
+          </div>
+        </div>
       </Modal>
     </>
   );

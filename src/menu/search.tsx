@@ -1,6 +1,7 @@
+import {Combobox, TextInput, useCombobox} from '@mantine/core';
+import {IconSearch} from '@tabler/icons-react';
 import React, {useEffect, useRef} from 'react';
 import {IntlShape, useIntl} from 'react-intl';
-import {Search, SearchResultProps} from 'semantic-ui-react';
 import {PersonRecord} from 'topola/model';
 import {formatDateOrRange} from '../util/date_util';
 import {SearchResult} from './search_index';
@@ -8,10 +9,6 @@ import {
   registerSearchInput,
   unregisterSearchInput,
 } from './use_search_shortcut';
-
-const SHORTCUT_INPUT_PROP = {
-  'aria-keyshortcuts': '/',
-};
 
 function getNameLine(result: SearchResult) {
   const name = [result.indi.firstName, result.indi.lastName].join(' ').trim();
@@ -34,18 +31,6 @@ function getDescriptionLine(indi: PersonRecord, currentIntl: IntlShape) {
   return `${birthDate} – ${deathDate}`;
 }
 
-function displaySearchResult(
-  result: SearchResult,
-  currentIntl: IntlShape,
-): SearchResultProps {
-  return {
-    id: result.id,
-    key: result.id,
-    title: getNameLine(result),
-    description: getDescriptionLine(result.indi, currentIntl),
-  } as SearchResultProps;
-}
-
 interface Props {
   results: SearchResult[];
   value: string;
@@ -58,6 +43,10 @@ interface Props {
 export const SearchBar = React.memo(function SearchBar(props: Props) {
   const intl = useIntl();
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const combobox = useCombobox({
+    onDropdownClose: () => combobox.resetSelectedOption(),
+  });
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -81,25 +70,104 @@ export const SearchBar = React.memo(function SearchBar(props: Props) {
         defaultMessage: "Search for people (press '/')",
       });
 
-  const transformedResults = props.results.map((r) =>
-    displaySearchResult(r, intl),
-  );
+  const hasResults = props.results.length > 0;
+  const hasValue = props.value.trim().length > 0;
 
   return (
-    <div ref={wrapperRef}>
-      <Search
-        onSearchChange={(_, data) => props.onSearchChange(data.value || '')}
-        onResultSelect={(_, data) => props.onResultSelect(data.result.id)}
-        results={transformedResults}
-        noResultsMessage={intl.formatMessage({
-          id: 'menu.search.no_results',
-          defaultMessage: 'No results found',
-        })}
-        placeholder={placeholder}
-        selectFirstResult={true}
-        value={props.value}
-        input={SHORTCUT_INPUT_PROP}
-      />
+    <div ref={wrapperRef} className="ui search">
+      <Combobox
+        store={combobox}
+        width={252}
+        position="bottom-start"
+        shadow="md"
+        onOptionSubmit={(val) => {
+          props.onResultSelect(val);
+          combobox.closeDropdown();
+        }}
+      >
+        <Combobox.Target>
+          <TextInput
+            placeholder={placeholder}
+            value={props.value}
+            onChange={(event) => {
+              props.onSearchChange(event.currentTarget.value);
+              combobox.openDropdown();
+              combobox.updateSelectedOptionIndex();
+            }}
+            onClick={() => combobox.openDropdown()}
+            onFocus={() => {
+              if (hasValue) combobox.openDropdown();
+            }}
+            onBlur={() => combobox.closeDropdown()}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                if (hasResults) {
+                  props.onResultSelect(props.results[0].id);
+                  combobox.closeDropdown();
+                }
+              }
+            }}
+            rightSection={
+              <IconSearch size={16} stroke={2} color="rgba(0, 0, 0, 0.5)" />
+            }
+            rightSectionPointerEvents="none"
+            aria-keyshortcuts="/"
+            size="sm"
+            radius="xl"
+            w={230}
+          />
+        </Combobox.Target>
+
+        {hasValue && (
+          <Combobox.Dropdown className="results" p={0}>
+            <Combobox.Options>
+              {hasResults ? (
+                props.results.map((result, index) => (
+                  <Combobox.Option
+                    value={result.id}
+                    key={result.id}
+                    className="result"
+                    style={{
+                      padding: '10px 14px',
+                      borderBottom:
+                        index < props.results.length - 1
+                          ? '1px solid rgba(34, 36, 38, 0.1)'
+                          : 'none',
+                      borderRadius: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: '14px',
+                        color: 'rgba(0, 0, 0, 0.87)',
+                      }}
+                    >
+                      {getNameLine(result)}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '13px',
+                        color: 'rgba(0, 0, 0, 0.4)',
+                        marginTop: 2,
+                      }}
+                    >
+                      {getDescriptionLine(result.indi, intl)}
+                    </div>
+                  </Combobox.Option>
+                ))
+              ) : (
+                <Combobox.Empty>
+                  {intl.formatMessage({
+                    id: 'menu.search.no_results',
+                    defaultMessage: 'No results found',
+                  })}
+                </Combobox.Empty>
+              )}
+            </Combobox.Options>
+          </Combobox.Dropdown>
+        )}
+      </Combobox>
     </div>
   );
 });

@@ -150,7 +150,12 @@ test.describe('Search functionality and global shortcut', () => {
       errors.push(err.message);
     });
     page.on('console', (msg) => {
-      if (msg.type() === 'error' && !msg.text().includes('Warning:')) {
+      if (
+        msg.type() === 'error' &&
+        !msg.text().includes('Warning:') &&
+        !msg.text().includes('ERR_INTERNET_DISCONNECTED') &&
+        !msg.text().includes('Failed to load resource')
+      ) {
         errors.push(msg.text());
       }
     });

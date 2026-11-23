@@ -22,6 +22,7 @@ test.describe('Core SVG Canvas Layouts @visual', () => {
       );
       const container = page.locator(layout.selector);
       await container.waitFor({state: 'visible'});
+      await expect(container).toContainText('Bonifacy');
       // Wait for D3 rendering and layout stabilization.
       await page.waitForTimeout(layout.waitTime);
       await expect(container).toHaveScreenshot(`chart-${layout.view}.png`);

@@ -1,8 +1,9 @@
+import {Menu} from '@mantine/core';
+import {IconFolderOpen} from '@tabler/icons-react';
 import queryString from 'query-string';
 import {SyntheticEvent} from 'react';
 import {FormattedMessage} from 'react-intl';
 import {useLocation, useNavigate} from 'react-router';
-import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {storeGedcom} from '../datasource/gedcom_store';
 import {loadFile} from '../datasource/load_data';
 import {analyticsEvent} from '../util/analytics';
@@ -79,20 +80,30 @@ export function UploadMenu(props: Props) {
 
   const content = (
     <>
-      <Icon name="folder open" />
+      <IconFolderOpen
+        size={18}
+        style={{marginRight: 6, verticalAlign: 'middle'}}
+      />
       <FormattedMessage id="menu.open_file" defaultMessage="Open file" />
     </>
   );
   return (
     <>
       {props.menuType === MenuType.Menu ? (
-        <label htmlFor="fileInput">
-          <Menu.Item as="a">{content}</Menu.Item>
+        <label
+          htmlFor="fileInput"
+          className="topbar-item"
+          style={{cursor: 'pointer', display: 'flex', alignItems: 'center'}}
+        >
+          {content}
         </label>
       ) : (
-        <Dropdown.Item as="label" htmlFor="fileInput">
-          {content}
-        </Dropdown.Item>
+        <label
+          htmlFor="fileInput"
+          style={{cursor: 'pointer', width: '100%', display: 'block'}}
+        >
+          <Menu.Item component="div">{content}</Menu.Item>
+        </label>
       )}
       <input
         className="hidden"

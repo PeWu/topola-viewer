@@ -1,5 +1,6 @@
+import {Tabs} from '@mantine/core';
+import {IconArrowLeft, IconArrowRight} from '@tabler/icons-react';
 import {useIntl} from 'react-intl';
-import {Button, Icon, Sidebar, Tab} from 'semantic-ui-react';
 import {TopolaData} from '../util/gedcom_util';
 import {Config, ConfigPanel} from './config/config';
 import {CollapsedDetails} from './details/collapsed-details';
@@ -9,7 +10,7 @@ interface SidePanelProps {
   data: TopolaData;
   selectedIndiId: string;
   config: Config;
-  onConfigChange: (config: Config) => void;
+  onConfigChange: (patch: Partial<Config>) => void;
   expanded: boolean;
   onToggle: () => void;
 }
@@ -24,53 +25,54 @@ export function SidePanel({
 }: SidePanelProps) {
   const intl = useIntl();
 
-  const tabs = [
-    {
-      menuItem: intl.formatMessage({
-        id: 'tab.info',
-        defaultMessage: 'Info',
-      }),
-      render: () => (
-        <Details
-          gedcom={data.gedcom}
-          indi={selectedIndiId}
-          config={config}
-          images={data.images}
-        />
-      ),
-    },
-    {
-      menuItem: intl.formatMessage({
-        id: 'tab.settings',
-        defaultMessage: 'Settings',
-      }),
-      render: () => (
-        <ConfigPanel
-          gedcom={data.gedcom}
-          config={config}
-          onChange={onConfigChange}
-        />
-      ),
-    },
-  ];
-
   return (
-    <Sidebar
-      id="sidebar"
-      animation="overlay"
-      icon="labeled"
-      width={expanded ? 'wide' : 'very thin'}
-      direction="right"
-      visible={true}
-    >
+    <div id="sidebar" className={expanded ? 'wide' : 'very thin'}>
       {expanded ? (
-        <Tab id="sideTabs" panes={tabs} />
+        <Tabs id="sideTabs" defaultValue="info" variant="outline" radius={4}>
+          <Tabs.List style={{paddingLeft: 60, height: 43}}>
+            <Tabs.Tab value="info">
+              {intl.formatMessage({
+                id: 'tab.info',
+                defaultMessage: 'Info',
+              })}
+            </Tabs.Tab>
+            <Tabs.Tab value="settings">
+              {intl.formatMessage({
+                id: 'tab.settings',
+                defaultMessage: 'Settings',
+              })}
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="info" style={{height: 'calc(100% - 43px)'}}>
+            <Details
+              gedcom={data.gedcom}
+              indi={selectedIndiId}
+              config={config}
+              images={data.images}
+            />
+          </Tabs.Panel>
+          <Tabs.Panel value="settings" style={{height: 'calc(100% - 43px)'}}>
+            <ConfigPanel
+              gedcom={data.gedcom}
+              config={config}
+              onChange={onConfigChange}
+            />
+          </Tabs.Panel>
+        </Tabs>
       ) : (
         <CollapsedDetails gedcom={data.gedcom} indi={selectedIndiId} />
       )}
-      <Button id="sideToggle" icon size="mini" onClick={() => onToggle()}>
-        <Icon size="large" name={expanded ? 'arrow right' : 'arrow left'} />
-      </Button>
-    </Sidebar>
+      <button
+        id="sideToggle"
+        onClick={() => onToggle()}
+        aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+      >
+        {expanded ? (
+          <IconArrowRight size={20} stroke={2.5} color="rgba(0, 0, 0, 0.6)" />
+        ) : (
+          <IconArrowLeft size={20} stroke={2.5} color="rgba(0, 0, 0, 0.6)" />
+        )}
+      </button>
+    </div>
   );
 }

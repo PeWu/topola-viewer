@@ -1,7 +1,19 @@
+import {Menu} from '@mantine/core';
+import {
+  IconCaretDownFilled,
+  IconDownload,
+  IconEye,
+  IconFolderOpen,
+  IconHourglass,
+  IconLogout,
+  IconMenu2,
+  IconPrinter,
+  IconTrain,
+  IconUsers,
+} from '@tabler/icons-react';
 import queryString from 'query-string';
 import {FormattedMessage} from 'react-intl';
 import {Link, useLocation, useNavigate} from 'react-router';
-import {Dropdown, Icon, Menu} from 'semantic-ui-react';
 import {ModelData} from 'topola/model';
 import {isGoogleDriveConfigured} from '../datasource/google_drive_service';
 import {IndiInfo} from '../util/gedcom_util';
@@ -78,103 +90,130 @@ export function TopBar(props: Props) {
     }
     const chartTypeItems = (
       <>
-        <Dropdown.Item onClick={() => changeView('hourglass')}>
-          <Icon name="hourglass" />
+        <Menu.Item
+          leftSection={<IconHourglass size={18} />}
+          onClick={() => changeView('hourglass')}
+        >
           <FormattedMessage
             id="menu.hourglass"
             defaultMessage="Hourglass chart"
           />
-        </Dropdown.Item>
+        </Menu.Item>
         {props.allowAllRelativesChart ? (
-          <Dropdown.Item onClick={() => changeView('relatives')}>
-            <Icon name="users" />
+          <Menu.Item
+            leftSection={<IconUsers size={18} />}
+            onClick={() => changeView('relatives')}
+          >
             <FormattedMessage
               id="menu.relatives"
               defaultMessage="All relatives"
             />
-          </Dropdown.Item>
+          </Menu.Item>
         ) : null}
-        <Dropdown.Item onClick={() => changeView('donatso')}>
-          <Icon name="users" />
+        <Menu.Item
+          leftSection={<IconUsers size={18} />}
+          onClick={() => changeView('donatso')}
+        >
           <FormattedMessage
             id="menu.donatso"
             defaultMessage="Donatso family chart"
           />
-        </Dropdown.Item>
-        <Dropdown.Item onClick={() => changeView('fancy')}>
-          <Icon name="users" />
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconUsers size={18} />}
+          onClick={() => changeView('fancy')}
+        >
           <FormattedMessage
             id="menu.fancy"
             defaultMessage="Fancy tree (experimental)"
           />
-        </Dropdown.Item>
-        <Dropdown.Item onClick={() => changeView('transit')}>
-          <Icon name="subway" />
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconTrain size={18} />}
+          onClick={() => changeView('transit')}
+        >
           <FormattedMessage
             id="menu.transit"
             defaultMessage="Transit map (experimental)"
           />
-        </Dropdown.Item>
+        </Menu.Item>
       </>
     );
     switch (screenSize) {
       case ScreenSize.LARGE:
         return (
           <>
-            <Menu.Item
+            <button
+              className="topbar-item"
               onClick={props.eventHandlers?.onPrint}
               disabled={!props.allowPrintAndDownload}
             >
-              <Icon name="print" />
+              <IconPrinter
+                size={18}
+                style={{marginRight: 6, verticalAlign: 'middle'}}
+              />
               <FormattedMessage id="menu.print" defaultMessage="Print" />
-            </Menu.Item>
+            </button>
 
-            <Dropdown
-              trigger={
-                <div>
-                  <Icon name="download" />
+            <Menu shadow="md" width={180} keepMounted>
+              <Menu.Target>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="topbar-item"
+                  style={{
+                    opacity: props.allowPrintAndDownload ? 1 : 0.45,
+                    pointerEvents: props.allowPrintAndDownload
+                      ? 'auto'
+                      : 'none',
+                  }}
+                >
+                  <IconDownload
+                    size={18}
+                    style={{marginRight: 6, verticalAlign: 'middle'}}
+                  />
                   <FormattedMessage
                     id="menu.download"
                     defaultMessage="Download"
                   />
+                  <IconCaretDownFilled size={12} style={{marginLeft: 10}} />
                 </div>
-              }
-              className="item"
-              disabled={!props.allowPrintAndDownload}
-            >
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={props.eventHandlers?.onDownloadPdf}>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item onClick={props.eventHandlers?.onDownloadPdf}>
                   <FormattedMessage
                     id="menu.pdf_file"
                     defaultMessage="PDF file"
                   />
-                </Dropdown.Item>
-                <Dropdown.Item onClick={props.eventHandlers?.onDownloadPng}>
+                </Menu.Item>
+                <Menu.Item onClick={props.eventHandlers?.onDownloadPng}>
                   <FormattedMessage
                     id="menu.png_file"
                     defaultMessage="PNG file"
                   />
-                </Dropdown.Item>
-                <Dropdown.Item onClick={props.eventHandlers?.onDownloadSvg}>
+                </Menu.Item>
+                <Menu.Item onClick={props.eventHandlers?.onDownloadSvg}>
                   <FormattedMessage
                     id="menu.svg_file"
                     defaultMessage="SVG file"
                   />
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
 
-            <Dropdown
-              trigger={
-                <div>
-                  <Icon name="eye" />
+            <Menu shadow="md" width={220} keepMounted>
+              <Menu.Target>
+                <div role="button" tabIndex={0} className="topbar-item">
+                  <IconEye
+                    size={18}
+                    style={{marginRight: 6, verticalAlign: 'middle'}}
+                  />
                   <FormattedMessage id="menu.view" defaultMessage="View" />
+                  <IconCaretDownFilled size={12} style={{marginLeft: 10}} />
                 </div>
-              }
-              className="item"
-            >
-              <Dropdown.Menu>{chartTypeItems}</Dropdown.Menu>
-            </Dropdown>
+              </Menu.Target>
+              <Menu.Dropdown>{chartTypeItems}</Menu.Dropdown>
+            </Menu>
             <SearchBar
               results={searchResults}
               value={searchString}
@@ -187,49 +226,53 @@ export function TopBar(props: Props) {
       case ScreenSize.SMALL:
         return (
           <>
-            <Dropdown.Item onClick={props.eventHandlers?.onPrint}>
-              <Icon name="print" />
+            <Menu.Item
+              leftSection={<IconPrinter size={18} />}
+              onClick={props.eventHandlers?.onPrint}
+            >
               <FormattedMessage id="menu.print" defaultMessage="Print" />
-            </Dropdown.Item>
+            </Menu.Item>
 
-            <Dropdown.Divider />
+            <Menu.Divider />
 
-            <Dropdown.Item onClick={props.eventHandlers?.onDownloadPdf}>
-              <Icon name="download" />
+            <Menu.Item
+              leftSection={<IconDownload size={18} />}
+              onClick={props.eventHandlers?.onDownloadPdf}
+            >
               <FormattedMessage
                 id="menu.download_pdf"
                 defaultMessage="Download PDF"
               />
-            </Dropdown.Item>
-            <Dropdown.Item onClick={props.eventHandlers?.onDownloadPng}>
-              <Icon name="download" />
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconDownload size={18} />}
+              onClick={props.eventHandlers?.onDownloadPng}
+            >
               <FormattedMessage
                 id="menu.download_png"
                 defaultMessage="Download PNG"
               />
-            </Dropdown.Item>
-            <Dropdown.Item onClick={props.eventHandlers?.onDownloadSvg}>
-              <Icon name="download" />
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconDownload size={18} />}
+              onClick={props.eventHandlers?.onDownloadSvg}
+            >
               <FormattedMessage
                 id="menu.download_svg"
                 defaultMessage="Download SVG"
               />
-            </Dropdown.Item>
+            </Menu.Item>
 
-            <Dropdown.Divider />
+            <Menu.Divider />
             {chartTypeItems}
-            <Dropdown.Divider />
+            <Menu.Divider />
           </>
         );
     }
   }
 
   function title() {
-    return (
-      <Menu.Item>
-        <b>Topola Genealogy</b>
-      </Menu.Item>
-    );
+    return <span className="topbar-title">Topola Genealogy</span>;
   }
 
   function googleDriveDisconnectMenu(screenSize: ScreenSize) {
@@ -244,13 +287,16 @@ export function TopBar(props: Props) {
           }
           onClick={props.onGoogleSignOut}
         >
-          <Icon name="sign out" />
+          <IconLogout
+            size={18}
+            style={{marginRight: 6, verticalAlign: 'middle'}}
+          />
           <FormattedMessage
             id="menu.google_sign_out"
             defaultMessage="Disconnect Google Drive"
           />
         </MenuItem>
-        {screenSize === ScreenSize.SMALL ? <Dropdown.Divider /> : null}
+        {screenSize === ScreenSize.SMALL ? <Menu.Divider /> : null}
       </>
     );
   }
@@ -258,9 +304,9 @@ export function TopBar(props: Props) {
   function fileMenuItems(menuType: MenuType) {
     return (
       <>
-        <UploadMenu menuType={menuType} {...props} />
-        <UrlMenu menuType={menuType} {...props} />
-        {showWikiTree && <WikiTreeMenu menuType={menuType} {...props} />}
+        <UploadMenu menuType={menuType} />
+        <UrlMenu menuType={menuType} />
+        {showWikiTree && <WikiTreeMenu menuType={menuType} />}
         <GoogleDriveMenu
           menuType={menuType}
           onTokenAcquired={props.onGoogleTokenAcquired}
@@ -274,12 +320,12 @@ export function TopBar(props: Props) {
     if (!props.standalone && showWikiTree) {
       switch (screenSize) {
         case ScreenSize.LARGE:
-          return <WikiTreeMenu menuType={MenuType.Menu} {...props} />;
+          return <WikiTreeMenu menuType={MenuType.Menu} />;
         case ScreenSize.SMALL:
           return (
             <>
-              <WikiTreeMenu menuType={MenuType.Dropdown} {...props} />
-              <Dropdown.Divider />
+              <WikiTreeMenu menuType={MenuType.Dropdown} />
+              <Menu.Divider />
             </>
           );
       }
@@ -295,17 +341,19 @@ export function TopBar(props: Props) {
         // Show dropdown if chart is shown, otherwise show individual menu
         // items.
         return props.showingChart ? (
-          <Dropdown
-            trigger={
-              <div>
-                <Icon name="folder open" />
+          <Menu shadow="md" width={220} keepMounted>
+            <Menu.Target>
+              <div role="button" tabIndex={0} className="topbar-item">
+                <IconFolderOpen
+                  size={18}
+                  style={{marginRight: 6, verticalAlign: 'middle'}}
+                />
                 <FormattedMessage id="menu.open" defaultMessage="Open" />
+                <IconCaretDownFilled size={12} style={{marginLeft: 10}} />
               </div>
-            }
-            className="item"
-          >
-            <Dropdown.Menu>{fileMenuItems(MenuType.Dropdown)}</Dropdown.Menu>
-          </Dropdown>
+            </Menu.Target>
+            <Menu.Dropdown>{fileMenuItems(MenuType.Dropdown)}</Menu.Dropdown>
+          </Menu>
         ) : (
           fileMenuItems(MenuType.Menu)
         );
@@ -314,7 +362,7 @@ export function TopBar(props: Props) {
         return (
           <>
             {fileMenuItems(MenuType.Dropdown)}
-            <Dropdown.Divider />
+            <Menu.Divider />
           </>
         );
     }
@@ -330,9 +378,8 @@ export function TopBar(props: Props) {
           menuType={
             screenSize === ScreenSize.SMALL ? MenuType.Dropdown : MenuType.Menu
           }
-          {...props}
         />
-        {screenSize === ScreenSize.SMALL ? <Dropdown.Divider /> : null}
+        {screenSize === ScreenSize.SMALL ? <Menu.Divider /> : null}
       </>
     );
   }
@@ -340,22 +387,25 @@ export function TopBar(props: Props) {
   function mobileMenus() {
     return (
       <>
-        <Dropdown
-          trigger={
-            <div>
-              <Icon name="sidebar" />
+        <Menu shadow="md" width={240} keepMounted>
+          <Menu.Target>
+            <div
+              role="button"
+              tabIndex={0}
+              className="topbar-item"
+              aria-label="Menu"
+            >
+              <IconMenu2 size={22} />
             </div>
-          }
-          className="item"
-          icon={null}
-        >
-          <Dropdown.Menu>
+          </Menu.Target>
+          <Menu.Dropdown>
             {fileMenus(ScreenSize.SMALL)}
             {chartMenus(ScreenSize.SMALL)}
             {googleDriveDisconnectMenu(ScreenSize.SMALL)}
             {wikiTreeLoginMenu(ScreenSize.SMALL)}
 
-            <Dropdown.Item
+            <Menu.Item
+              component="a"
               href="https://github.com/PeWu/topola-viewer"
               target="_blank"
               rel="noopener noreferrer"
@@ -364,9 +414,9 @@ export function TopBar(props: Props) {
                 id="menu.github"
                 defaultMessage="GitHub project"
               />
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
         <div className="topbar--title">
           {props.standalone ? <Link to="/">{title()}</Link> : title()}
         </div>
@@ -386,13 +436,20 @@ export function TopBar(props: Props) {
   function desktopMenus() {
     return (
       <>
-        {props.standalone ? <Link to="/">{title()}</Link> : null}
+        {props.standalone ? (
+          <Link to="/" style={{textDecoration: 'none'}}>
+            {title()}
+          </Link>
+        ) : null}
         {fileMenus(ScreenSize.LARGE)}
         {chartMenus(ScreenSize.LARGE)}
-        <Menu.Menu position="right">
+        <div
+          style={{marginLeft: 'auto', display: 'flex', alignItems: 'center'}}
+        >
           {googleDriveDisconnectMenu(ScreenSize.LARGE)}
           {wikiTreeLoginMenu(ScreenSize.LARGE)}
-          <Menu.Item
+          <a
+            className="topbar-item"
             href="https://github.com/PeWu/topola-viewer"
             target="_blank"
             rel="noopener noreferrer"
@@ -401,34 +458,20 @@ export function TopBar(props: Props) {
               id="menu.github"
               defaultMessage="GitHub project"
             />
-          </Menu.Item>
-        </Menu.Menu>
+          </a>
+        </div>
       </>
     );
   }
 
   return (
     <div>
-      <Menu
-        as={Media}
-        greaterThanOrEqual="large"
-        attached="top"
-        inverted
-        color="blue"
-        size="large"
-      >
-        {desktopMenus()}
-      </Menu>
-      <Menu
-        as={Media}
-        at="small"
-        attached="top"
-        inverted
-        color="blue"
-        size="large"
-      >
-        {mobileMenus()}
-      </Menu>
+      <Media greaterThanOrEqual="large">
+        <div className="topbar">{desktopMenus()}</div>
+      </Media>
+      <Media at="small">
+        <div className="topbar">{mobileMenus()}</div>
+      </Media>
     </div>
   );
 }

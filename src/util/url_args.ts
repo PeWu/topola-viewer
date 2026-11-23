@@ -106,7 +106,9 @@ export function getParamFromSearch(name: string, search: ParsedQuery) {
  * Retrieve arguments passed into the application through the URL and uploaded
  * data.
  */
-export function getArguments(location: H.Location): Arguments {
+export function getArguments(
+  location: Pick<H.Location, 'pathname' | 'search' | 'hash'>,
+): Arguments {
   const search = parseQuery(location.search);
   const getParam = (name: string) => getParamFromSearch(name, search);
 
@@ -208,7 +210,7 @@ export function getArguments(location: H.Location): Arguments {
  * with new values added or removed from the current URL.
  */
 export function getUrlForArgs(
-  location: H.Location,
+  location: Pick<H.Location, 'pathname' | 'search' | 'hash'>,
   newArgs: Record<string, string | (string | null)[] | null | undefined>,
 ): {pathname: string; search: string; hash: string} {
   const search = parseQuery(location.search);

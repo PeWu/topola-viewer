@@ -1,9 +1,9 @@
+import {Button, Group, Modal, Stack} from '@mantine/core';
 import {useEffect, useState} from 'react';
 import {FormattedMessage} from 'react-intl';
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
-import {Button, Header, Modal} from 'semantic-ui-react';
 import {unified} from 'unified';
 import changelog from '../CHANGELOG.md?raw';
 
@@ -71,27 +71,40 @@ export function Changelog() {
   }, []);
 
   return (
-    <Modal open={open} centered={false}>
-      <Header>
+    <Modal
+      opened={open}
+      onClose={() => setOpen(false)}
+      centered={false}
+      withCloseButton={false}
+      title={
         <FormattedMessage
           id="whats_new.title"
           defaultMessage="What's new in this version?"
         />
-      </Header>
-      <Modal.Content className="limit-height">
-        <span dangerouslySetInnerHTML={{__html: changelog}} />
-        <a href="https://github.com/PeWu/topola-viewer/blob/master/CHANGELOG.md">
-          <FormattedMessage
-            id="intro.full_changelog"
-            defaultMessage="See full changelog"
-          />
-        </a>
-      </Modal.Content>
-      <Modal.Actions>
-        <Button primary onClick={() => setOpen(false)}>
-          Close
-        </Button>
-      </Modal.Actions>
+      }
+      size="lg"
+    >
+      <Stack gap="md">
+        <div
+          className="limit-height"
+          style={{maxHeight: '300px', overflowY: 'auto'}}
+        >
+          <span dangerouslySetInnerHTML={{__html: changelog}} />
+          <a
+            href="https://github.com/PeWu/topola-viewer/blob/master/CHANGELOG.md"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FormattedMessage
+              id="intro.full_changelog"
+              defaultMessage="See full changelog"
+            />
+          </a>
+        </div>
+        <Group justify="flex-end">
+          <Button onClick={() => setOpen(false)}>Close</Button>
+        </Group>
+      </Stack>
     </Modal>
   );
 }

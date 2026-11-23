@@ -1,5 +1,15 @@
+import {Divider, List, Text} from '@mantine/core';
+import {
+  IconCalendar,
+  IconCopyright,
+  IconEdit,
+  IconFile,
+  IconMail,
+  IconMapPin,
+  IconPhone,
+  IconUser,
+} from '@tabler/icons-react';
 import {FormattedMessage, useIntl} from 'react-intl';
-import {Divider, Header, Icon, Item, List} from 'semantic-ui-react';
 import {parseGedcomDate} from 'topola/gedcom';
 import {formatDateOrRange} from '../../util/date_util';
 import {dereference, GedcomData} from '../../util/gedcom_util';
@@ -64,83 +74,71 @@ export function SourceHead(gedcom: GedcomData) {
     return null;
   }
 
-  // Icons: https://react.semantic-ui.com/elements/icon/
   return (
-    <Item>
-      <Item.Content>
-        <Header sub>
-          <FormattedMessage id="head.source" defaultMessage="Data source" />
-        </Header>
-        <List>
-          {sour_name && (
-            <List.Item>
-              <div className="list-icon-wrapper">
-                <Icon name="edit" />
-              </div>
-              <List.Content>{sour_name}</List.Content>
-            </List.Item>
-          )}
+    <div style={{padding: '0 15px 0 25px'}}>
+      <Text
+        className="sub-header"
+        size="xs"
+        fw={700}
+        tt="uppercase"
+        mb={6}
+        style={{color: 'rgba(0, 0, 0, 0.87)', lineHeight: 1.2}}
+      >
+        <FormattedMessage id="head.source" defaultMessage="Data source" />
+      </Text>
+      <List
+        spacing={5}
+        size="sm"
+        styles={{
+          itemIcon: {
+            width: 20,
+            textAlign: 'center',
+            marginRight: 4,
+            color: 'rgba(0, 0, 0, 0.87)',
+          },
+        }}
+      >
+        {sour_name && (
+          <List.Item icon={<IconEdit size={15} stroke={2} />}>
+            {sour_name}
+          </List.Item>
+        )}
 
-          {date && (
-            <List.Item>
-              <div className="list-icon-wrapper">
-                <Icon name="calendar" />
-              </div>
-              <List.Content>{dateFormatted}</List.Content>
-            </List.Item>
-          )}
-          {file && (
-            <List.Item>
-              <div className="list-icon-wrapper">
-                <Icon name="file" />
-              </div>
-              <List.Content>{filename}</List.Content>
-            </List.Item>
-          )}
-          {name && (
-            <List.Item>
-              <div className="list-icon-wrapper">
-                <Icon name="user" />
-              </div>
-              <List.Content>{name}</List.Content>
-            </List.Item>
-          )}
-          {adr1 && (
-            <List.Item>
-              <div className="list-icon-wrapper">
-                <Icon name="marker" />
-              </div>
-              <List.Content>{location}</List.Content>
-            </List.Item>
-          )}
-          {phon && (
-            <List.Item>
-              <div className="list-icon-wrapper">
-                <Icon name="phone" />
-              </div>
-              <List.Content>{phon}</List.Content>
-            </List.Item>
-          )}
-          {email && (
-            <List.Item>
-              <div className="list-icon-wrapper">
-                <Icon name="mail" />
-              </div>
-              <List.Content>{email}</List.Content>
-            </List.Item>
-          )}
-          {copr && (
-            <List.Item>
-              <div className="list-icon-wrapper">
-                <Icon name="copyright" />
-              </div>
-              <List.Content>{copr}</List.Content>
-            </List.Item>
-          )}
-        </List>
-
-        <Divider />
-      </Item.Content>
-    </Item>
+        {date && (
+          <List.Item icon={<IconCalendar size={15} stroke={2} />}>
+            {dateFormatted}
+          </List.Item>
+        )}
+        {file && (
+          <List.Item icon={<IconFile size={15} stroke={2} />}>
+            {filename}
+          </List.Item>
+        )}
+        {name && (
+          <List.Item icon={<IconUser size={15} stroke={2} />}>{name}</List.Item>
+        )}
+        {adr1 && (
+          <List.Item icon={<IconMapPin size={15} stroke={2} />}>
+            {location}
+          </List.Item>
+        )}
+        {phon && (
+          <List.Item icon={<IconPhone size={15} stroke={2} />}>
+            {phon}
+          </List.Item>
+        )}
+        {email && (
+          <List.Item icon={<IconMail size={15} stroke={2} />}>
+            {email}
+          </List.Item>
+        )}
+        {copr && (
+          <List.Item icon={<IconCopyright size={15} stroke={2} />}>
+            {copr}
+          </List.Item>
+        )}
+      </List>
+      <Divider my={14} color="rgba(34, 36, 38, 0.15)" />
+    </div>
   );
 }

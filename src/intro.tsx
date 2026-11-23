@@ -1,8 +1,8 @@
+import {Card, Image, Title} from '@mantine/core';
 import queryString from 'query-string';
 import {useEffect, useState} from 'react';
 import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router';
-import {Card, Grid, Image} from 'semantic-ui-react';
 import {getChangelog, updateSeenVersion} from './changelog';
 import logo from './topola.jpg';
 import {Media} from './util/media';
@@ -132,11 +132,15 @@ function Contents() {
           ' cross-site file loading in the browser (CORS).'
         }
         values={{
-          link: <a href="https://topolaproxy.bieda.it/">cors-anywhere</a>,
+          link: (
+            <a key="proxy-link" href="https://topolaproxy.bieda.it/">
+              cors-anywhere
+            </a>
+          ),
         }}
       />
 
-      <p className="ui right aligned version">
+      <p className="version" style={{textAlign: 'right'}}>
         version: {formatBuildDate(import.meta.env.VITE_GIT_TIME)} (
         <a
           href={`https://github.com/PeWu/topola-viewer/commit/${import.meta.env.VITE_GIT_SHA}`}
@@ -154,37 +158,66 @@ export function Intro() {
   return (
     <div id="introContent">
       <div className="backgroundImage" />
-      <Card className="intro">
-        <Card.Content as={Media} greaterThanOrEqual="large">
-          <Card.Header>
-            <FormattedMessage
-              id="intro.title"
-              defaultMessage="Topola Genealogy Viewer"
-            />
-          </Card.Header>
-        </Card.Content>
-        <Card.Content>
-          <Grid as={Media} greaterThanOrEqual="large">
-            <Grid.Row>
-              <Grid.Column width={5}>
-                <Image src={logo} alt="Topola logo" />
-              </Grid.Column>
-              <Grid.Column width={11}>
-                <Contents />
-              </Grid.Column>
-            </Grid.Row>
-          </Grid>
-          <Media at="small">
+      <Card
+        className="intro"
+        padding={0}
+        radius="sm"
+        shadow="sm"
+        withBorder
+        style={{
+          width: 770,
+          maxWidth: '95vw',
+          margin: 'auto',
+          maxHeight: 'calc(100vh - 50px)',
+          overflowY: 'auto',
+        }}
+      >
+        <Media greaterThanOrEqual="large">
+          <div
+            style={{
+              padding: '14px',
+              borderBottom: '1px solid rgba(34, 36, 38, 0.1)',
+            }}
+          >
+            <Title
+              order={2}
+              style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                lineHeight: 1.2857,
+                color: 'rgba(0, 0, 0, 0.85)',
+                margin: 0,
+              }}
+            >
+              <FormattedMessage
+                id="intro.title"
+                defaultMessage="Topola Genealogy Viewer"
+              />
+            </Title>
+          </div>
+          <div style={{display: 'flex', padding: '14px 0'}}>
+            <div style={{flex: '0 0 31.25%', padding: '0 14px'}}>
+              <Image src={logo} alt="Topola logo" radius={0} />
+            </div>
+            <div style={{flex: '0 0 68.75%', padding: '0 14px'}}>
+              <Contents />
+            </div>
+          </div>
+        </Media>
+        <Media at="small">
+          <div style={{padding: '14px'}}>
             <Image
               src={logo}
               alt="Topola logo"
-              centered={true}
-              size="tiny"
+              radius={0}
+              w={80}
+              mx="auto"
+              mb="md"
               className="blockImage"
             />
             <Contents />
-          </Media>
-        </Card.Content>
+          </div>
+        </Media>
       </Card>
     </div>
   );

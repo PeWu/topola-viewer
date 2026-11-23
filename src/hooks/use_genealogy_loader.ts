@@ -55,7 +55,7 @@ export function useGenealogyLoader(options: {
 
   const isMountedRef = useRef(true);
   const fetchIdRef = useRef(0);
-  const loadedSelectionRef = useRef<IndiInfo>();
+  const loadedSelectionRef = useRef<IndiInfo | undefined>(undefined);
 
   useEffect(() => {
     isMountedRef.current = true;

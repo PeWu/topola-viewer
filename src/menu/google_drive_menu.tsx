@@ -1,7 +1,7 @@
+import {IconBrandGoogleDrive} from '@tabler/icons-react';
 import queryString from 'query-string';
 import {FormattedMessage} from 'react-intl';
 import {useNavigate} from 'react-router';
-import {Icon} from 'semantic-ui-react';
 import {
   googleDriveService,
   isGoogleDriveConfigured,
@@ -49,7 +49,10 @@ export function GoogleDriveMenu(props: Props) {
 
   return (
     <MenuItem onClick={handleClick} menuType={props.menuType}>
-      <Icon name="google drive" />
+      <IconBrandGoogleDrive
+        size={18}
+        style={{marginRight: 6, verticalAlign: 'middle'}}
+      />
       <FormattedMessage
         id="menu.load_from_google_drive"
         defaultMessage="Load from Google Drive"

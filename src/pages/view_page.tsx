@@ -1,6 +1,6 @@
+import {Center, Loader} from '@mantine/core';
 import {useCallback} from 'react';
 import {useIntl} from 'react-intl';
-import {Loader, SidebarPushable, SidebarPusher} from 'semantic-ui-react';
 import {Chart} from '../chart/chart';
 import {
   downloadPdf,
@@ -185,9 +185,9 @@ export function ViewPage() {
               onDismiss={onDismissErrorPopup}
             />
             {state === AppState.LOADING_MORE ? (
-              <Loader active size="small" className="loading-more" />
+              <Loader size="sm" className="loading-more" />
             ) : null}
-            <SidebarPushable>
+            <div className="pushable">
               <SidePanel
                 data={data}
                 selectedIndiId={detailIndi || selection.id}
@@ -196,8 +196,8 @@ export function ViewPage() {
                 onToggle={onToggleSidePanel}
                 onConfigChange={onConfigChange}
               />
-              <SidebarPusher>{renderChart(selection)}</SidebarPusher>
-            </SidebarPushable>
+              <div className="pusher">{renderChart(selection)}</div>
+            </div>
           </div>
         );
       }
@@ -207,7 +207,11 @@ export function ViewPage() {
 
       case AppState.INITIAL:
       case AppState.LOADING:
-        return <Loader active size="large" />;
+        return (
+          <Center style={{height: '100%'}}>
+            <Loader size="xl" />
+          </Center>
+        );
     }
   }
 

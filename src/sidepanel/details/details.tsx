@@ -1,7 +1,7 @@
+import {Text} from '@mantine/core';
 import flatMap from 'array.prototype.flatmap';
 import {GedcomEntry} from 'parse-gedcom';
 import {FormattedMessage} from 'react-intl';
-import {Header, Item} from 'semantic-ui-react';
 import {
   dereference,
   GedcomData,
@@ -47,9 +47,15 @@ function dataDetails(entry: GedcomEntry) {
   }
   return (
     <>
-      <Header sub>
+      <Text
+        className="sub-header"
+        size="xs"
+        fw={700}
+        tt="uppercase"
+        style={{color: 'rgba(0, 0, 0, 0.87)', lineHeight: 1.2}}
+      >
         <TranslatedTag tag={entry.tag} />
-      </Header>
+      </Text>
       <span>
         <MultilineText lines={lines} />
       </span>
@@ -72,9 +78,15 @@ function attributeDetails(entry: GedcomEntry) {
   if (attributeName) {
     return (
       <>
-        <Header sub>
+        <Text
+          className="sub-header"
+          size="xs"
+          fw={700}
+          tt="uppercase"
+          style={{color: 'rgba(0, 0, 0, 0.87)', lineHeight: 1.2}}
+        >
           <TranslatedTag tag={entry.tag} />
-        </Header>
+        </Text>
         <div>
           <b>{attributeName}</b>: {attributeValue}
         </div>
@@ -83,9 +95,15 @@ function attributeDetails(entry: GedcomEntry) {
   } else {
     return (
       <>
-        <Header sub>
+        <Text
+          className="sub-header"
+          size="xs"
+          fw={700}
+          tt="uppercase"
+          style={{color: 'rgba(0, 0, 0, 0.87)', lineHeight: 1.2}}
+        >
           <TranslatedTag tag={entry.tag} />
-        </Header>
+        </Text>
         <div>{attributeValue}</div>
       </>
     );
@@ -134,9 +152,18 @@ function sourceDetails(
   return (
     <>
       <div className="item-header">
-        <Header as="span" size="small">
+        <Text
+          span
+          className="header"
+          fw={700}
+          style={{
+            fontSize: '15px',
+            lineHeight: 1.2857,
+            color: 'rgba(0, 0, 0, 0.87)',
+          }}
+        >
           <TranslatedTag tag="SOUR" />
-        </Header>
+        </Text>
       </div>
       <Sources sources={sources} />
     </>
@@ -171,9 +198,18 @@ function fileDetails(
   return (
     <>
       <div className="item-header">
-        <Header as="span" size="small">
+        <Text
+          span
+          className="header"
+          fw={700}
+          style={{
+            fontSize: '15px',
+            lineHeight: 1.2857,
+            color: 'rgba(0, 0, 0, 0.87)',
+          }}
+        >
           <TranslatedTag tag="OBJE" />
-        </Header>
+        </Text>
       </div>
       <AdditionalFiles files={files} />
     </>
@@ -235,17 +271,32 @@ function nameDetails(entry: GedcomEntry) {
 
   return (
     <>
-      <Header as="span" size="large">
+      <Text
+        span
+        fw={700}
+        style={{
+          fontSize: '24px',
+          lineHeight: 1.2857,
+          color: 'rgba(0, 0, 0, 0.87)',
+        }}
+      >
         {fullName ? (
           fullName
         ) : (
           <FormattedMessage id="name.unknown_name" defaultMessage="N.N." />
         )}
-      </Header>
+      </Text>
       {fullName && nameType && (
-        <Item.Meta>
+        <div
+          style={{
+            fontSize: '14px',
+            lineHeight: 1,
+            color: 'rgba(0, 0, 0, 0.6)',
+            margin: '7px 0 0',
+          }}
+        >
           <TranslatedTag tag={nameType} />
-        </Item.Meta>
+        </div>
       )}
     </>
   );
@@ -269,9 +320,9 @@ function getSectionForEachMatchingEntry(
   )
     .filter((element) => element !== null)
     .map((element, index) => (
-      <Item key={index}>
-        <Item.Content>{element}</Item.Content>
-      </Item>
+      <div className="item" key={index}>
+        <div className="content">{element}</div>
+      </div>
     ));
 }
 
@@ -299,9 +350,9 @@ function combineAllMatchingEntriesIntoSingleSection(
   }
 
   return (
-    <Item>
-      <Item.Content>{sectionWithDetails}</Item.Content>
-    </Item>
+    <div className="item">
+      <div className="content">{sectionWithDetails}</div>
+    </div>
   );
 }
 
@@ -322,24 +373,30 @@ function getOtherSections(entries: GedcomEntry[], gedcom: GedcomData) {
     .map((entry) => dataDetails(entry))
     .filter((element) => element !== null)
     .map((element, index) => (
-      <Item key={index}>
-        <Item.Content>{element}</Item.Content>
-      </Item>
+      <div className="item" key={index}>
+        <div className="content">{element}</div>
+      </div>
     ));
 }
 
 function getSectionForId(indi: string): React.ReactNode {
   return (
-    <Item>
-      <Item.Content>
-        <Header sub>
+    <div className="item">
+      <div className="content">
+        <Text
+          className="sub-header"
+          size="xs"
+          fw={700}
+          tt="uppercase"
+          style={{color: 'rgba(0, 0, 0, 0.87)', lineHeight: 1.2}}
+        >
           <FormattedMessage id="config.ids" defaultMessage="Identification" />
-        </Header>
+        </Text>
         <div>
           <i>{indi}</i>
         </div>
-      </Item.Content>
-    </Item>
+      </div>
+    </div>
   );
 }
 
@@ -355,7 +412,7 @@ export function Details(props: Props) {
 
   return (
     <div className="details" data-testid="details">
-      <Item.Group divided>
+      <div className="items divided">
         {getSectionForEachMatchingEntry(
           entries,
           props.gedcom,
@@ -403,7 +460,7 @@ export function Details(props: Props) {
           ['SOUR'],
           sourceDetails,
         )}
-      </Item.Group>
+      </div>
     </div>
   );
 }

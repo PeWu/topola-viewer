@@ -1,14 +1,12 @@
+import {ActionIcon, Group, Tooltip} from '@mantine/core';
+import {
+  IconCameraFilled,
+  IconFileText,
+  IconNote,
+  IconQuoteFilled,
+} from '@tabler/icons-react';
 import {useState} from 'react';
 import {FormattedMessage} from 'react-intl';
-import {
-  Icon,
-  Item,
-  List,
-  Menu,
-  MenuItemProps,
-  Popup,
-  Tab,
-} from 'semantic-ui-react';
 import {Source} from '../../util/gedcom_util';
 import {AdditionalFiles, FileEntry} from './additional-files';
 import {MultilineText} from './multiline-text';
@@ -33,15 +31,13 @@ function eventImages(images: Image[] | undefined) {
   return (
     !!images &&
     images.map((image, index) => (
-      <List key={index}>
-        <List.Item>
-          <WrappedImage
-            url={image.url}
-            filename={image.filename}
-            title={image.title}
-          />
-        </List.Item>
-      </List>
+      <div key={index} style={{marginBottom: 8}}>
+        <WrappedImage
+          url={image.url}
+          filename={image.filename}
+          title={image.title}
+        />
+      </div>
     ))
   );
 }
@@ -52,8 +48,8 @@ function eventNotes(notes: string[][] | undefined) {
     notes.map((note, index) => (
       <div key={index}>
         <MultilineText
-          lines={note.map((line, index) => (
-            <i key={index}>{line}</i>
+          lines={note.map((line, idx) => (
+            <i key={idx}>{line}</i>
           ))}
         />
       </div>
@@ -62,119 +58,149 @@ function eventNotes(notes: string[][] | undefined) {
 }
 
 export function EventExtras(props: Props) {
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
   const [indi, setIndi] = useState('');
 
   if (!indi || indi !== props.indi) {
-    setActiveIndex(-1);
+    setActiveTab(null);
     setIndi(props.indi);
   }
 
-  function handleTabOnClick(
-    _event: React.MouseEvent<HTMLAnchorElement>,
-    menuItemProps: MenuItemProps,
-  ) {
-    menuItemProps.index !== undefined && activeIndex !== menuItemProps.index
-      ? setActiveIndex(menuItemProps.index)
-      : setActiveIndex(-1);
+  const hasImages = !!props.images?.length;
+  const hasNotes = !!props.notes?.length;
+  const hasSources = !!props.sources?.length;
+  const hasFiles = !!props.files?.length;
+
+  if (!hasImages && !hasNotes && !hasSources && !hasFiles) {
+    return null;
   }
 
-  const imageTab = props.images?.length && {
-    menuItem: (
-      <Menu.Item fitted key="images" onClick={handleTabOnClick}>
-        <Popup
-          content={
-            <FormattedMessage id="extras.images" defaultMessage="Images" />
-          }
-          size="mini"
-          position="bottom center"
-          trigger={<Icon circular name="camera" />}
-        />
-      </Menu.Item>
-    ),
-    render: () => <Tab.Pane>{eventImages(props.images)}</Tab.Pane>,
-  };
+  const getButtonStyle = (isActive: boolean): React.CSSProperties => ({
+    width: 28,
+    height: 28,
+    minWidth: 28,
+    minHeight: 28,
+    borderRadius: '500em',
+    boxShadow: isActive ? 'none' : '0em 0em 0em 0.1em rgba(0, 0, 0, 0.1) inset',
+    backgroundColor: isActive ? '#1b1c1d' : 'transparent',
+    color: isActive ? '#ffffff' : 'rgba(0, 0, 0, 0.87)',
+    border: 'none',
+  });
 
-  const noteTab = props.notes?.length && {
-    menuItem: (
-      <Menu.Item fitted key="notes" onClick={handleTabOnClick}>
-        <Popup
-          content={
-            <FormattedMessage id="extras.notes" defaultMessage="Notes" />
-          }
-          size="mini"
-          position="bottom center"
-          trigger={<Icon circular name="sticky note outline" />}
-        />
-      </Menu.Item>
-    ),
-    render: () => <Tab.Pane>{eventNotes(props.notes)}</Tab.Pane>,
-  };
+  return (
+    <div className="event-extras" style={{marginTop: 8}}>
+      <Group gap={7}>
+        {hasImages && (
+          <Tooltip
+            label={
+              <FormattedMessage id="extras.images" defaultMessage="Images" />
+            }
+            position="bottom"
+          >
+            <ActionIcon
+              variant="transparent"
+              size={28}
+              radius="xl"
+              style={getButtonStyle(activeTab === 'images')}
+              onClick={() =>
+                setActiveTab(activeTab === 'images' ? null : 'images')
+              }
+              aria-label="Images"
+            >
+              <IconCameraFilled size={15} />
+            </ActionIcon>
+          </Tooltip>
+        )}
 
-  const sourceTab = props.sources?.length && {
-    menuItem: (
-      <Menu.Item fitted key="sources" onClick={handleTabOnClick}>
-        <Popup
-          content={
-            <FormattedMessage id="extras.sources" defaultMessage="Sources" />
-          }
-          size="mini"
-          position="bottom center"
-          trigger={<Icon circular name="quote right" />}
-        />
-      </Menu.Item>
-    ),
-    render: () => (
-      <Tab.Pane>
-        <Sources sources={props.sources} />
-      </Tab.Pane>
-    ),
-  };
+        {hasNotes && (
+          <Tooltip
+            label={
+              <FormattedMessage id="extras.notes" defaultMessage="Notes" />
+            }
+            position="bottom"
+          >
+            <ActionIcon
+              variant="transparent"
+              size={28}
+              radius="xl"
+              style={getButtonStyle(activeTab === 'notes')}
+              onClick={() =>
+                setActiveTab(activeTab === 'notes' ? null : 'notes')
+              }
+              aria-label="Notes"
+            >
+              <IconNote size={15} stroke={2} />
+            </ActionIcon>
+          </Tooltip>
+        )}
 
-  const filesTab = props.files?.length && {
-    menuItem: (
-      <Menu.Item fitted key="files" onClick={handleTabOnClick}>
-        <Popup
-          content={
-            <FormattedMessage
-              id="extras.files"
-              defaultMessage="Additional files"
-            />
-          }
-          size="mini"
-          position="bottom center"
-          trigger={<Icon circular name="file alternate outline" />}
-        />
-      </Menu.Item>
-    ),
-    render: () => (
-      <Tab.Pane>
-        <AdditionalFiles files={props.files} />
-      </Tab.Pane>
-    ),
-  };
+        {hasSources && (
+          <Tooltip
+            label={
+              <FormattedMessage id="extras.sources" defaultMessage="Sources" />
+            }
+            position="bottom"
+          >
+            <ActionIcon
+              variant="transparent"
+              size={28}
+              radius="xl"
+              style={getButtonStyle(activeTab === 'sources')}
+              onClick={() =>
+                setActiveTab(activeTab === 'sources' ? null : 'sources')
+              }
+              aria-label="Sources"
+            >
+              <IconQuoteFilled size={15} />
+            </ActionIcon>
+          </Tooltip>
+        )}
 
-  const panes = [imageTab, noteTab, sourceTab, filesTab].flatMap((tab) =>
-    tab ? [tab] : [],
-  );
+        {hasFiles && (
+          <Tooltip
+            label={
+              <FormattedMessage
+                id="extras.files"
+                defaultMessage="Additional files"
+              />
+            }
+            position="bottom"
+          >
+            <ActionIcon
+              variant="transparent"
+              size={28}
+              radius="xl"
+              style={getButtonStyle(activeTab === 'files')}
+              onClick={() =>
+                setActiveTab(activeTab === 'files' ? null : 'files')
+              }
+              aria-label="Additional files"
+            >
+              <IconFileText size={15} stroke={2} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </Group>
 
-  if (panes.length) {
-    return (
-      <Item.Description>
-        <Tab
-          className="event-extras"
-          activeIndex={activeIndex}
-          renderActiveOnly={true}
-          menu={{
-            tabular: true,
-            attached: true,
-            compact: true,
-            borderless: true,
+      {activeTab && (
+        <div
+          style={{
+            wordBreak: 'normal',
+            overflowWrap: 'anywhere',
+            maxWidth: 289,
+            paddingTop: 10,
           }}
-          panes={panes}
-        />
-      </Item.Description>
-    );
-  }
-  return null;
+        >
+          {activeTab === 'images' && eventImages(props.images)}
+          {activeTab === 'notes' && eventNotes(props.notes)}
+          {activeTab === 'sources' && props.sources && (
+            <Sources sources={props.sources} />
+          )}
+          {activeTab === 'files' && props.files && (
+            <AdditionalFiles files={props.files} />
+          )}
+        </div>
+      )}
+    </div>
+  );
 }

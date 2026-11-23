@@ -1,10 +1,16 @@
-import {useCallback, useMemo} from 'react';
+import {useCallback, useMemo, useRef} from 'react';
 import {useLocation, useNavigate} from 'react-router';
 import {PRIVATE_ID_PREFIX} from '../datasource/wikitree';
 import {Config, configToArgs} from '../sidepanel/config/config';
 import {analyticsEvent} from '../util/analytics';
 import {IndiInfo} from '../util/gedcom_util';
 import {getArguments, getUrlForArgs} from '../util/url_args';
+
+type LocationLike = {pathname: string; search: string; hash: string};
+
+function locationKey(loc: LocationLike): string {
+  return `${loc.pathname}${loc.search}${loc.hash}`;
+}
 
 /**
  * Custom React hook to manage and synchronize URL routing and query parameter state
@@ -14,8 +20,30 @@ export function useUrlState() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Tracks in-flight navigations dispatched before React Router commits a
+  // transition, so rapid back-to-back updates (e.g. clicking multiple settings)
+  // compose on top of each other instead of clobbering earlier changes.
+  const pendingNavRef = useRef<{
+    baseKey: string;
+    intermediateKeys: Set<string>;
+    latest: LocationLike;
+  } | null>(null);
+
   // Parse all URL arguments memoized on location changes.
   const args = useMemo(() => getArguments(location), [location]);
+
+  const getBaseLocation = useCallback((): LocationLike => {
+    const locKey = locationKey(location);
+    const pending = pendingNavRef.current;
+    if (
+      pending &&
+      (locKey === pending.baseKey || pending.intermediateKeys.has(locKey))
+    ) {
+      return pending.latest;
+    }
+    pendingNavRef.current = null;
+    return location;
+  }, [location]);
 
   /**
    * Helper to update the browser URL query parameters.
@@ -25,9 +53,27 @@ export function useUrlState() {
       newArgs: Record<string, string | (string | null)[] | null | undefined>,
       options?: {replace?: boolean},
     ) => {
-      navigate(getUrlForArgs(location, newArgs), options);
+      const locKey = locationKey(location);
+      const base = getBaseLocation();
+      const next = getUrlForArgs(base, newArgs);
+      const nextKey = locationKey(next);
+      if (nextKey === locKey) {
+        pendingNavRef.current = null;
+      } else {
+        const prevPending = pendingNavRef.current;
+        const intermediateKeys = prevPending
+          ? prevPending.intermediateKeys
+          : new Set<string>();
+        intermediateKeys.add(locationKey(base));
+        pendingNavRef.current = {
+          baseKey: prevPending ? prevPending.baseKey : locKey,
+          intermediateKeys,
+          latest: next,
+        };
+      }
+      navigate(next, options);
     },
-    [location, navigate],
+    [getBaseLocation, location, navigate],
   );
 
   /**
@@ -80,10 +126,11 @@ export function useUrlState() {
    * Updates the URL parameters based on configuration updates.
    */
   const onConfigChange = useCallback(
-    (config: Config) => {
-      updateUrl(configToArgs(config), {replace: true});
+    (patch: Partial<Config>) => {
+      const currentConfig = getArguments(getBaseLocation()).config;
+      updateUrl(configToArgs({...currentConfig, ...patch}), {replace: true});
     },
-    [updateUrl],
+    [getBaseLocation, updateUrl],
   );
 
   return {

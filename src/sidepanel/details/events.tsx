@@ -1,7 +1,7 @@
+import {Text} from '@mantine/core';
 import flatMap from 'array.prototype.flatmap';
 import {GedcomEntry} from 'parse-gedcom';
 import {IntlShape, useIntl} from 'react-intl';
-import {Header, Item} from 'semantic-ui-react';
 import {parseGedcomDate} from 'topola/gedcom';
 import {DateOrRange} from 'topola/model';
 import {calcAge} from '../../util/age_util';
@@ -110,13 +110,32 @@ function EventHeader(props: {event: EventData}) {
   const intl = useIntl();
   return (
     <div className="item-header">
-      <Header as="span" size="small">
+      <Text
+        span
+        className="header"
+        fw={700}
+        style={{
+          fontSize: '15px',
+          lineHeight: 1.2857,
+          color: 'rgba(0, 0, 0, 0.87)',
+        }}
+      >
         <TranslatedTag tag={getEventTitle(props.event)} />
-      </Header>
+      </Text>
       {props.event.date ? (
-        <Header as="span" textAlign="right" sub>
+        <Text
+          span
+          className="header sub"
+          fw={700}
+          style={{
+            fontSize: '12px',
+            lineHeight: 1.2,
+            color: 'rgba(0, 0, 0, 0.87)',
+            textAlign: 'right',
+          }}
+        >
           {formatDateOrRange(props.event.date, intl)}
-        </Header>
+        </Text>
       ) : null}
     </div>
   );
@@ -311,15 +330,34 @@ function toFamilyEvents(
 
 function Event(props: {event: EventData}) {
   return (
-    <Item>
-      <Item.Content>
+    <div className="item">
+      <div className="content">
         <EventHeader event={props.event} />
-        {!!props.event.age && <Item.Meta>{props.event.age}</Item.Meta>}
+        {!!props.event.age && (
+          <div
+            style={{
+              fontSize: '14px',
+              lineHeight: 1,
+              color: 'rgba(0, 0, 0, 0.6)',
+              margin: '0 0 7px 0',
+            }}
+          >
+            {props.event.age}
+          </div>
+        )}
         {!!props.event.personLink && (
           <PersonLink person={props.event.personLink} />
         )}
         {!!props.event.place && (
-          <Item.Description>{props.event.place}</Item.Description>
+          <div
+            style={{
+              fontSize: '14px',
+              lineHeight: 1.4285,
+              color: 'rgba(0, 0, 0, 0.87)',
+            }}
+          >
+            {props.event.place}
+          </div>
         )}
         <EventExtras
           images={props.event.images}
@@ -328,8 +366,8 @@ function Event(props: {event: EventData}) {
           indi={props.event.indi}
           files={props.event.files}
         />
-      </Item.Content>
-    </Item>
+      </div>
+    </div>
   );
 }
 
