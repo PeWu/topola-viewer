@@ -2,6 +2,11 @@ import {select} from 'd3-selection';
 import 'd3-transition';
 import {zoomTransform} from 'd3-zoom';
 import {saveAs} from 'file-saver';
+import type {jsPDF} from 'jspdf';
+import dejaVuSymbolsUrl from './fonts/DejaVuSans-Symbols.ttf?url';
+import montserratBoldUrl from './fonts/Montserrat-Bold.ttf?url';
+import montserratItalicUrl from './fonts/Montserrat-Italic.ttf?url';
+import montserratRegularUrl from './fonts/Montserrat-Regular.ttf?url';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -239,20 +244,32 @@ function loadImage(blob: Blob): Promise<HTMLImageElement> {
       URL.revokeObjectURL(objectUrl);
       resolve(image);
     });
-    image.addEventListener('error', (err) => {
+    image.addEventListener('error', () => {
       URL.revokeObjectURL(objectUrl);
-      reject(err);
+      reject(new Error('Failed to load the chart as an image'));
     });
     image.src = objectUrl;
   });
 }
 
+/** Largest canvas width or height supported by the major browsers. */
+const MAX_CANVAS_SIDE = 32767;
+/** Largest canvas area supported by Chrome, in pixels. */
+const MAX_CANVAS_AREA = 268_435_456;
+
 /** Draw image on a new canvas and return the canvas. */
 function drawImageOnCanvas(image: HTMLImageElement) {
   const canvas = document.createElement('canvas');
-  // Scale image for better quality.
-  canvas.width = image.width * 2;
-  canvas.height = image.height * 2;
+  // Scale image for better quality, as long as the canvas is not too large
+  // for the browser. Large charts are scaled down instead of failing.
+  const scale = Math.min(
+    2,
+    MAX_CANVAS_SIDE / image.width,
+    MAX_CANVAS_SIDE / image.height,
+    Math.sqrt(MAX_CANVAS_AREA / (image.width * image.height)),
+  );
+  canvas.width = Math.floor(image.width * scale);
+  canvas.height = Math.floor(image.height * scale);
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const ctx = canvas.getContext('2d')!;
@@ -277,10 +294,63 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string) {
   });
 }
 
-/** Return a copy of the SVG chart but without scaling and positioning. */
-function getStrippedSvg() {
+/** Styles of the chart copied to the elements of PDF files. */
+const PDF_STYLES = [
+  'fill',
+  'fill-opacity',
+  'stroke',
+  'stroke-width',
+  'stroke-dasharray',
+  'stroke-linecap',
+  'stroke-linejoin',
+  'opacity',
+  'font-size',
+  'font-weight',
+  'font-style',
+  'text-anchor',
+  'dominant-baseline',
+];
+
+/** Attribute with the width of a text in the browser, for PDF files. */
+const TEXT_WIDTH_ATTRIBUTE = 'data-text-width';
+
+/**
+ * Copies the styles computed by the browser to the attributes of the copy of
+ * the chart, and removes the style sheets. svg2pdf.js applies style sheets to
+ * each element, which is several times slower. Also keeps the width of each
+ * text in the browser, to draw texts at the same width in the PDF file.
+ */
+function copyComputedStyles(live: Element, copy: Element) {
+  const liveElements = live.querySelectorAll('*');
+  const copyElements = copy.querySelectorAll('*');
+  liveElements.forEach((element, i) => {
+    const style = getComputedStyle(element);
+    for (const name of PDF_STYLES) {
+      copyElements[i].setAttribute(name, style.getPropertyValue(name));
+    }
+    if (element instanceof SVGTextElement) {
+      copyElements[i].setAttribute(
+        TEXT_WIDTH_ATTRIBUTE,
+        String(element.getComputedTextLength()),
+      );
+    }
+  });
+  copy.querySelectorAll('style').forEach((style) => style.remove());
+}
+
+/**
+ * Return a copy of the SVG chart but without scaling and positioning.
+ *
+ * @param forPdf copy the computed styles to the elements (see
+ *   copyComputedStyles())
+ */
+function getStrippedSvg(forPdf = false) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const svg = document.getElementById('chartSvg')!.cloneNode(true) as Element;
+  const live = document.getElementById('chartSvg')!;
+  const svg = live.cloneNode(true) as Element;
+  if (forPdf) {
+    copyComputedStyles(live, svg);
+  }
 
   svg.removeAttribute('transform');
   const parent = select('#svgContainer').node() as Element;
@@ -297,9 +367,9 @@ function getStrippedSvg() {
 }
 
 /**
- * Returns the serialized chart SVG with a white background and all images and
- * active web fonts inlined as data URLs, together with the chart's true
- * (unscaled) width and height in pixels.
+ * Returns the cloned chart SVG with a white background and all images (and, for
+ * non-PDF exports, active web fonts) inlined as data URLs, together with the
+ * chart's true (unscaled) width and height in pixels.
  *
  * The dimensions are read from the stripped SVG (i.e. with the d3-zoom scale
  * divided out), NOT from the live `#chartSvg` element, whose `width`/`height`
@@ -308,12 +378,12 @@ function getStrippedSvg() {
  * reading the live element, otherwise the output is sized to the on-screen
  * zoomed viewport and ends up truncated.
  */
-export async function getSvgContentsWithInlinedImages(): Promise<{
-  contents: string;
+async function getSvgWithInlinedImages(forPdf = false): Promise<{
+  svg: Element;
   width: number;
   height: number;
 }> {
-  const svg = getStrippedSvg();
+  const svg = getStrippedSvg(forPdf);
   const width = Number(svg.getAttribute('width'));
   const height = Number(svg.getAttribute('height'));
 
@@ -327,7 +397,21 @@ export async function getSvgContentsWithInlinedImages(): Promise<{
   rect.setAttribute('fill', 'white');
   svg.prepend(rect);
 
-  await Promise.all([inlineImages(svg), inlineFonts(svg)]);
+  if (forPdf) {
+    await inlineImages(svg);
+  } else {
+    await Promise.all([inlineImages(svg), inlineFonts(svg)]);
+  }
+  return {svg, width, height};
+}
+
+/** Same as getSvgWithInlinedImages(), with the SVG serialized. */
+export async function getSvgContentsWithInlinedImages(): Promise<{
+  contents: string;
+  width: number;
+  height: number;
+}> {
+  const {svg, width, height} = await getSvgWithInlinedImages(false);
   const contents = new XMLSerializer().serializeToString(svg);
   return {contents, width, height};
 }
@@ -371,20 +455,196 @@ export async function downloadPng() {
   saveAs(blob, 'topola.png');
 }
 
-export async function downloadPdf() {
-  // Lazy load jspdf.
-  const {default: jspdf} = await import('jspdf');
+/** Largest page width or height allowed in a PDF file, in points. */
+const MAX_PDF_SIDE = 14400;
+/** JPEG quality of the chart in PDF files drawn as an image. */
+const PDF_JPEG_QUALITY = 0.9;
 
+/** Name of the chart font in PDF files. */
+const PDF_FONT = 'Montserrat';
+/** Name of the font for the symbols missing in the chart font. */
+const PDF_SYMBOL_FONT = 'Symbols';
+
+/** Fonts embedded in PDF files. */
+const PDF_FONTS: Array<{url: string; name: string; styles: string[]}> = [
+  {url: montserratRegularUrl, name: PDF_FONT, styles: ['normal']},
+  {url: montserratBoldUrl, name: PDF_FONT, styles: ['bold', 'bolditalic']},
+  {url: montserratItalicUrl, name: PDF_FONT, styles: ['italic']},
+  {url: dejaVuSymbolsUrl, name: PDF_SYMBOL_FONT, styles: ['normal']},
+];
+
+/** Font files as base64 strings, loaded once. */
+const fontFiles = new Map<string, Promise<string>>();
+
+/** Loads a font file as a base64 string. */
+function loadFontFile(url: string): Promise<string> {
+  let file = fontFiles.get(url);
+  if (!file) {
+    file = fetch(url)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load font ${url}: ${response.status}`);
+        }
+        return response.blob();
+      })
+      .then(loadAsDataUrl)
+      .then((dataUrl) => dataUrl.substring(dataUrl.indexOf(',') + 1));
+    fontFiles.set(url, file);
+    file.catch(() => fontFiles.delete(url));
+  }
+  return file;
+}
+
+/** Adds the fonts used in the chart to the PDF document. */
+async function addPdfFonts(doc: jsPDF) {
+  const files = await Promise.all(PDF_FONTS.map(({url}) => loadFontFile(url)));
+  PDF_FONTS.forEach(({url, name, styles}, i) => {
+    const fileName = url.substring(url.lastIndexOf('/') + 1);
+    doc.addFileToVFS(fileName, files[i]);
+    styles.forEach((style) => doc.addFont(fileName, name, style));
+  });
+}
+
+/** Returns whether the chart font has a glyph for each character of the text. */
+function hasGlyphs(doc: jsPDF, text: string): boolean {
+  doc.setFont(PDF_FONT, 'normal');
+  const metadata = (
+    doc.getFont() as unknown as {
+      metadata?: {characterToGlyph?: (code: number) => number};
+    }
+  ).metadata;
+  if (!metadata?.characterToGlyph) {
+    return !/[\u2190-\u2bff]/.test(text);
+  }
+  return Array.from(text).every(
+    (char) =>
+      /\s/.test(char) ||
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      metadata.characterToGlyph!(char.codePointAt(0)!) !== 0,
+  );
+}
+
+/**
+ * Sets the fonts of the texts, and scales each text horizontally so that it
+ * has the same width as in the browser. Texts would be slightly wider in the
+ * PDF file because jsPDF doesn't use kerning, or wider or narrower if the
+ * browser used another font, e.g. when Montserrat could not be loaded.
+ */
+function prepareTexts(svg: Element, doc: jsPDF) {
+  svg.querySelectorAll('text').forEach((text) => {
+    // White space is collapsed like in the browser.
+    const content = (text.textContent ?? '').replace(/\s+/g, ' ').trim();
+    const bold = Number(text.getAttribute('font-weight')) >= 600;
+    const italic = text.getAttribute('font-style') === 'italic';
+    const symbols = !hasGlyphs(doc, content);
+    text.setAttribute('font-family', symbols ? PDF_SYMBOL_FONT : PDF_FONT);
+    if (symbols) {
+      text.setAttribute('font-weight', 'normal');
+      text.setAttribute('font-style', 'normal');
+    } else {
+      text.setAttribute('font-weight', bold ? 'bold' : 'normal');
+    }
+    const width = Number(text.getAttribute(TEXT_WIDTH_ATTRIBUTE));
+    text.removeAttribute(TEXT_WIDTH_ATTRIBUTE);
+    const fontSize = parseFloat(text.getAttribute('font-size') ?? '');
+    if (!content || !(width > 0) || !(fontSize > 0)) {
+      return;
+    }
+    const style = symbols
+      ? 'normal'
+      : `${bold ? 'bold' : ''}${italic ? 'italic' : ''}` || 'normal';
+    doc.setFont(symbols ? PDF_SYMBOL_FONT : PDF_FONT, style);
+    const pdfWidth = doc.getStringUnitWidth(content) * fontSize;
+    const scale = width / pdfWidth;
+    if (isFinite(scale) && Math.abs(scale - 1) > 0.002) {
+      const transform = text.getAttribute('transform') ?? '';
+      const x = parseFloat(text.getAttribute('x') ?? '');
+      // Built-in presets position texts via transform="translate(x, y)", while
+      // custom looks such as Transit may use a non-zero `x` attribute.
+      const scaleTransform =
+        Number.isFinite(x) && x !== 0
+          ? `translate(${x}, 0) scale(${scale}, 1) translate(${-x}, 0)`
+          : `scale(${scale}, 1)`;
+      text.setAttribute(
+        'transform',
+        transform ? `${transform} ${scaleTransform}` : scaleTransform,
+      );
+    }
+  });
+}
+
+/**
+ * Creates the PDF document as vectors, with svg2pdf.js. Texts stay sharp at
+ * any zoom level and can be selected, and the file is much smaller than an
+ * image of the chart.
+ */
+async function createVectorPdf(): Promise<jsPDF> {
+  // Lazy load jspdf and svg2pdf.js.
+  const [{default: jspdf}, {svg2pdf}] = await Promise.all([
+    import('jspdf'),
+    import('svg2pdf.js'),
+  ]);
   // Use the chart's true (unscaled) dimensions, returned by the same call that
-  // serializes the SVG, so the PDF page and the drawn SVG always match. Reading
+  // copies the SVG, so the PDF page and the drawn SVG always match. Reading
   // the live `#chartSvg` attributes here would pick up d3-zoom's scaled values
   // and produce a page sized to the on-screen viewport instead of the full tree.
-  const {contents, width, height} = await getSvgContentsWithInlinedImages();
+  const {svg, width, height} = await getSvgWithInlinedImages(true);
+  // Large charts are scaled down to fit in a PDF page, instead of being cut.
+  const scale = Math.min(1, MAX_PDF_SIDE / width, MAX_PDF_SIDE / height);
   const doc = new jspdf({
     orientation: width > height ? 'l' : 'p',
     unit: 'pt',
-    format: [width, height],
+    format: [width * scale, height * scale],
+    compress: true,
   });
-  await doc.addSvgAsImage(contents, 0, 0, width, height);
+  await addPdfFonts(doc);
+  prepareTexts(svg, doc);
+  // Without a viewBox, svg2pdf.js would draw the chart at its true size, and
+  // cut it at the page size instead of scaling it down.
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  await svg2pdf(svg, doc, {
+    x: 0,
+    y: 0,
+    width: width * scale,
+    height: height * scale,
+  });
+  return doc;
+}
+
+/** Creates the PDF document as an image of the chart. */
+async function createImagePdf(): Promise<jsPDF> {
+  // Lazy load jspdf.
+  const {default: jspdf} = await import('jspdf');
+  const {contents, width, height} = await getSvgContentsWithInlinedImages();
+  // The chart is drawn by the browser, like for PNG files. This is much faster
+  // than jsPDF's addSvgAsImage(), which draws it with canvg at its true size.
+  const blob = new Blob([contents], {type: 'image/svg+xml'});
+  const canvas = drawImageOnCanvas(await loadImage(blob));
+  const scale = Math.min(1, MAX_PDF_SIDE / width, MAX_PDF_SIDE / height);
+  const doc = new jspdf({
+    orientation: width > height ? 'l' : 'p',
+    unit: 'pt',
+    format: [width * scale, height * scale],
+  });
+  doc.addImage(
+    canvas.toDataURL('image/jpeg', PDF_JPEG_QUALITY),
+    'JPEG',
+    0,
+    0,
+    width * scale,
+    height * scale,
+  );
+  return doc;
+}
+
+export async function downloadPdf() {
+  let doc: jsPDF;
+  try {
+    doc = await createVectorPdf();
+  } catch (e) {
+    // E.g. the fonts could not be loaded.
+    console.warn('Failed to create a vector PDF file, using an image:', e);
+    doc = await createImagePdf();
+  }
   doc.save('topola.pdf');
 }

@@ -1,6 +1,11 @@
-import {expect, test} from '@playwright/test';
+import {expect, Page, test} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
-import {setupGedcomRoute, setupHermeticEnvironment} from './helpers';
+import {inflateSync} from 'node:zlib';
+import {
+  mockGedcomResponse,
+  setupGedcomRoute,
+  setupHermeticEnvironment,
+} from './helpers';
 
 /**
  * Reads the chart's live (zoom-scaled) and true (unscaled) dimensions from the
@@ -243,5 +248,144 @@ test.describe('Chart export and Topola 4 lifecycle', () => {
     expect(after.hasLoraLink).toBe(true);
     expect(after.styleCss).toContain('.male .frame { stroke: #1565c0; }');
     expect(after.styleCss).toContain('font-family: Lora, Georgia, serif;');
+  });
+});
+
+/** Returns the contents of the streams in a PDF file, decompressed. */
+function getPdfContents(pdf: Buffer): string {
+  const contents: string[] = [];
+  const text = pdf.toString('latin1');
+  const streams = /\/Length (\d+)[^>]*>>\s*stream\r?\n/g;
+  for (const match of text.matchAll(streams)) {
+    const start = (match.index ?? 0) + match[0].length;
+    const data = pdf.subarray(start, start + Number(match[1]));
+    try {
+      contents.push(inflateSync(data).toString('latin1'));
+    } catch {
+      // Not compressed with Flate, e.g. an image.
+    }
+  }
+  return contents.join('\n');
+}
+
+/** Returns the relative difference between two numbers. */
+function relativeDifference(a: number, b: number): number {
+  return Math.abs(a / b - 1);
+}
+
+/** Returns the width and height of a PNG image. */
+function getPngSize(png: Buffer): [number, number] {
+  return [png.readUInt32BE(16), png.readUInt32BE(20)];
+}
+
+/** Downloads the chart in the given format and returns the file path. */
+async function download(page: Page, menuItem: string): Promise<string> {
+  await page.getByText('Download', {exact: true}).click();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByText(menuItem, {exact: true}).click();
+  const path = await (await downloadPromise).path();
+  expect(path).toBeTruthy();
+  return path ?? '';
+}
+
+test.describe('PDF export', () => {
+  test.beforeEach(async ({page, context}) => {
+    await setupHermeticEnvironment(context);
+    await setupGedcomRoute(context);
+    await page.goto('/#/view?url=https://example.org/family.ged');
+    await expect(page.locator('#content')).toContainText('Bonifacy');
+  });
+
+  test('draws the chart as vectors with the chart fonts', async ({page}) => {
+    const pdf = (await readFile(await download(page, 'PDF file'))).toString(
+      'latin1',
+    );
+
+    // The chart font, and the font of the ♂ and ♀ symbols, are embedded.
+    expect(pdf).toMatch(/\/BaseFont \/Montserrat/);
+    expect(pdf).toMatch(/\/BaseFont \/Symbols/);
+    // No image of the chart: test.ged has no photos.
+    expect(pdf).not.toContain('/Subtype /Image');
+  });
+
+  test('draws the chart as an image if the fonts cannot be loaded', async ({
+    page,
+  }) => {
+    await page.route('**/*.ttf*', (route) => route.fulfill({status: 404}));
+
+    const pdf = (await readFile(await download(page, 'PDF file'))).toString(
+      'latin1',
+    );
+
+    expect(pdf).toContain('/Subtype /Image');
+    expect(pdf).not.toMatch(/\/BaseFont \/Montserrat/);
+  });
+});
+
+/** A family with 260 children, which makes a very wide chart. */
+function createWideGedcom(): string {
+  const children = Array.from({length: 260}, (_, i) => `C${i}`);
+  return [
+    '0 HEAD',
+    '0 @P@ INDI',
+    '1 NAME Parent /Wide/',
+    '1 FAMS @F@',
+    '0 @F@ FAM',
+    '1 HUSB @P@',
+    ...children.map((id) => `1 CHIL @${id}@`),
+    ...children.flatMap((id, i) => [
+      `0 @${id}@ INDI`,
+      `1 NAME Child${i} /Wide/`,
+      '1 FAMC @F@',
+    ]),
+    '0 TRLR',
+  ].join('\n');
+}
+
+test.describe('Export of a very wide chart', () => {
+  test.beforeEach(async ({page, context}) => {
+    await setupHermeticEnvironment(context);
+    await mockGedcomResponse(context, createWideGedcom());
+    await page.goto('/#/view?url=https://example.org/family.ged&indi=P');
+    await expect(page.locator('#content')).toContainText('Child259');
+  });
+
+  test('PNG file is scaled down to fit the canvas', async ({page}) => {
+    const {trueW, trueH} = await getChartDimensions(page);
+    // Wider than the largest canvas at twice the size of the chart.
+    expect(2 * trueW).toBeGreaterThan(32767);
+
+    const [width, height] = getPngSize(
+      await readFile(await download(page, 'PNG file')),
+    );
+
+    expect(width).toBeLessThanOrEqual(32767);
+    // Same proportions, up to the rounding to whole pixels.
+    expect(relativeDifference(width / height, trueW / trueH)).toBeLessThan(
+      0.01,
+    );
+  });
+
+  test('PDF page shows the whole chart', async ({page}) => {
+    const {trueW, trueH} = await getChartDimensions(page);
+    // Wider than the largest PDF page.
+    expect(trueW).toBeGreaterThan(14400);
+
+    const pdfPath = await download(page, 'PDF file');
+    const [pdfW, pdfH] = await getPdfPageSize(pdfPath);
+
+    // The page is scaled down to fit in a PDF file, instead of being cut.
+    expect(pdfW).toBeLessThanOrEqual(14400);
+    expect(relativeDifference(pdfW / pdfH, trueW / trueH)).toBeLessThan(0.01);
+    // And so is the chart in it: the drawing is scaled by the same factor.
+    const scale = pdfW / trueW;
+    const matrices = getPdfContents(await readFile(pdfPath)).matchAll(
+      /^([\d.]+) 0\. 0\. ([\d.]+) \S+ \S+ cm$/gm,
+    );
+    expect(
+      Array.from(matrices).some(
+        ([, a, d]) => a === d && relativeDifference(Number(a), scale) < 0.01,
+      ),
+    ).toBe(true);
   });
 });
