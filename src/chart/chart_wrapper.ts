@@ -45,7 +45,9 @@ import {
   ensureGoogleFontLoaded,
   getFontFamilyStack,
   Ids,
+  Occupations,
   Sex,
+  Titles,
 } from '../sidepanel/config/config';
 import {ChartProps, ChartType} from './chart_types';
 import {createTransitConfig, TransitLabels, TransitTheme} from './transit_look';
@@ -325,6 +327,8 @@ export class ChartWrapper {
       locale,
       hideId,
       hideSex,
+      showOccupations: props.occupations === Occupations.SHOW,
+      showTitles: props.titles === Titles.SHOW,
     });
 
     return {

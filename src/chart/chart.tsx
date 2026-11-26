@@ -66,6 +66,8 @@ export function Chart(props: ChartProps) {
         props.fontFamily !== prevProps.fontFamily ||
         props.hideIds !== prevProps.hideIds ||
         props.hideSex !== prevProps.hideSex ||
+        props.occupations !== prevProps.occupations ||
+        props.titles !== prevProps.titles ||
         props.placeDisplay !== prevProps.placeDisplay ||
         props.placeCount !== prevProps.placeCount;
       const resetPosition =

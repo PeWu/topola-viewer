@@ -162,6 +162,8 @@ export function ViewPage() {
         fontFamily={config.fontFamily}
         hideIds={config.id}
         hideSex={config.sex}
+        occupations={config.occupations}
+        titles={config.titles}
         placeDisplay={config.place}
         placeCount={config.placeCount}
         onFirstRender={() => setLoadingStatus('')}
