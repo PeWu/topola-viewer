@@ -4,8 +4,10 @@ import {
   AllowedFont,
   ChartColors,
   Ids,
+  Occupations,
   PlaceDisplay,
   Sex,
+  Titles,
 } from '../sidepanel/config/config';
 import {IndiInfo} from '../util/gedcom_util';
 
@@ -32,6 +34,8 @@ export interface ChartProps {
   fontFamily?: AllowedFont;
   hideIds?: Ids;
   hideSex?: Sex;
+  occupations?: Occupations;
+  titles?: Titles;
   placeDisplay?: PlaceDisplay;
   placeCount?: number;
   /** Called once after the initial layout and SVG render completes. */

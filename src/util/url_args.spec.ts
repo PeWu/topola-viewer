@@ -7,8 +7,10 @@ import {
   configToArgs,
   DEFAULT_FONT_FAMILY,
   Ids,
+  Occupations,
   PlaceDisplay,
   Sex,
+  Titles,
 } from '../sidepanel/config/config';
 import {
   getArguments,
@@ -128,6 +130,8 @@ describe('url_args', () => {
         sex: Sex.SHOW,
         place: PlaceDisplay.FULL,
         placeCount: 2,
+        occupations: Occupations.HIDE,
+        titles: Titles.HIDE,
       });
     });
 
@@ -285,7 +289,7 @@ describe('url_args', () => {
 
     it('parses config object from query parameters', () => {
       const args = getArguments(
-        createLocation('?c=s&ct=f&ff=Lora&i=h&s=h&p=s&pn=5'),
+        createLocation('?c=s&ct=f&ff=Lora&i=h&s=h&p=s&pn=5&o=s&t=s'),
       );
       expect(args.config).toEqual({
         color: ChartColors.COLOR_BY_SEX,
@@ -295,6 +299,8 @@ describe('url_args', () => {
         sex: Sex.HIDE,
         place: PlaceDisplay.SHORT,
         placeCount: 5,
+        occupations: Occupations.SHOW,
+        titles: Titles.SHOW,
       });
     });
 

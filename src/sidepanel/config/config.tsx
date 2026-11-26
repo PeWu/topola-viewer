@@ -25,6 +25,16 @@ export enum Sex {
   SHOW,
 }
 
+export enum Occupations {
+  HIDE,
+  SHOW,
+}
+
+export enum Titles {
+  HIDE,
+  SHOW,
+}
+
 export const DEFAULT_FONT_FAMILY = 'Montserrat';
 
 export const ALLOWED_FONTS = [
@@ -96,6 +106,8 @@ export interface Config {
   sex: Sex;
   place: PlaceDisplay;
   placeCount: number;
+  occupations: Occupations;
+  titles: Titles;
 }
 
 export const DEFALUT_CONFIG: Config = {
@@ -106,6 +118,8 @@ export const DEFALUT_CONFIG: Config = {
   sex: Sex.SHOW,
   place: PlaceDisplay.FULL,
   placeCount: DEFAULT_PLACE_DISPLAY_COUNT,
+  occupations: Occupations.HIDE,
+  titles: Titles.HIDE,
 };
 
 const COLOR_ARG = new Map<string, ChartColors>([
@@ -146,6 +160,20 @@ const PLACE_ARG = new Map<string, PlaceDisplay>([
 const PLACE_ARG_INVERSE = new Map<PlaceDisplay, string>();
 PLACE_ARG.forEach((v, k) => PLACE_ARG_INVERSE.set(v, k));
 
+const OCCUPATIONS_ARG = new Map<string, Occupations>([
+  ['h', Occupations.HIDE],
+  ['s', Occupations.SHOW],
+]);
+const OCCUPATIONS_ARG_INVERSE = new Map<Occupations, string>();
+OCCUPATIONS_ARG.forEach((v, k) => OCCUPATIONS_ARG_INVERSE.set(v, k));
+
+const TITLES_ARG = new Map<string, Titles>([
+  ['h', Titles.HIDE],
+  ['s', Titles.SHOW],
+]);
+const TITLES_ARG_INVERSE = new Map<Titles, string>();
+TITLES_ARG.forEach((v, k) => TITLES_ARG_INVERSE.set(v, k));
+
 export function argsToConfig(args: ParsedQuery<unknown>): Config {
   const getParam = (name: string) => {
     const value = args[name];
@@ -163,6 +191,9 @@ export function argsToConfig(args: ParsedQuery<unknown>): Config {
     sex: SEX_ARG.get(getParam('s') ?? '') ?? DEFALUT_CONFIG.sex,
     place: PLACE_ARG.get(getParam('p') ?? '') ?? DEFALUT_CONFIG.place,
     placeCount: placeCount >= 1 ? placeCount : DEFALUT_CONFIG.placeCount,
+    occupations:
+      OCCUPATIONS_ARG.get(getParam('o') ?? '') ?? DEFALUT_CONFIG.occupations,
+    titles: TITLES_ARG.get(getParam('t') ?? '') ?? DEFALUT_CONFIG.titles,
   };
 }
 
@@ -192,6 +223,16 @@ export function configToArgs(config: Config): ParsedQuery {
     config.place === PlaceDisplay.SHORT &&
     config.placeCount !== DEFALUT_CONFIG.placeCount
       ? String(config.placeCount)
+      : null;
+  // Set to null when hidden (the default), so that a previous `o=s` or `t=s`
+  // is removed from the URL and the setting can be changed back to "hide".
+  result.o =
+    config.occupations !== DEFALUT_CONFIG.occupations
+      ? (OCCUPATIONS_ARG_INVERSE.get(config.occupations) ?? null)
+      : null;
+  result.t =
+    config.titles !== DEFALUT_CONFIG.titles
+      ? (TITLES_ARG_INVERSE.get(config.titles) ?? null)
       : null;
   return result;
 }
@@ -477,6 +518,82 @@ export function ConfigPanel(props: {
                   <FormattedMessage
                     id="config.places.FULL"
                     defaultMessage="full"
+                  />
+                }
+              />
+            </Stack>
+          </Radio.Group>
+        </div>
+
+        <div className="item" style={{padding: '0 15px 0 25px'}}>
+          <Text className="sub-header" size="xs" fw={700} tt="uppercase" mb={4}>
+            <FormattedMessage
+              id="config.occupations"
+              defaultMessage="Occupations"
+            />
+          </Text>
+          <Radio.Group
+            value={
+              props.config.occupations === Occupations.SHOW ? 'show' : 'hide'
+            }
+            onChange={(val) =>
+              props.onChange({
+                occupations:
+                  val === 'show' ? Occupations.SHOW : Occupations.HIDE,
+              })
+            }
+          >
+            <Stack gap={4}>
+              <Radio
+                value="hide"
+                label={
+                  <FormattedMessage
+                    id="config.occupations.HIDE"
+                    defaultMessage="hide"
+                  />
+                }
+              />
+              <Radio
+                value="show"
+                label={
+                  <FormattedMessage
+                    id="config.occupations.SHOW"
+                    defaultMessage="show"
+                  />
+                }
+              />
+            </Stack>
+          </Radio.Group>
+        </div>
+
+        <div className="item" style={{padding: '0 15px 0 25px'}}>
+          <Text className="sub-header" size="xs" fw={700} tt="uppercase" mb={4}>
+            <FormattedMessage id="config.titles" defaultMessage="Titles" />
+          </Text>
+          <Radio.Group
+            value={props.config.titles === Titles.SHOW ? 'show' : 'hide'}
+            onChange={(val) =>
+              props.onChange({
+                titles: val === 'show' ? Titles.SHOW : Titles.HIDE,
+              })
+            }
+          >
+            <Stack gap={4}>
+              <Radio
+                value="hide"
+                label={
+                  <FormattedMessage
+                    id="config.titles.HIDE"
+                    defaultMessage="hide"
+                  />
+                }
+              />
+              <Radio
+                value="show"
+                label={
+                  <FormattedMessage
+                    id="config.titles.SHOW"
+                    defaultMessage="show"
                   />
                 }
               />
